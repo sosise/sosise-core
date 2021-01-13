@@ -1,0 +1,60 @@
+{
+  "name": "sosise-core",
+  "version": "0.1.1",
+  "description": "Sosise",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "build/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sosise/sosise-core"
+  },
+  "scripts": {
+    "build": "rm -rf build && tsc",
+    "cscheck": "./node_modules/.bin/tslint --project tsconfig.json",
+    "eccheck": "./node_modules/.bin/editorconfig-checker -exclude \"(node_modules|build)\""
+  },
+  "author": "Igor Kov",
+  "license": "MIT",
+  "dependencies": {
+    "@sentry/node": "^5.29.2",
+    "@sentry/tracing": "^5.29.2",
+    "axios": "^0.21.1",
+    "bcrypt": "^5.0.0",
+    "colors": "^1.4.0",
+    "commander": "^6.2.1",
+    "dayjs": "^1.10.2",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "find-process": "^1.4.4",
+    "knex": "^0.21.15",
+    "lodash": "^4.17.20",
+    "mssql": "^6.3.1",
+    "mysql": "^2.18.1",
+    "sqlite3": "^5.0.0",
+    "uuid": "^8.3.2",
+    "validatorjs": "^3.22.1"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/bcrypt": "^3.0.0",
+    "@types/commander": "^2.12.2",
+    "@types/express": "^4.17.9",
+    "@types/find-process": "^1.2.0",
+    "@types/knex": "^0.16.1",
+    "@types/lodash": "^4.14.167",
+    "@types/mssql": "^6.0.7",
+    "@types/mysql": "^2.15.17",
+    "@types/node": "^14.14.20",
+    "@types/sqlite3": "^3.1.6",
+    "@types/uuid": "^8.3.0",
+    "@types/validatorjs": "^3.15.0",
+    "editorconfig": "^0.15.3",
+    "editorconfig-checker": "^3.3.0",
+    "tsc-watch": "^4.2.9",
+    "tslint": "^6.1.3",
+    "typescript": "^4.1.3"
+  }
+}
