@@ -1,18 +1,18 @@
 {
   "name": "sosise-core",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Sosise",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
-    "build/**/*"
+    "/build"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/sosise/sosise-core"
   },
   "scripts": {
-    "build": "rm -rf build && tsc",
+    "build": "rm -rf build && tsc && cp -R src/Artisan/FileTemplates build/Artisan/FileTemplates",
     "cscheck": "./node_modules/.bin/tslint --project tsconfig.json",
     "eccheck": "./node_modules/.bin/editorconfig-checker -exclude \"(node_modules|build)\""
   },

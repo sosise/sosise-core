@@ -1,0 +1,6 @@
+export default interface %name% {
+    /**
+     * Example
+     */
+    example(limit: number): Promise<any>;
+}

@@ -1,0 +1,42 @@
+import commander from 'commander';
+import BaseCommand, { OptionType } from '../../Libraries/Command/BaseCommand';
+
+export default class %name% extends BaseCommand {
+    /**
+     * Command name
+     */
+    protected signature: string = 'example:command';
+
+    /**
+     * Command description
+     */
+    protected description: string = 'This is a example command';
+
+    /**
+     * When command is executed prevent from double execution
+     */
+    protected singleExecution: boolean = false;
+
+    /**
+     * Command options
+     */
+    protected options: OptionType[] = [
+        // Options can be boolean
+        { flag: '-d, --debug', description: 'Show debug information' },
+
+        // Options can pass some values
+        { flag: '-s, --since <since>', description: 'Report since', default: '29.12.2020' },
+    ];
+
+    /**
+     * Execute the console command
+     */
+    public async handle(cli: commander.Command): Promise<void> {
+        // When debug option is true
+        if (cli.debug) {
+            console.log('Debug option provided');
+        }
+
+        console.log('Example export since ' + cli.since);
+    }
+}

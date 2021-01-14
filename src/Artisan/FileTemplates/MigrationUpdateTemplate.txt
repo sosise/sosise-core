@@ -1,0 +1,27 @@
+import BaseSchema from '../../app/Libraries/Database/BaseSchema';
+
+/**
+ * If you need more information, see: http://knexjs.org/
+ */
+export default class CreateOrderTable extends BaseSchema {
+
+    protected tableName = 'table_name_comes_here';
+
+    /**
+     * Run the migrations.
+     */
+    public async up(): Promise<void> {
+        await this.dbConnection.schema.alterTable(this.tableName, (table) => {
+            table.string('new_field').defaultTo(null);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public async down(): Promise<void> {
+        await this.dbConnection.schema.alterTable(this.tableName, (table) => {
+            table.dropColumn('new_field');
+        });
+    }
+}
