@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import ResponseType from '../../Types/Response/ResponseType';
+import HttpResponse from 'sosise-core/build/Types/HttpResponse';
 
 export default class %name% {
     /**
@@ -7,16 +7,15 @@ export default class %name% {
      */
     public async example(request: Request, response: Response, next: NextFunction) {
         try {
-            // Prepare response
-            const responseType: ResponseType = {
-                httpCode: 200,
+            // Prepare http response
+            const httpResponse: HttpResponse = {
                 code: 1000,
                 message: 'Some example',
                 data: null
             };
 
             // Send response
-            return response.send(responseType);
+            return response.send(httpResponse);
         } catch (error) {
             next(error);
         }

@@ -10,8 +10,8 @@ export default class Database {
      * Constructor
      */
     private constructor(connectionName: string) {
-        // TODO
-        const databaseConfig = require('../todo');
+        // Get database config
+        const databaseConfig = require(process.cwd() + '/build/config/database').default;
 
         // Check if connection configuration exists
         if (databaseConfig.connections[connectionName] === undefined) {

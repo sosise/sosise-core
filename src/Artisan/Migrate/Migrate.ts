@@ -15,7 +15,8 @@ export default class Migrate {
      * Constructor
      */
     constructor() {
-        const defaultConnection = process.env.DEFAULT_DB_CONNECTION;
+        const databaseConfig = require(process.cwd() + '/build/config/database').default;
+        const defaultConnection = databaseConfig.default;
         if (!defaultConnection) {
             throw new DefaultConnectionNotSetException('Default database connection is not set');
         }

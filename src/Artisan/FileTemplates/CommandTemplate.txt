@@ -1,5 +1,5 @@
 import commander from 'commander';
-import BaseCommand, { OptionType } from '../../Libraries/Command/BaseCommand';
+import BaseCommand, { OptionType } from 'sosise-core/build/Command/BaseCommand';
 
 export default class %name% extends BaseCommand {
     /**

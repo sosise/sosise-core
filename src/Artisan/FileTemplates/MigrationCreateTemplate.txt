@@ -1,4 +1,4 @@
-import BaseSchema from '../../app/Libraries/Database/BaseSchema';
+import BaseSchema from 'sosise-core/build/Database/BaseSchema';
 
 /**
  * If you need more information, see: http://knexjs.org/

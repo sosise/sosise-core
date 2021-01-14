@@ -1,13 +1,16 @@
 import Exception from '../Exception';
 import HttpResponse from '../../Types/HttpResponse';
 
-export default class MigrationDoesNotExistsOnFilesystemException extends Exception {
+export default class IOCMakeException extends Exception {
+
+    public className: string;
 
     /**
      * Constructor
      */
-    constructor(message: string) {
+    constructor(message: string, className: string) {
         super(message);
+        this.className = className;
     }
 
     /**
@@ -16,9 +19,11 @@ export default class MigrationDoesNotExistsOnFilesystemException extends Excepti
     public handle(exception: this): HttpResponse {
         // Prepare response
         const httpResponse: HttpResponse = {
-            code: 106,
+            code: 103,
             message: exception.message,
-            data: null
+            data: {
+                classToResolve: this.name
+            }
         };
 
         // Return response

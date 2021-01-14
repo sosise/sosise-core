@@ -1,1 +1,1 @@
-export * from './artisan';
+// Barrel file

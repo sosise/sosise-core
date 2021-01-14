@@ -1,6 +1,6 @@
 {
   "name": "sosise-core",
-  "version": "0.1.3",
+  "version": "0.1.21",
   "description": "Sosise",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build": "rm -rf build && tsc && cp -R src/Artisan/FileTemplates build/Artisan/FileTemplates",
+    "pub": "npm version patch --no-git-tag-version && npm run build && npm publish",
     "cscheck": "./node_modules/.bin/tslint --project tsconfig.json",
     "eccheck": "./node_modules/.bin/editorconfig-checker -exclude \"(node_modules|build)\""
   },

@@ -1,5 +1,5 @@
 import Validator from 'validatorjs';
-import ValidationException from '../Exceptions/Validation/ValidationException';
+import ValidationException from 'sosise-core/build/Exceptions/Validation/ValidationException';
 
 /**
  * If you need more validation rules, see: https://github.com/mikeerickson/validatorjs

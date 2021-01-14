@@ -13,7 +13,9 @@ import Enum from './Artisan/Make/Enum';
 import CommandRegistration from './Command/CommandRegistration';
 
 export default class Artisan {
-    // TODO
+    /**
+     * Artisan main entry method
+     */
     public run(argv: string[]): void {
         try {
             // Initialize commander
