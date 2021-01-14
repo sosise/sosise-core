@@ -1,5 +1,5 @@
+import ExceptionResponse from '../../Types/ExceptionResponse';
 import Exception from '../Exception';
-import HttpResponse from '../../Types/HttpResponse';
 
 export default class ValidationException extends Exception {
 
@@ -16,15 +16,13 @@ export default class ValidationException extends Exception {
     /**
      * Handle exception
      */
-    public handle(exception: this): HttpResponse {
-        // Prepare response
-        const httpResponse: HttpResponse = {
-            code: 104,
+    public handle(exception: this): ExceptionResponse {
+        const response: ExceptionResponse = {
+            code: 2006,
+            httpCode: 422,
             message: exception.message,
             data: this.validationErrors
         };
-
-        // Return response
-        return httpResponse;
+        return response;
     }
 }

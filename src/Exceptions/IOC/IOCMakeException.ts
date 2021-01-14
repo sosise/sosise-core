@@ -1,5 +1,5 @@
+import ExceptionResponse from '../../Types/ExceptionResponse';
 import Exception from '../Exception';
-import HttpResponse from '../../Types/HttpResponse';
 
 export default class IOCMakeException extends Exception {
 
@@ -16,17 +16,14 @@ export default class IOCMakeException extends Exception {
     /**
      * Handle exception
      */
-    public handle(exception: this): HttpResponse {
-        // Prepare response
-        const httpResponse: HttpResponse = {
-            code: 103,
+    public handle(exception: this): ExceptionResponse {
+        const response: ExceptionResponse = {
+            code: 2005,
             message: exception.message,
             data: {
                 classToResolve: this.name
             }
         };
-
-        // Return response
-        return httpResponse;
+        return response;
     }
 }

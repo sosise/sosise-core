@@ -1,5 +1,5 @@
 import Exception from "../Exception";
-import HttpResponse from '../../Types/HttpResponse';
+import ExceptionResponse from "../../Types/ExceptionResponse";
 
 export default class DatabaseConfigurationException extends Exception {
 
@@ -16,17 +16,14 @@ export default class DatabaseConfigurationException extends Exception {
     /**
      * Handle exception
      */
-    public handle(exception: this): HttpResponse {
-        // Prepare response
-        const httpResponse: HttpResponse = {
-            code: 102,
+    public handle(exception: this): ExceptionResponse {
+        const response: ExceptionResponse = {
+            code: 2002,
             message: exception.message,
             data: {
                 connectionName: this.connectionName
             }
         };
-
-        // Return response
-        return httpResponse;
+        return response;
     }
 }

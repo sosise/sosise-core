@@ -1,5 +1,5 @@
+import ExceptionResponse from '../../Types/ExceptionResponse';
 import Exception from '../Exception';
-import HttpResponse from '../../Types/HttpResponse';
 
 export default class MakeException extends Exception {
     /**
@@ -12,17 +12,14 @@ export default class MakeException extends Exception {
     /**
      * Handle exception
      */
-    public handle(exception: this): HttpResponse {
-        // Prepare response
-        const httpResponse: HttpResponse = {
-            code: 101,
+    public handle(exception: this): ExceptionResponse {
+        const response: ExceptionResponse = {
+            code: 2001,
             message: this.message,
             data: {
                 stack: exception.stack!.split('\n')
             }
         };
-
-        // Return response
-        return httpResponse;
+        return response;
     }
 }

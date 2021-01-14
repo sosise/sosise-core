@@ -1,5 +1,5 @@
+import ExceptionResponse from '../../Types/ExceptionResponse';
 import Exception from '../Exception';
-import HttpResponse from '../../Types/HttpResponse';
 
 export default class DefaultConnectionNotSetException extends Exception {
 
@@ -13,15 +13,12 @@ export default class DefaultConnectionNotSetException extends Exception {
     /**
      * Handle exception
      */
-    public handle(exception: this): HttpResponse {
-        // Prepare response
-        const httpResponse: HttpResponse = {
-            code: 105,
+    public handle(exception: this): ExceptionResponse {
+        const response: ExceptionResponse = {
+            code: 2003,
             message: exception.message,
             data: null
         };
-
-        // Return response
-        return httpResponse;
+        return response;
     }
 }
