@@ -12,8 +12,9 @@ export default class Server {
         const port = process.env.LISTEN_PORT || 10000;
 
         // Initialize sentry
+        const sentryConfig = require(process.cwd() + '/build/config/sentry').default;
         Sentry.init({
-            dsn: process.env.SENTRY_DSN || undefined,
+            dsn: sentryConfig.dsn,
             integrations: [
                 // enable HTTP calls tracing
                 new Sentry.Integrations.Http({ tracing: true }),

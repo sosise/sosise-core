@@ -1,6 +1,5 @@
 import commander from 'commander';
 import fs from 'fs';
-// import Handler from '../../Exceptions/Handler';
 import findProcess from 'find-process';
 import colors from 'colors';
 
@@ -86,10 +85,9 @@ export default class CommandRegistration {
                         commandClassInstance.handle(cli).then(() => {
                             process.exit(0);
                         }).catch((error) => {
-                            // TODO Debug (remove it)
-                            console.log(error);
-                            // const exceptionHandler = new Handler();
-                            // exceptionHandler.reportCommandException(error);
+                            const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                            const exceptionHandler = new Handler();
+                            exceptionHandler.reportCommandException(error);
                         });
                     });
 

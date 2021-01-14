@@ -1,5 +1,4 @@
 import { Command } from 'commander';
-// import Handler from './app/Exceptions/Handler';
 import Controller from './Artisan/Make/Controller';
 import Unifier from './Artisan/Make/Unifier';
 import Migrate from './Artisan/Migrate/Migrate';
@@ -125,12 +124,10 @@ export default class Artisan {
                         await instance.run();
                         process.exit(0);
                     } catch (error) {
-                        // TODO Debug (remove it)
-                        console.log(error);
+                        const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                        const exceptionHandler = new Handler();
+                        exceptionHandler.reportCommandException(error);
                         process.exit(0);
-                        // const exceptionHandler = new Handler();
-                        // exceptionHandler.reportCommandException(error);
-                        // process.exit(0);
                     }
                 });
 
@@ -144,12 +141,10 @@ export default class Artisan {
                         await instance.rollback();
                         process.exit(0);
                     } catch (error) {
-                        // TODO Debug (remove it)
-                        console.log(error);
+                        const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                        const exceptionHandler = new Handler();
+                        exceptionHandler.reportCommandException(error);
                         process.exit(0);
-                        // const exceptionHandler = new Handler();
-                        // exceptionHandler.reportCommandException(error);
-                        // process.exit(0);
                     }
                 });
 
@@ -157,12 +152,10 @@ export default class Artisan {
             program.parse(argv);
         }
         catch (error) {
-            // TODO Debug (remove it)
-            console.log(error);
+            const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+            const exceptionHandler = new Handler();
+            exceptionHandler.reportCommandException(error);
             process.exit(0);
-            // const exceptionHandler = new Handler();
-            // exceptionHandler.reportCommandException(error);
-            // process.exit(0);
         }
     }
 }

@@ -21,7 +21,7 @@ export default class IOCMakeException extends Exception {
             code: 2005,
             message: exception.message,
             data: {
-                classToResolve: this.name
+                classToResolve: this.className
             }
         };
         return response;
