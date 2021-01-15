@@ -9,6 +9,17 @@ export default class Helper {
             return null;
         }
 
+        return dayjs(date).format('YYYY-MM-DD');
+    }
+
+    /**
+     * Helper method which checks if given date is not null, casts to date format
+     */
+    public static parseDateTime(date: string): string | null {
+        if (date === null || date.toString().trim() === '') {
+            return null;
+        }
+
         return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
     }
 
