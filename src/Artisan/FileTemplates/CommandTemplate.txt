@@ -22,10 +22,10 @@ export default class %name% extends BaseCommand {
      */
     protected options: OptionType[] = [
         // Options can be boolean
-        { flag: '-d, --debug', description: 'Show debug information' },
+        { flag: '-d, --debug', description: 'Show debug information', required: false },
 
         // Options can pass some values
-        { flag: '-s, --since <since>', description: 'Report since', default: '29.12.2020' },
+        { flag: '-s, --since <since>', description: 'Report since', default: '29.12.2020', required: false },
     ];
 
     /**

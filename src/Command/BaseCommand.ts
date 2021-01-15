@@ -4,6 +4,7 @@ export interface OptionType {
     flag: string;
     description: string;
     default?: string | boolean | undefined;
+    required?: boolean;
 }
 
 export default abstract class BaseCommand {

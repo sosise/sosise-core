@@ -93,7 +93,11 @@ export default class CommandRegistration {
 
                 // Add options to new command
                 for (const option of commandClassInstance.options) {
-                    newCommand.option(option.flag, option.description, option.default);
+                    if (option.required === undefined || option.required === false) {
+                        newCommand.option(option.flag, option.description, option.default);
+                    } else {
+                        newCommand.requiredOption(option.flag, option.description, option.default);
+                    }
                 }
 
                 // Add to commander
