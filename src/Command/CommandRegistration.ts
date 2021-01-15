@@ -64,7 +64,7 @@ export default class CommandRegistration {
                                     if (fileObject.signature === commandClassInstance.signature) {
                                         // Now check if pid exists
                                         if ((await findProcess('pid', fileObject.pid, true)).length > 0) {
-                                            // Pid found in processlist, exit prevent executing again
+                                            // Pid found in process list, exit prevent executing again
                                             console.log(colors.yellow(`Command ${commandClassInstance.signature} is running, do not run it until it's end`));
                                             process.exit(0);
                                         }
