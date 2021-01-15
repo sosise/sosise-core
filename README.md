@@ -1,4 +1,23 @@
-# Sosise core
-Please do not download this project, it is under heavy development
+# Sosise
+This is a simple boilerplate built on top of different libraries like lodash, expressjs, dayjs, knex etc.
+The purpose of this boilerplate is to speedup and to standardize the develpment process.
 
-But, it will be laravel like framework in nodejs world!
+## Documentation
+Documentation is available at https://sosise.github.io/sosise-docs
+
+## Installation
+Install `sosise-cli` via `npm` or `yarn` globally.
+
+```sh
+npm i sosise-cli -g
+```
+
+## Usage
+Use `new` to generate your project.
+
+```sh
+sosise new <name>
+```
+
+## License
+[MIT](LICENSE.md)
