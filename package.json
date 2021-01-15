@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "rm -rf build && tsc && cp -R src/Artisan/FileTemplates build/Artisan/FileTemplates",
-    "watch": "rm -rf build && tsc -w && cp -R src/Artisan/FileTemplates build/Artisan/FileTemplates",
+    "watch": "npm build && tsc -w",
     "pub": "npm version patch --no-git-tag-version && npm run build && npm publish",
     "cscheck": "./node_modules/.bin/tslint --project tsconfig.json",
     "eccheck": "./node_modules/.bin/editorconfig-checker -exclude \"(node_modules|build)\""
