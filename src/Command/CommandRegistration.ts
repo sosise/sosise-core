@@ -15,9 +15,9 @@ export default class CommandRegistration {
     }
 
     /**
-     * Register application commands
+     * Get list of commands
      */
-    public registerApplicationCommands(): void {
+    public get listOfCommandFiles(): string[] {
         try {
             // Get list of command files
             let listOfCommandFiles = fs.readdirSync(process.cwd() + '/build/app/Console/Commands');
@@ -27,8 +27,19 @@ export default class CommandRegistration {
                 return (element.includes('js') && element.includes('Command')) && (!element.includes('map'));
             });
 
+            return listOfCommandFiles;
+        } catch (error) {
+            return [];
+        }
+    }
+
+    /**
+     * Register application commands
+     */
+    public registerApplicationCommands(): void {
+        try {
             // Iterate through files
-            for (const commandFile of listOfCommandFiles) {
+            for (const commandFile of this.listOfCommandFiles) {
                 // Get command file path
                 const commandFilePath = process.cwd() + '/build/app/Console/Commands/' + commandFile;
 
@@ -39,8 +50,9 @@ export default class CommandRegistration {
                 const commandClassInstance = new commandClassImport.default();
 
                 // Register command and specify what to do when command is executed
-                const newCommand = commander.command(commandClassInstance.signature)
-                    .description(commandClassInstance.description)
+                const newCommand = commander
+                    .command(commandClassInstance.signature)
+                    .description(`${commandClassInstance.description}`.dim)
                     .action(async (cli) => {
                         // Perform double execution prevention only if singleExecution param is set to true in current command
                         if (commandClassInstance.singleExecution) {
