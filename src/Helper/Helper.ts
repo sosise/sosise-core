@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { inspect } from 'util';
 
 export default class Helper {
     /**
@@ -28,5 +29,28 @@ export default class Helper {
      */
     public static getCurrentDateTime(): string {
         return dayjs().format('YYYY-MM-DD HH:mm:ss');
+    }
+
+    /**
+     * Die and dump
+     */
+    public static dd(params: any): void {
+        console.log(inspect(params, {
+            depth: null,
+            maxArrayLength: null,
+            colors: true
+        }));
+        process.exit(0);
+    }
+
+    /**
+     * Dump
+     */
+    public static dump(params: any): void {
+        console.log(inspect(params, {
+            depth: null,
+            maxArrayLength: null,
+            colors: true
+        }));
     }
 }
