@@ -1,6 +1,5 @@
 # Sosise
-This is a simple boilerplate built on top of different libraries like lodash, expressjs, dayjs, knex etc.
-The purpose of this boilerplate is to speedup and to standardize the develpment process.
+This is a simple boilerplate built on top of different libraries like lodash, expressjs, dayjs, knex, etc. The purpose of this boilerplate is to speedup and to standardize the development process.
 
 ## Documentation
 Documentation is available at https://sosise.github.io/sosise-docs
