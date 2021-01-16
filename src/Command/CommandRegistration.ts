@@ -5,19 +5,19 @@ import colors from 'colors';
 
 export default class CommandRegistration {
 
-    private commander: commander.Command;
+    private command: commander.Command;
 
     /**
      * Constructor
      */
-    constructor(com: commander.Command) {
-        this.commander = com;
+    constructor(command: commander.Command) {
+        this.command = command;
     }
 
     /**
      * Get list of commands
      */
-    public get listOfCommandFiles(): string[] {
+    private getListOfCommandFiles(): string[] {
         try {
             // Get list of command files
             let listOfCommandFiles = fs.readdirSync(process.cwd() + '/build/app/Console/Commands');
@@ -38,8 +38,17 @@ export default class CommandRegistration {
      */
     public registerApplicationCommands(): void {
         try {
+            // Get all available commands
+            const listOfCommandFiles = this.getListOfCommandFiles();
+
+            // Show user commands if they exist
+            if (listOfCommandFiles.length > 0) {
+                this.command.command('');
+                this.command.command('User:'.green);
+            }
+
             // Iterate through files
-            for (const commandFile of this.listOfCommandFiles) {
+            for (const commandFile of this.getListOfCommandFiles()) {
                 // Get command file path
                 const commandFilePath = process.cwd() + '/build/app/Console/Commands/' + commandFile;
 
@@ -109,7 +118,7 @@ export default class CommandRegistration {
                 }
 
                 // Add to commander
-                this.commander.addCommand(newCommand);
+                this.command.addCommand(newCommand);
             }
         } catch (error) {
             // Do nothing, commands could not be registered

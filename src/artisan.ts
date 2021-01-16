@@ -18,27 +18,23 @@ export default class Artisan {
     public run(argv: string[]): void {
         try {
             // Initialize commander
-            const program = new Command();
+            const command = new Command();
 
-            program
+            command
                 .name('./artisan'.green)
                 .usage('[command] [options]'.green)
                 .helpOption(false)
                 .addHelpCommand('help [command]', 'Display help for command'.dim);
 
             // Register available commands
-            const commandRegistration = new CommandRegistration(program);
-            if (commandRegistration.listOfCommandFiles.length > 0) {
-                program.command('');
-                program.command('User:'.green);
-                commandRegistration.registerApplicationCommands();
-            }
+            const commandRegistration = new CommandRegistration(command);
+            commandRegistration.registerApplicationCommands();
 
             // Artisan commands
-            program.command('');
-            program.command('Artisan:'.green);
+            command.command('');
+            command.command('Artisan:'.green);
 
-            program
+            command
                 .command('make:controller <name>')
                 .description('Create a new controller'.dim)
                 .action((name) => {
@@ -46,7 +42,7 @@ export default class Artisan {
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:unifier <name>')
                 .description('Create a new unifier'.dim)
                 .action((name) => {
@@ -54,7 +50,7 @@ export default class Artisan {
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:migration <name>')
                 .description('Create a new database migration'.dim)
                 .option('-c, --create', 'Migration will create table'.dim)
@@ -79,7 +75,7 @@ export default class Artisan {
                     instance.createMigrationForTableCreation();
                 });
 
-            program
+            command
                 .command('make:service <name>')
                 .description('Create a new service'.dim)
                 .action((name) => {
@@ -87,7 +83,7 @@ export default class Artisan {
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:repository <name>')
                 .description('Create a new repository and repository interface'.dim)
                 .action((name) => {
@@ -96,7 +92,7 @@ export default class Artisan {
                     instance.createRepositoryInterfaceFile();
                 });
 
-            program
+            command
                 .command('make:command <name>')
                 .description('Create a new command'.dim)
                 .action((name) => {
@@ -104,7 +100,7 @@ export default class Artisan {
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:middleware <name>')
                 .description('Create a new middleware'.dim)
                 .action((name) => {
@@ -112,7 +108,7 @@ export default class Artisan {
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:type <name>')
                 .description('Create a new type interface'.dim)
                 .action((name) => {
@@ -120,7 +116,7 @@ export default class Artisan {
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:enum <name>')
                 .description('Create a new enum'.dim)
                 .action((name) => {
@@ -128,9 +124,9 @@ export default class Artisan {
                     instance.createFile();
                 });
 
-            program.command(''); // Blanc line
+            command.command(''); // Blanc line
 
-            program
+            command
                 .command('migrate')
                 .description('Run the database migrations'.dim)
                 .action(async () => {
@@ -147,7 +143,7 @@ export default class Artisan {
                     }
                 });
 
-            program
+            command
                 .command('migrate:rollback')
                 .description('Rollback the last database migration'.dim)
                 .action(async () => {
@@ -164,10 +160,10 @@ export default class Artisan {
                     }
                 });
 
-            program.command(''); // Blanc line
+            command.command(''); // Blanc line
 
             // Parse cli arguments and execute actions
-            program.parse(argv);
+            command.parse(argv);
         }
         catch (error) {
             const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
