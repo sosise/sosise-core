@@ -43,6 +43,7 @@ export default class Server {
         // Initialize sentry
         const sentryConfig = require(process.cwd() + '/build/config/sentry').default;
         Sentry.init({
+            environment: process.env.APP_ENV,
             dsn: sentryConfig.dsn,
             integrations: [
                 // enable HTTP calls tracing
