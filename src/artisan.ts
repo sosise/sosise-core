@@ -30,9 +30,9 @@ export default class Artisan {
             const commandRegistration = new CommandRegistration(command);
             commandRegistration.registerApplicationCommands();
 
-            // Artisan commands
+            // Make commands
             command.command('');
-            command.command('Artisan:'.green);
+            command.command('Make'.green);
 
             command
                 .command('make:controller <name>')
@@ -124,7 +124,9 @@ export default class Artisan {
                     instance.createFile();
                 });
 
-            command.command(''); // Blanc line
+            // Make commands
+            command.command('');
+            command.command('Migrate'.green);
 
             command
                 .command('migrate')
@@ -160,7 +162,9 @@ export default class Artisan {
                     }
                 });
 
-            command.command(''); // Blanc line
+            // Make commands
+            command.command('');
+            command.command('Help'.green);
 
             // Parse cli arguments and execute actions
             command.parse(argv);

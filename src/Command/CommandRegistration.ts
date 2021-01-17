@@ -44,7 +44,7 @@ export default class CommandRegistration {
             // Show user commands if they exist
             if (listOfCommandFiles.length > 0) {
                 this.command.command('');
-                this.command.command('User:'.green);
+                this.command.command('User-defined'.green);
             }
 
             // Iterate through files
