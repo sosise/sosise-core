@@ -18,33 +18,43 @@ export default class Artisan {
     public run(argv: string[]): void {
         try {
             // Initialize commander
-            const program = new Command();
+            const command = new Command();
+
+            command
+                .name('./artisan'.green)
+                .usage('[command] [options]'.green)
+                .helpOption(false)
+                .addHelpCommand('help [command]', 'Display help for command'.dim);
 
             // Register available commands
-            const commandRegistration = new CommandRegistration(program);
+            const commandRegistration = new CommandRegistration(command);
             commandRegistration.registerApplicationCommands();
 
-            program
+            // Artisan commands
+            command.command('');
+            command.command('Artisan:'.green);
+
+            command
                 .command('make:controller <name>')
-                .description('Create a new controller class')
+                .description('Create a new controller'.dim)
                 .action((name) => {
                     const instance = new Controller(name);
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:unifier <name>')
-                .description('Create a new unifier class')
+                .description('Create a new unifier'.dim)
                 .action((name) => {
                     const instance = new Unifier(name);
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:migration <name>')
-                .description('Create a new database migration')
-                .option('-c, --create', 'Migration will create table')
-                .option('-u, --update', 'Migration will update table')
+                .description('Create a new database migration'.dim)
+                .option('-c, --create', 'Migration will create table'.dim)
+                .option('-u, --update', 'Migration will update table'.dim)
                 .action((name, options) => {
                     // If user wants to use creation migration
                     if (options.create) {
@@ -65,58 +75,60 @@ export default class Artisan {
                     instance.createMigrationForTableCreation();
                 });
 
-            program
+            command
                 .command('make:service <name>')
-                .description('Create a new service class')
+                .description('Create a new service'.dim)
                 .action((name) => {
                     const instance = new Service(name);
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:repository <name>')
-                .description('Create a new repository and repository interface classes')
+                .description('Create a new repository and repository interface'.dim)
                 .action((name) => {
                     const instance = new Repository(name);
                     instance.createRepositoryFile();
                     instance.createRepositoryInterfaceFile();
                 });
 
-            program
+            command
                 .command('make:command <name>')
-                .description('Create a new command class')
+                .description('Create a new command'.dim)
                 .action((name) => {
                     const instance = new MakeCommand(name);
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:middleware <name>')
-                .description('Create a new middleware class')
+                .description('Create a new middleware'.dim)
                 .action((name) => {
                     const instance = new Middleware(name);
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:type <name>')
-                .description('Create a new type interface')
+                .description('Create a new type interface'.dim)
                 .action((name) => {
                     const instance = new Type(name);
                     instance.createFile();
                 });
 
-            program
+            command
                 .command('make:enum <name>')
-                .description('Create a new enum')
+                .description('Create a new enum'.dim)
                 .action((name) => {
                     const instance = new Enum(name);
                     instance.createFile();
                 });
 
-            program
+            command.command(''); // Blanc line
+
+            command
                 .command('migrate')
-                .description('Run the database migrations')
+                .description('Run the database migrations'.dim)
                 .action(async () => {
                     try {
                         const instance = new Migrate();
@@ -131,9 +143,9 @@ export default class Artisan {
                     }
                 });
 
-            program
+            command
                 .command('migrate:rollback')
-                .description('Rollback the last database migration')
+                .description('Rollback the last database migration'.dim)
                 .action(async () => {
                     try {
                         const instance = new Migrate();
@@ -148,8 +160,10 @@ export default class Artisan {
                     }
                 });
 
+            command.command(''); // Blanc line
+
             // Parse cli arguments and execute actions
-            program.parse(argv);
+            command.parse(argv);
         }
         catch (error) {
             const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;

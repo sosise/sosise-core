@@ -5,19 +5,19 @@ import colors from 'colors';
 
 export default class CommandRegistration {
 
-    private commander: commander.Command;
+    private command: commander.Command;
 
     /**
      * Constructor
      */
-    constructor(com: commander.Command) {
-        this.commander = com;
+    constructor(command: commander.Command) {
+        this.command = command;
     }
 
     /**
-     * Register application commands
+     * Get list of commands
      */
-    public registerApplicationCommands(): void {
+    private getListOfCommandFiles(): string[] {
         try {
             // Get list of command files
             let listOfCommandFiles = fs.readdirSync(process.cwd() + '/build/app/Console/Commands');
@@ -27,8 +27,28 @@ export default class CommandRegistration {
                 return (element.includes('js') && element.includes('Command')) && (!element.includes('map'));
             });
 
+            return listOfCommandFiles;
+        } catch (error) {
+            return [];
+        }
+    }
+
+    /**
+     * Register application commands
+     */
+    public registerApplicationCommands(): void {
+        try {
+            // Get all available commands
+            const listOfCommandFiles = this.getListOfCommandFiles();
+
+            // Show user commands if they exist
+            if (listOfCommandFiles.length > 0) {
+                this.command.command('');
+                this.command.command('User:'.green);
+            }
+
             // Iterate through files
-            for (const commandFile of listOfCommandFiles) {
+            for (const commandFile of this.getListOfCommandFiles()) {
                 // Get command file path
                 const commandFilePath = process.cwd() + '/build/app/Console/Commands/' + commandFile;
 
@@ -39,8 +59,9 @@ export default class CommandRegistration {
                 const commandClassInstance = new commandClassImport.default();
 
                 // Register command and specify what to do when command is executed
-                const newCommand = commander.command(commandClassInstance.signature)
-                    .description(commandClassInstance.description)
+                const newCommand = commander
+                    .command(commandClassInstance.signature)
+                    .description(`${commandClassInstance.description}`.dim)
                     .action(async (cli) => {
                         // Perform double execution prevention only if singleExecution param is set to true in current command
                         if (commandClassInstance.singleExecution) {
@@ -64,7 +85,7 @@ export default class CommandRegistration {
                                     if (fileObject.signature === commandClassInstance.signature) {
                                         // Now check if pid exists
                                         if ((await findProcess('pid', fileObject.pid, true)).length > 0) {
-                                            // Pid found in processlist, exit prevent executing again
+                                            // Pid found in process list, exit prevent executing again
                                             console.log(colors.yellow(`Command ${commandClassInstance.signature} is running, do not run it until it's end`));
                                             process.exit(0);
                                         }
@@ -101,7 +122,7 @@ export default class CommandRegistration {
                 }
 
                 // Add to commander
-                this.commander.addCommand(newCommand);
+                this.command.addCommand(newCommand);
             }
         } catch (error) {
             // Do nothing, commands could not be registered
