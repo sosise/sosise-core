@@ -4,6 +4,9 @@ This is a simple boilerplate built on top of different libraries like lodash, ex
 ## Documentation
 Documentation is available at https://sosise.github.io/sosise-docs
 
+## Inspiration
+Sosise is inspired by Laravel
+
 ## Installation
 Install `sosise-cli` via `npm` or `yarn` globally.
 

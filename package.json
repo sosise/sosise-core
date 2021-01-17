@@ -1,11 +1,20 @@
 {
   "name": "sosise-core",
-  "version": "0.1.38",
+  "version": "0.1.40",
   "description": "Sosise",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
     "/build"
+  ],
+  "keywords": [
+    "sosise",
+    "sosise-cli",
+    "sosise-installer",
+    "installer",
+    "framework",
+    "express",
+    "laravel"
   ],
   "repository": {
     "type": "git",
