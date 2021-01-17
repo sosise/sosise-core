@@ -4,12 +4,41 @@ import { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
+import session from 'express-session';
+import SessionFileStore from 'session-file-store';
+import SessionMemoryStore from 'memorystore';
+import SessionInitializationException from './Exceptions/Session/SessionInitializationException';
+import fs from 'fs';
 
 export default class Server {
     public run(): void {
         // Instantiate app
         const app = express();
         const port = process.env.LISTEN_PORT || 10000;
+
+        // Session support
+        // Only support session if session config exists
+        if (fs.existsSync(process.cwd() + '/build/config/session.js')) {
+            app.set('trust proxy', 1); // trust first proxy
+            const sessionConfig = require(process.cwd() + '/build/config/session').default;
+
+            // Initialize session store
+            switch (sessionConfig.driver) {
+                case 'file':
+                    const FileStore = SessionFileStore(session);
+                    sessionConfig.store = new FileStore(sessionConfig.drivers[sessionConfig.driver]);
+                    break;
+
+                case 'memory':
+                    const MemoryStore = SessionMemoryStore(session);
+                    sessionConfig.store = new MemoryStore(sessionConfig.drivers[sessionConfig.driver]);
+                    break;
+
+                default:
+                    throw new SessionInitializationException('Session driver is not supported, let me know which driver you need, I will add it');
+            }
+            app.use(session(sessionConfig));
+        }
 
         // Initialize sentry
         const sentryConfig = require(process.cwd() + '/build/config/sentry').default;
