@@ -141,7 +141,7 @@ export default class Artisan {
                         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
                         const exceptionHandler = new Handler();
                         exceptionHandler.reportCommandException(error);
-                        process.exit(0);
+                        process.exit(1);
                     }
                 });
 
@@ -158,7 +158,7 @@ export default class Artisan {
                         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
                         const exceptionHandler = new Handler();
                         exceptionHandler.reportCommandException(error);
-                        process.exit(0);
+                        process.exit(1);
                     }
                 });
 
@@ -173,7 +173,7 @@ export default class Artisan {
             const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
             const exceptionHandler = new Handler();
             exceptionHandler.reportCommandException(error);
-            process.exit(0);
+            process.exit(1);
         }
     }
 }

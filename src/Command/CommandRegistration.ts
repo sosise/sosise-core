@@ -90,7 +90,7 @@ export default class CommandRegistration {
                                             // At this point we are sure that process exists
                                             // Pid found in process list, exit, preventing executing again
                                             console.log(colors.yellow(`Command ${commandClassInstance.signature} is running, do not run it until it's end`));
-                                            process.exit(0);
+                                            process.exit(1);
                                         } catch (error) {
                                             // If pid not found, do nothing
                                         }
