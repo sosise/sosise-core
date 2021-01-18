@@ -1,6 +1,6 @@
 {
   "name": "sosise-core",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "description": "Sosise",
   "main": "build/index.js",
   "types": "build/index.d.ts",
