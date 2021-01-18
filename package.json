@@ -1,6 +1,6 @@
 {
   "name": "sosise-core",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "Sosise",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -21,7 +21,7 @@
     "url": "https://github.com/sosise/sosise-core"
   },
   "scripts": {
-    "build": "rm -rf build && tsc && cp -R src/Artisan/FileTemplates build/Artisan/FileTemplates",
+    "build": "rm -rf build ; tsc ; cp -R src/Artisan/FileTemplates build/Artisan/FileTemplates",
     "watch": "npm build && tsc -w",
     "pub": "npm version patch --no-git-tag-version && npm run build && npm publish",
     "cscheck": "./node_modules/.bin/tslint --project tsconfig.json",

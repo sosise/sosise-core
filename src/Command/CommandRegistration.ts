@@ -66,7 +66,7 @@ export default class CommandRegistration {
                         // Perform double execution prevention only if singleExecution param is set to true in current command
                         if (commandClassInstance.singleExecution) {
                             // Specify tmp directory
-                            const tmpDirectory = (process.env.TMPDIR || process.env.TEMP)!;
+                            const tmpDirectory = '/tmp/';
 
                             // Get list of all *.pid files within tmp directory
                             let listOfPidFiles = fs.readdirSync(tmpDirectory);
