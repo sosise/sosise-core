@@ -1,6 +1,5 @@
 import commander from 'commander';
 import fs from 'fs';
-import findProcess from 'find-process';
 import colors from 'colors';
 
 export default class CommandRegistration {
@@ -84,10 +83,16 @@ export default class CommandRegistration {
                                     // If pid file contains signature what we are executing right now
                                     if (fileObject.signature === commandClassInstance.signature) {
                                         // Now check if pid exists
-                                        if ((await findProcess('pid', fileObject.pid, true)).length > 0) {
-                                            // Pid found in process list, exit prevent executing again
+                                        try {
+                                            // Try to send signal 0 to the pid
+                                            process.kill(fileObject.pid, 0);
+
+                                            // At this point we are sure that process exists
+                                            // Pid found in process list, exit, preventing executing again
                                             console.log(colors.yellow(`Command ${commandClassInstance.signature} is running, do not run it until it's end`));
                                             process.exit(0);
+                                        } catch (error) {
+                                            // If pid not found, do nothing
                                         }
                                     }
                                 } catch (error) {
