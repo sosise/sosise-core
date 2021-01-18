@@ -4,7 +4,7 @@ export default class %name% {
     /**
      * This method handles the middleware
      */
-    public async handle(request: Request, response: Response, next: NextFunction): Promise<void> {
+    public async handle(request: Request, response: Response, next: NextFunction): Promise<any> {
         // Before
         next();
         // After
