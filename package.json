@@ -1,6 +1,6 @@
 {
   "name": "sosise-core",
-  "version": "0.1.47",
+  "version": "0.1.48",
   "description": "Sosise",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -32,6 +32,7 @@
   "dependencies": {
     "@sentry/node": "^5.29.2",
     "@sentry/tracing": "^5.29.2",
+    "collect.js": "^4.28.6",
     "colors": "^1.4.0",
     "commander": "^6.2.1",
     "dayjs": "^1.10.2",
