@@ -14,6 +14,6 @@ export default class IOC {
         }
 
         // Nope requested name does not exists in ioc.ts config
-        throw new IOCMakeException('IOC could not resolve class, please check IOC.ts and register needed name there', name);
+        throw new IOCMakeException('IOC could not resolve class, please check your config/ioc.ts config and register needed name there', name);
     }
 }
