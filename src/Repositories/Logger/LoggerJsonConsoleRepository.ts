@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import LoggerRepositoryInterface from './LoggerRepositoryInterface';
 
-export default class LoggerConsoleRepository implements LoggerRepositoryInterface {
+export default class LoggerJsonConsoleRepository implements LoggerRepositoryInterface {
     /**
      * Log debug message
      */
