@@ -10,6 +10,12 @@ export default class LoggerService {
     constructor(repository: LoggerRepositoryInterface) {
         this.repository = repository;
     }
+    /**
+     * Log debug message
+     */
+    public debug(message: string, params: any = null): void {
+        this.repository.debug(message, params);
+    }
 
     /**
      * Log info message
@@ -30,5 +36,12 @@ export default class LoggerService {
      */
     public error(message: string, params: any = null): void {
         this.repository.error(message, params);
+    }
+
+    /**
+     * Log critical message
+     */
+    public critical(message: string, params: any = null): void {
+        this.repository.critical(message, params);
     }
 }
