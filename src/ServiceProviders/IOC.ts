@@ -29,21 +29,31 @@ export default class IOC {
     /**
      * Get object from IOC
      */
-    public static make(name: any): any {
+    public static make<T>(serviceName: T): any {
         // Require ioc config
         const iocConfig = require(process.cwd() + '/build/config/ioc').default;
 
+        // Initialize config key
+        let configKey = '';
+
+        // Decide what to do depending on which type was given
+        if (typeof serviceName !== 'string' && (serviceName as any).name !== undefined) {
+            configKey = (serviceName as any).name;
+        } else {
+            configKey = serviceName as any;
+        }
+
         // Check if requested name exists in ioc.ts config
-        if (iocConfig.normal[name]) {
-            return iocConfig.normal[name]();
+        if (iocConfig.normal[configKey]) {
+            return iocConfig.normal[configKey]();
         }
 
         // Check if requested name exists in local coreServices property
-        if (this.coreServices.normal[name]) {
-            return this.coreServices.normal[name]();
+        if (this.coreServices.normal[configKey]) {
+            return this.coreServices.normal[configKey]();
         }
 
         // Nope requested name does not exists in ioc.ts config
-        throw new IOCMakeException('IOC could not resolve class, please check your config/ioc.ts config and register needed name there', name);
+        throw new IOCMakeException('IOC could not resolve class, please check your config/ioc.ts config and register needed name there', configKey);
     }
 }
