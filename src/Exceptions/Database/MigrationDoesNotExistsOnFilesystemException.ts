@@ -15,7 +15,6 @@ export default class MigrationDoesNotExistsOnFilesystemException extends Excepti
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: 2004,
             message: exception.message,
             data: null
         };

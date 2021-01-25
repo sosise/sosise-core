@@ -4,6 +4,8 @@ import ExceptionResponse from "../../Types/ExceptionResponse";
 export default class DatabaseConfigurationException extends Exception {
 
     public connectionName: string;
+    protected httpCode = 500;
+    protected code = 3000;
 
     /**
      * Constructor
@@ -18,7 +20,8 @@ export default class DatabaseConfigurationException extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: 2002,
+            code: this.httpCode,
+            httpCode: this.httpCode,
             message: exception.message,
             data: {
                 connectionName: this.connectionName

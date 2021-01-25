@@ -4,6 +4,8 @@ import Exception from '../Exception';
 export default class IOCMakeException extends Exception {
 
     public className: string;
+    protected httpCode = 500;
+    protected code = 3001;
 
     /**
      * Constructor
@@ -18,7 +20,8 @@ export default class IOCMakeException extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: 2005,
+            code: this.httpCode,
+            httpCode: this.httpCode,
             message: exception.message,
             data: {
                 classToResolve: this.className

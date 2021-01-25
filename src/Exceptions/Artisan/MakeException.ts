@@ -14,7 +14,6 @@ export default class MakeException extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: 2001,
             message: this.message,
             data: {
                 stack: exception.stack!.split('\n')

@@ -15,7 +15,6 @@ export default class DefaultConnectionNotSetException extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: 2003,
             message: exception.message,
             data: null
         };

@@ -4,6 +4,8 @@ import Exception from '../Exception';
 export default class ValidationException extends Exception {
 
     public validationErrors: string[];
+    protected httpCode = 422;
+    protected code = 3002;
 
     /**
      * Constructor
@@ -18,8 +20,8 @@ export default class ValidationException extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: 2006,
-            httpCode: 422,
+            code: this.httpCode,
+            httpCode: this.httpCode,
             message: exception.message,
             data: this.validationErrors
         };

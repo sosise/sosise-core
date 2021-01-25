@@ -14,8 +14,6 @@ export default class SessionInitializationException extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: 2007,
-            httpCode: 500,
             message: exception.message,
             data: null
         };

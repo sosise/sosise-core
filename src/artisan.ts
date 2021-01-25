@@ -10,6 +10,7 @@ import Middleware from './Artisan/Make/Middleware';
 import Type from './Artisan/Make/Type';
 import Enum from './Artisan/Make/Enum';
 import CommandRegistration from './Command/CommandRegistration';
+import Exception from './Artisan/Make/Exception';
 
 export default class Artisan {
     /**
@@ -121,6 +122,14 @@ export default class Artisan {
                 .description('Create a new enum'.dim)
                 .action((name) => {
                     const instance = new Enum(name);
+                    instance.createFile();
+                });
+
+            command
+                .command('make:exception <name>')
+                .description('Create a new exception'.dim)
+                .action((name) => {
+                    const instance = new Exception(name);
                     instance.createFile();
                 });
 
