@@ -75,7 +75,6 @@ export default class Migrate {
 
             // Skip if file was already migrated
             if (lodash.map(migrationRows, 'migration').includes(migrationName)) {
-                console.log(colors.yellow(`Migration ${migrationName} was already migrated, skipping`));
                 continue;
             }
 
