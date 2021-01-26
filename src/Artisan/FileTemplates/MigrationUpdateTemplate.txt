@@ -1,7 +1,7 @@
 import BaseSchema from 'sosise-core/build/Database/BaseSchema';
 
 /**
- * If you need more information, see: http://knexjs.org/
+ * If you need more information, see: http://knexjs.org/#Schema
  */
 export default class CreateOrderTable extends BaseSchema {
 
