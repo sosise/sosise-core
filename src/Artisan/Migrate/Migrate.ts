@@ -41,7 +41,7 @@ export default class Migrate {
     }
 
     /**
-     * Run all migrations
+     * Run the database migrations
      */
     public async run(): Promise<void> {
         // Proceed only when migrations path exists
@@ -79,7 +79,7 @@ export default class Migrate {
             }
 
             // Log
-            console.log(colors.yellow(`Start migrating ${migrationName}`));
+            console.log(`Start migrating ${migrationName}`.yellow);
 
             // Get migration file path
             const migrationFilePath = `${process.cwd()}${this.migrationsPath}/${migrationName}.js`;
@@ -100,12 +100,12 @@ export default class Migrate {
             });
 
             // Log
-            console.log(colors.green(`Done migrating ${migrationName}`));
+            console.log(`Done migrating ${migrationName}`.green);
         }
     }
 
     /**
-     * Rollback previous migrations
+     * Rollback the last database migration
      */
     public async rollback(): Promise<void> {
         // First of all get all rows from migrations table
@@ -120,7 +120,7 @@ export default class Migrate {
         // Iterate through all migrations we want to rollback
         for (const migrationName of migrationNamesToRollback) {
             // Log
-            console.log(colors.yellow(`Rolling back migration ${migrationName}`));
+            console.log(`Rolling back migration ${migrationName}`.yellow);
 
             // Get migration file path
             const migrationFilePath = `${process.cwd()}${this.migrationsPath}/${migrationName}.js`;
@@ -143,7 +143,40 @@ export default class Migrate {
             await this.dbConnection.table('migrations').where('batch', lastBatchNumber).delete();
 
             // Log
-            console.log(colors.green(`Done rolling back migration ${migrationName}`));
+            console.log(`Done rolling back migration ${migrationName}`.green);
         }
+    }
+
+    /**
+     * Drop all tables and re-run all migrations
+     */
+    public async fresh(): Promise<void> {
+        // Get all tables
+        const allTables = await this.dbConnection.schema.raw('SHOW TABLES;');
+
+        // Log
+        console.log('Drop all tables'.dim);
+
+        // Iterate through all tables and drop them
+        for (const tableRow of allTables[0]) {
+            // Get table name
+            const tableName = tableRow.Tables_in_express;
+
+            // Drop table
+            await this.dbConnection.schema.dropTableIfExists(tableName);
+
+            // Log
+            console.log(`Table ${tableName} dropped`.green);
+        }
+
+        // Log
+        console.log();
+        console.log(`Migrating all migrations`.dim);
+
+        // Create migrations table if needed
+        await this.createMigrationsTableIfNeeded();
+
+        // Now run migrate
+        await this.run();
     }
 }

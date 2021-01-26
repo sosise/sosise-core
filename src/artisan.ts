@@ -24,7 +24,6 @@ export default class Artisan {
             command
                 .name('./artisan'.green)
                 .usage('[command] [options]'.green)
-                .helpOption(false)
                 .addHelpCommand('help [command]', 'Display help for command'.dim);
 
             // Register available commands
@@ -157,11 +156,41 @@ export default class Artisan {
             command
                 .command('migrate:rollback')
                 .description('Rollback the last database migration'.dim)
-                .action(async () => {
+                .option('-f, --force', 'Force dropping all tables and re-run all migrations', false)
+                .action(async (cli) => {
                     try {
+                        // Stop the command if env is NOT local and no force is used
+                        if (process.env.APP_ENV !== 'local' && !cli.force) {
+                            console.log(`Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`.red);
+                            console.log(`See ./artisan migrate:rollback --help for more information`.dim);
+                            process.exit(0);
+                        }
                         const instance = new Migrate();
                         await instance.createMigrationsTableIfNeeded();
                         await instance.rollback();
+                        process.exit(0);
+                    } catch (error) {
+                        const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                        const exceptionHandler = new Handler();
+                        exceptionHandler.reportCommandException(error);
+                        process.exit(1);
+                    }
+                });
+
+            command
+                .command('migrate:fresh')
+                .description('Drop all tables and re-run all migrations'.dim)
+                .option('-f, --force', 'Force dropping all tables and re-run all migrations', false)
+                .action(async (cli) => {
+                    try {
+                        // Stop the command if env is NOT local and no force is used
+                        if (process.env.APP_ENV !== 'local' && !cli.force) {
+                            console.log(`Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`.red);
+                            console.log(`See ./artisan migrate:fresh --help for more information`.dim);
+                            process.exit(0);
+                        }
+                        const instance = new Migrate();
+                        await instance.fresh();
                         process.exit(0);
                     } catch (error) {
                         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
