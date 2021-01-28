@@ -14,6 +14,7 @@ import Exception from './Artisan/Make/Exception';
 import fs from 'fs';
 import path from 'path';
 import figlet from 'figlet';
+import Config from './Artisan/Make/Config';
 
 export default class Artisan {
     /**
@@ -138,6 +139,14 @@ export default class Artisan {
                 .description('Create a new exception'.dim)
                 .action((name) => {
                     const instance = new Exception(name);
+                    instance.createFile();
+                });
+
+            command
+                .command('make:config <name>')
+                .description('Create a new config'.dim)
+                .action((name) => {
+                    const instance = new Config(name);
                     instance.createFile();
                 });
 

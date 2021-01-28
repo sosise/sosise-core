@@ -1,0 +1,9 @@
+const %name% = {
+    someGroupedConfigs: {
+        exampleUsername: process.env.EXAMPLE_USERNAME || null,
+        examplePassword: process.env.EXAMPLE_PASSWORD || null,
+    },
+    example: true
+};
+
+export default %name%;

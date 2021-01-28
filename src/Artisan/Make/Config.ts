@@ -1,19 +1,11 @@
+import Base from './Base';
 import MakeException from '../../Exceptions/Artisan/MakeException';
 import fs from 'fs';
 import colors from 'colors';
 
-export default abstract class Base {
-
-    protected abstract templatePath: string;
-    protected abstract createPath: string;
-    protected name: string;
-
-    /**
-     * Constructor
-     */
-    constructor(name: string) {
-        this.name = name;
-    }
+export default class Config extends Base {
+    protected templatePath = __dirname + '/../FileTemplates/ConfigTemplate.txt';
+    protected createPath = 'src/config';
 
     /**
      * Create file
@@ -21,23 +13,13 @@ export default abstract class Base {
     public createFile(): void {
         try {
             let templateFileContent = fs.readFileSync(this.templatePath, 'utf8');
-            templateFileContent = templateFileContent.replace(new RegExp('%name%', 'g'), this.name.charAt(0).toUpperCase() + this.name.slice(1));
+            templateFileContent = templateFileContent.replace(new RegExp('%name%', 'g'), this.name.toLocaleLowerCase() + 'Config');
             const pathOfNewFile = `${process.cwd()}/${this.createPath}/${this.name}.ts`;
             this.throwExceptionIfFileAlreadyExists(pathOfNewFile);
             fs.writeFileSync(pathOfNewFile, templateFileContent);
             console.log(colors.green(`Created ${this.constructor.name}:`), `${this.createPath}/${this.name}.ts`);
         } catch (error) {
             throw new MakeException(error.message);
-        }
-    }
-
-    /**
-     * Throw exception if file already exists
-     */
-    public throwExceptionIfFileAlreadyExists(filePath: string): void {
-        if (fs.existsSync(filePath)) {
-            console.log(colors.red(`File already exists ${filePath}`));
-            process.exit(0);
         }
     }
 }
