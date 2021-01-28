@@ -23,7 +23,7 @@ export default class %name% extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: this.httpCode, // optional
+            code: this.code, // optional
             httpCode: this.httpCode, // optional
             message: exception.message,
             data: {

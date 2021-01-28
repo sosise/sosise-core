@@ -20,7 +20,7 @@ export default class ValidationException extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: this.httpCode,
+            code: this.code,
             httpCode: this.httpCode,
             message: exception.message,
             data: this.validationErrors
