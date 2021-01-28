@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import { Command, version } from 'commander';
 import Controller from './Artisan/Make/Controller';
 import Unifier from './Artisan/Make/Unifier';
 import Migrate from './Artisan/Migrate/Migrate';
@@ -11,6 +11,9 @@ import Type from './Artisan/Make/Type';
 import Enum from './Artisan/Make/Enum';
 import CommandRegistration from './Command/CommandRegistration';
 import Exception from './Artisan/Make/Exception';
+import fs from 'fs';
+import path from 'path';
+import figlet from 'figlet';
 
 export default class Artisan {
     /**
@@ -21,8 +24,14 @@ export default class Artisan {
             // Initialize commander
             const command = new Command();
 
+            // Get version of the sosise-core
+            const packageJsonFileContent = fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8');
+            const artisanString = figlet.textSync('Artisan').magenta;
+            const versionString = `          sosise-core: ${JSON.parse(packageJsonFileContent).version}`.dim;
+
             command
                 .name('./artisan'.green)
+                .description(`${artisanString}\n${versionString}`)
                 .usage('[command] [options]'.green)
                 .addHelpCommand('help [command]', 'Display help for command'.dim);
 
