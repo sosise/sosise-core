@@ -26,17 +26,24 @@ export default class Database {
      * Get connection
      */
     public static getConnection(connectionName: string): Database {
+        // Iterate through singleton instances and try to find already instantiated one
+        // If found return it
         for (const element of Database.instances) {
             if (element.connectionName === connectionName && element.instance !== null) {
                 return element.instance;
             }
         }
 
+        // Ups singleton does not exists, instantiate object
         const self = new Database(connectionName);
+
+        // Remember in static property
         Database.instances.push({
             connectionName,
             instance: self
         });
+
+        // Return
         return self;
     }
 }
