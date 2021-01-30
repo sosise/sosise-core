@@ -95,11 +95,17 @@ export default class Artisan {
 
             command
                 .command('make:repository <name>')
+                .option('-t, --test', 'Make test repository also'.dim)
                 .description('Create a new repository and repository interface'.dim)
-                .action((name) => {
+                .action((name, options) => {
                     const instance = new Repository(name);
                     instance.createRepositoryFile();
                     instance.createRepositoryInterfaceFile();
+
+                    // Create a test repository if needed
+                    if (options.test) {
+                        instance.createTestRepositoryFile();
+                    }
                 });
 
             command

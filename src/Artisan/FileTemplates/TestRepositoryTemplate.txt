@@ -1,4 +1,4 @@
-import %name%Interface from './%name%Interface';
+import %name%Interface from '../../app/Repositories/%name%Interface';
 
 export default class %name% implements %name%Interface {
     /**
