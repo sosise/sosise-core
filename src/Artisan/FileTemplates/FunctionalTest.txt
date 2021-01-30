@@ -1,0 +1,9 @@
+/**
+ * Jest test framework documentation: https://jestjs.io/docs/en/getting-started
+ */
+describe("This is a sample test suit", () => {
+    test("This is a sample test", () => {
+        const someVariable: number = 42;
+        expect(someVariable).toEqual(42);
+    });
+});
