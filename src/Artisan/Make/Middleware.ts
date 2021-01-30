@@ -18,7 +18,7 @@ export default class Middleware extends Base {
             this.throwExceptionIfFileAlreadyExists(pathOfNewFile);
             fs.writeFileSync(pathOfNewFile, templateFileContent);
             console.log(colors.green('Created Middleware:'), `${this.createPath}/${this.name}.ts`);
-            console.log(colors.yellow(`Dont't forget to register the middleware in src/app/Http/Middlewares/Kernel.ts`));
+            console.log(colors.yellow(`Don't forget to register the middleware in src/app/Http/Middlewares/Kernel.ts`));
         } catch (error) {
             throw new MakeException(error.message);
         }
