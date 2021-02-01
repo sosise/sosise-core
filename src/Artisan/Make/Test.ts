@@ -3,9 +3,9 @@ import colors from 'colors';
 import MakeException from '../../Exceptions/Artisan/MakeException';
 
 export default class Test {
-    protected unitTestTemplatePath = __dirname + '/../FileTemplates/UnitTest.txt';
+    protected unitTestTemplatePath = __dirname + '/../FileTemplates/UnitTestTemplate.txt';
     protected unitTestsPath = 'src/tests/unit';
-    protected functionalTestTemplatePath = __dirname + '/../FileTemplates/FunctionalTest.txt';
+    protected functionalTestTemplatePath = __dirname + '/../FileTemplates/FunctionalTestTemplate.txt';
     protected functionalTestsPath = 'src/tests/functional';
 
     protected name: string;
