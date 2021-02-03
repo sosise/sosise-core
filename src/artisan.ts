@@ -15,6 +15,7 @@ import fs from 'fs';
 import path from 'path';
 import figlet from 'figlet';
 import Config from './Artisan/Make/Config';
+import Test from './Artisan/Make/Test';
 
 export default class Artisan {
     /**
@@ -95,11 +96,17 @@ export default class Artisan {
 
             command
                 .command('make:repository <name>')
+                .option('-t, --test', 'Make test repository also'.dim)
                 .description('Create a new repository and repository interface'.dim)
-                .action((name) => {
+                .action((name, options) => {
                     const instance = new Repository(name);
                     instance.createRepositoryFile();
                     instance.createRepositoryInterfaceFile();
+
+                    // Create a test repository if needed
+                    if (options.test) {
+                        instance.createTestRepositoryFile();
+                    }
                 });
 
             command
@@ -148,6 +155,30 @@ export default class Artisan {
                 .action((name) => {
                     const instance = new Config(name);
                     instance.createFile();
+                });
+
+            command
+                .command('make:test <name>')
+                .description('Create a new test'.dim)
+                .option('-u, --unit', 'Make unit test'.dim)
+                .option('-f, --functional', 'Make unit test'.dim)
+                .action((name, options) => {
+                    const instance = new Test(name);
+
+                    // Create Unit test if user wants to do that
+                    if (options.unit) {
+                        instance.createUnitTestFile();
+                        return;
+                    }
+
+                    // Create Unit test if user wants to do that
+                    if (options.functional) {
+                        instance.createFunctionalTestFile();
+                        return;
+                    }
+
+                    // If nothing specified, we assume that user wants create unit test
+                    instance.createUnitTestFile();
                 });
 
             // Make commands
