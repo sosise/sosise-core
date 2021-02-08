@@ -4,9 +4,9 @@ import MakeException from '../../Exceptions/Artisan/MakeException';
 
 export default class Test {
     protected unitTestTemplatePath = __dirname + '/../FileTemplates/UnitTestTemplate.txt';
-    protected unitTestsPath = 'src/tests/unit';
+    protected unitTestsPath = 'src/tests/Unit';
     protected functionalTestTemplatePath = __dirname + '/../FileTemplates/FunctionalTestTemplate.txt';
-    protected functionalTestsPath = 'src/tests/functional';
+    protected functionalTestsPath = 'src/tests/Functional';
 
     protected name: string;
 

@@ -8,7 +8,7 @@ export default class Repository {
     protected repositoryInterfaceTemplatePath = __dirname + '/../FileTemplates/RepositoryInterfaceTemplate.txt';
     protected testRepositoryTemplatePath = __dirname + '/../FileTemplates/TestRepositoryTemplate.txt';
     protected createPath = 'src/app/Repositories';
-    protected testRepositoriesDirPath = 'src/tests/repositories';
+    protected testRepositoriesDirPath = 'src/tests/Repositories';
 
     protected name: string;
 
