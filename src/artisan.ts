@@ -197,8 +197,9 @@ export default class Artisan {
                     } catch (error) {
                         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
                         const exceptionHandler = new Handler();
-                        exceptionHandler.reportCommandException(error);
-                        process.exit(1);
+                        exceptionHandler.reportCommandException(error).then(() => {
+                            process.exit(1);
+                        });
                     }
                 });
 
@@ -221,8 +222,9 @@ export default class Artisan {
                     } catch (error) {
                         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
                         const exceptionHandler = new Handler();
-                        exceptionHandler.reportCommandException(error);
-                        process.exit(1);
+                        exceptionHandler.reportCommandException(error).then(() => {
+                            process.exit(1);
+                        });
                     }
                 });
 
@@ -244,8 +246,9 @@ export default class Artisan {
                     } catch (error) {
                         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
                         const exceptionHandler = new Handler();
-                        exceptionHandler.reportCommandException(error);
-                        process.exit(1);
+                        exceptionHandler.reportCommandException(error).then(() => {
+                            process.exit(1);
+                        });
                     }
                 });
 
@@ -259,8 +262,9 @@ export default class Artisan {
         catch (error) {
             const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
             const exceptionHandler = new Handler();
-            exceptionHandler.reportCommandException(error);
-            process.exit(1);
+            exceptionHandler.reportCommandException(error).then(() => {
+                process.exit(1);
+            });
         }
     }
 }

@@ -110,10 +110,10 @@ export default class CommandRegistration {
                         // Run handle method of the command
                         commandClassInstance.handle(cli).then(() => {
                             process.exit(0);
-                        }).catch((error) => {
+                        }).catch(async (error) => {
                             const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
                             const exceptionHandler = new Handler();
-                            exceptionHandler.reportCommandException(error);
+                            await exceptionHandler.reportCommandException(error);
                         });
                     });
 
