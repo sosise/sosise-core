@@ -114,6 +114,7 @@ export default class CommandRegistration {
                             const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
                             const exceptionHandler = new Handler();
                             await exceptionHandler.reportCommandException(error);
+                            process.exit(1);
                         });
                     });
 
