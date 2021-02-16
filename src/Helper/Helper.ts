@@ -53,4 +53,11 @@ export default class Helper {
             colors: true
         }));
     }
+
+    /**
+     * Sleep amount of seconds
+     */
+    public static sleep(milliseconds: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, milliseconds));
+    }
 }

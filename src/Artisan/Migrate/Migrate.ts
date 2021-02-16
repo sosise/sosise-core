@@ -1,7 +1,6 @@
 import fs from 'fs';
 import knex from 'knex';
 import lodash from 'lodash';
-import colors from 'colors';
 import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
 import Database from '../../Database/Database';
 import MigrationDoesNotExistsOnFilesystemException from '../../Exceptions/Database/MigrationDoesNotExistsOnFilesystemException';
@@ -63,7 +62,7 @@ export default class Migrate {
         // Get list of migration files
         let listOfMigrationFiles = fs.readdirSync(process.cwd() + this.migrationsPath);
 
-        // Filter out only js files with postfix Command
+        // Filter out only js files
         listOfMigrationFiles = listOfMigrationFiles.filter((element) => {
             return (element.includes('js') && !element.includes('map'));
         });

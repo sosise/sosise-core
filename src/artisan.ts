@@ -16,6 +16,8 @@ import path from 'path';
 import figlet from 'figlet';
 import Config from './Artisan/Make/Config';
 import Test from './Artisan/Make/Test';
+import MakeSeed from './Artisan/Make/Seed';
+import Seed from './Artisan/Seed/Seed';
 
 export default class Artisan {
     /**
@@ -84,6 +86,14 @@ export default class Artisan {
                     // If nothing specified, we assume that user wants to use creation migration
                     const instance = new Migration(name);
                     instance.createMigrationForTableCreation();
+                });
+
+            command
+                .command('make:seed <name>')
+                .description('Create a new seed'.dim)
+                .action((name) => {
+                    const instance = new MakeSeed(name);
+                    instance.createFile();
                 });
 
             command
@@ -242,6 +252,27 @@ export default class Artisan {
                         }
                         const instance = new Migrate();
                         await instance.fresh();
+                        process.exit(0);
+                    } catch (error) {
+                        const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                        const exceptionHandler = new Handler();
+                        exceptionHandler.reportCommandException(error).then(() => {
+                            process.exit(1);
+                        });
+                    }
+                });
+
+            // Make commands
+            command.command('');
+            command.command('Seed'.green);
+
+            command
+                .command('seed')
+                .description('Run the database seeds'.dim)
+                .action(async () => {
+                    try {
+                        const instance = new Seed();
+                        await instance.run();
                         process.exit(0);
                     } catch (error) {
                         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;

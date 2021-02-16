@@ -1,0 +1,29 @@
+import BaseSchema from 'sosise-core/build/Database/BaseSchema';
+import * as faker from 'faker';
+
+/**
+ * If you need more information, see: http://knexjs.org/#Schema ; https://www.npmjs.com/package/faker
+ */
+export default class %name% extends BaseSchema {
+
+    protected tableName = 'orders';
+
+    /**
+     * Run seed
+     */
+    public async run(): Promise<void> {
+        // Prepare data to seed
+        const data: any = [];
+
+        // Generate 100 rows
+        for (let row = 0; row < 100; row++) {
+            data.push({
+                example_field_1: faker.name.firstName(),
+                example_field_2: faker.date.between('2020-01-01', '2021-12-31')
+            });
+        }
+
+        // Insert to table
+        await this.dbConnection.table(this.tableName).insert(data);
+    }
+}
