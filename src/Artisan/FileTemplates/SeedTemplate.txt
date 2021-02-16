@@ -6,7 +6,7 @@ import * as faker from 'faker';
  */
 export default class %name% extends BaseSchema {
 
-    protected tableName = 'orders';
+    protected tableName = 'table_name_comes_here';
 
     /**
      * Run seed
