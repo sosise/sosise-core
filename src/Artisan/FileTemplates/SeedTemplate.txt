@@ -5,7 +5,14 @@ import * as faker from 'faker';
  * If you need more information, see: http://knexjs.org/#Schema ; https://www.npmjs.com/package/faker
  */
 export default class %name% extends BaseSchema {
+    /**
+     * Restrict running the seed only in a local environment (APP_ENV=local)
+     */
+    protected onlyInLocalEnvironment = false;
 
+    /**
+     * Table name where data should be inserted in
+     */
     protected tableName = 'table_name_comes_here';
 
     /**

@@ -269,9 +269,10 @@ export default class Artisan {
             command
                 .command('seed')
                 .description('Run the database seeds'.dim)
-                .action(async () => {
+                .option('-f, --force', 'Force seeding even if seeds are restricted to be run in a local environment', false)
+                .action(async (cli) => {
                     try {
-                        const instance = new Seed();
+                        const instance = new Seed(cli);
                         await instance.run();
                         process.exit(0);
                     } catch (error) {
