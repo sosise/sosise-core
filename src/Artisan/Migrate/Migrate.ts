@@ -159,7 +159,7 @@ export default class Migrate {
         // Iterate through all tables and drop them
         for (const tableRow of allTables[0]) {
             // Get table name
-            const tableName = tableRow.Tables_in_express;
+            const tableName = tableRow[Object.keys(tableRow)[0]];
 
             // Drop table
             await this.dbConnection.schema.dropTableIfExists(tableName);
