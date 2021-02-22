@@ -42,7 +42,6 @@ export default class LoggerPrettyConsoleRepository implements LoggerRepositoryIn
      * Compose and return a pretty string for logger
      */
     private makePrettyString(level: 'debug' | 'info' | 'warning' | 'error' | 'critical', message: string, params: any = null): string {
-
         const levelString: string = (() => {
             switch (level) {
                 case 'debug':
@@ -58,8 +57,10 @@ export default class LoggerPrettyConsoleRepository implements LoggerRepositoryIn
             }
         })();
 
-        const output: string = `${colors.dim(dayjs().format('YYYY-MM-DD HH:mm:ss'))} ${levelString} ${message} ${(params !== null) ? colors.cyan(params) : ''}`;
+        // Prepare a string
+        const outputString: string = `${colors.dim(dayjs().format('YYYY-MM-DD HH:mm:ss'))} ${levelString} ${message} ${(params !== null) ? colors.cyan(params) : ''}`;
 
-        return output;
+        // Return a composed string
+        return outputString;
     }
 }
