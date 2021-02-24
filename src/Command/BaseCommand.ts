@@ -3,7 +3,7 @@ import commander from 'commander';
 export interface OptionType {
     flag: string;
     description: string;
-    default?: string | boolean | undefined;
+    default?: string | boolean | undefined | any;
     required?: boolean;
 }
 
