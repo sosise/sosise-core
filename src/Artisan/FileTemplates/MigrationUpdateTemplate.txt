@@ -13,6 +13,7 @@ export default class CreateOrderTable extends BaseSchema {
     public async up(): Promise<void> {
         await this.dbConnection.schema.alterTable(this.tableName, (table) => {
             table.string('new_field').defaultTo(null);
+            table.integer('existing_int_field').index().alter();
         });
     }
 
@@ -22,6 +23,7 @@ export default class CreateOrderTable extends BaseSchema {
     public async down(): Promise<void> {
         await this.dbConnection.schema.alterTable(this.tableName, (table) => {
             table.dropColumn('new_field');
+            table.integer('existing_int_field').alter();
         });
     }
 }
