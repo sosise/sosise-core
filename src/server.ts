@@ -17,27 +17,33 @@ export default class Server {
         const port = process.env.LISTEN_PORT || 10000;
 
         // Session support
-        // Only support session if session config exists
+        // Check if session config exists
         if (fs.existsSync(process.cwd() + '/build/config/session.js')) {
-            app.set('trust proxy', 1); // trust first proxy
+            // Require session config
             const sessionConfig = require(process.cwd() + '/build/config/session').default;
 
-            // Initialize session store
-            switch (sessionConfig.driver) {
-                case 'file':
-                    const FileStore = SessionFileStore(session);
-                    sessionConfig.store = new FileStore(sessionConfig.drivers[sessionConfig.driver]);
-                    break;
+            // Only if sessions are enabled in the config
+            if (sessionConfig.enabled) {
+                // Trust first proxy
+                app.set('trust proxy', 1);
 
-                case 'memory':
-                    const MemoryStore = SessionMemoryStore(session);
-                    sessionConfig.store = new MemoryStore(sessionConfig.drivers[sessionConfig.driver]);
-                    break;
+                // Initialize session store
+                switch (sessionConfig.driver) {
+                    case 'file':
+                        const FileStore = SessionFileStore(session);
+                        sessionConfig.store = new FileStore(sessionConfig.drivers[sessionConfig.driver]);
+                        break;
 
-                default:
-                    throw new SessionInitializationException('Session driver is not supported, let me know which driver you need, I will add it');
+                    case 'memory':
+                        const MemoryStore = SessionMemoryStore(session);
+                        sessionConfig.store = new MemoryStore(sessionConfig.drivers[sessionConfig.driver]);
+                        break;
+
+                    default:
+                        throw new SessionInitializationException('Session driver is not supported, let me know which driver you need, I will add it');
+                }
+                app.use(session(sessionConfig));
             }
-            app.use(session(sessionConfig));
         }
 
         // Initialize sentry
