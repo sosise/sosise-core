@@ -1,0 +1,48 @@
+import { Worker, QueueScheduler, Job } from 'bullmq';
+import queueConfig from '../../../config/queue';
+import Handler from '../../Exceptions/Handler';
+
+export default class %name% {
+    /**
+     * Queue name to listen
+     */
+    public queueName: string = 'new-order';
+
+    /**
+     * Redis connection data
+     */
+    private redisConnection: { host: string, port: number };
+
+    /**
+     * Constructor
+     */
+    constructor() {
+        this.redisConnection = { host: queueConfig.redis.host, port: queueConfig.redis.port };
+    }
+
+    /**
+     * Handle incoming job
+     */
+    private async handle(job: Job): Promise<void> {
+        console.log('job received', job.id, job.data, job.attemptsMade);
+    }
+
+    /**
+     * Listen queue, please do not delete this method
+     */
+    private async listen(): Promise<void> {
+        // Instantiate queue scheduler
+        const scheduler = new QueueScheduler(this.queueName, { connection: this.redisConnection });
+
+        // Instantiate worker
+        const myWorker = new Worker(this.queueName, async (job) => this.handle(job), { connection: this.redisConnection });
+
+        // Report job exceptions
+        myWorker.on('failed', async (job: Job, error) => {
+            // Some exception occured during job handling
+            // Report the exception
+            const exceptionHandler = new Handler();
+            exceptionHandler.reportCommandException(error);
+        });
+    }
+}

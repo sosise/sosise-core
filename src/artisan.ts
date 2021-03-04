@@ -18,6 +18,8 @@ import Config from './Artisan/Make/Config';
 import Test from './Artisan/Make/Test';
 import MakeSeed from './Artisan/Make/Seed';
 import Seed from './Artisan/Seed/Seed';
+import QueueHandler from './Artisan/Queue/QueueHandler';
+import QueueWorker from './Artisan/Make/QueueWorker';
 
 export default class Artisan {
     /**
@@ -191,6 +193,14 @@ export default class Artisan {
                     instance.createUnitTestFile();
                 });
 
+            command
+                .command('make:queueworker <name>')
+                .description('Create a new queue worker'.dim)
+                .action((name) => {
+                    const instance = new QueueWorker(name);
+                    instance.createFile();
+                });
+
             // Make commands
             command.command('');
             command.command('Migrate'.green);
@@ -274,6 +284,86 @@ export default class Artisan {
                     try {
                         const instance = new Seed(cli);
                         await instance.run();
+                        process.exit(0);
+                    } catch (error) {
+                        const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                        const exceptionHandler = new Handler();
+                        exceptionHandler.reportCommandException(error).then(() => {
+                            process.exit(1);
+                        });
+                    }
+                });
+
+            // Make commands
+            command.command('');
+            command.command('Queue'.green);
+
+            command
+                .command('queue:listen <queueName>')
+                .description('Listen to a given queue'.dim)
+                .action(async (queueName) => {
+                    try {
+                        const instance = new QueueHandler();
+                        await instance.listen(queueName);
+                    } catch (error) {
+                        const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                        const exceptionHandler = new Handler();
+                        exceptionHandler.reportCommandException(error).then(() => {
+                            process.exit(1);
+                        });
+                    }
+                });
+
+            command
+                .command('queue:list <queueName>')
+                .description('List jobs in a queue'.dim)
+                .action(async (queueName) => {
+                    try {
+                        // Log
+                        console.log(`Inspecting queue "${queueName}"`.magenta);
+                        console.log('');
+
+                        const instance = new QueueHandler();
+                        await instance.listFailedJobs(queueName);
+                        await instance.listWaitingJobs(queueName);
+                        await instance.listDelayedJobs(queueName);
+                        await instance.listCompletedJobs(queueName);
+                        await instance.listActiveJobs(queueName);
+
+                        process.exit(0);
+                    } catch (error) {
+                        const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                        const exceptionHandler = new Handler();
+                        exceptionHandler.reportCommandException(error).then(() => {
+                            process.exit(1);
+                        });
+                    }
+                });
+
+            command
+                .command('queue:retry <queueName>')
+                .description('Retry all jobs marked as failed'.dim)
+                .action(async (queueName) => {
+                    try {
+                        const instance = new QueueHandler();
+                        await instance.retryFailedByQueueName(queueName);
+                        process.exit(0);
+                    } catch (error) {
+                        const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                        const exceptionHandler = new Handler();
+                        exceptionHandler.reportCommandException(error).then(() => {
+                            process.exit(1);
+                        });
+                    }
+                });
+
+            command
+                .command('queue:flush <queueName>')
+                .description('Flush all jobs marked as failed'.dim)
+                .action(async (queueName) => {
+                    try {
+                        const instance = new QueueHandler();
+                        await instance.flushFailed(queueName);
                         process.exit(0);
                     } catch (error) {
                         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;

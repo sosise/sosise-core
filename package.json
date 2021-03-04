@@ -1,6 +1,6 @@
 {
   "name": "sosise-core",
-  "version": "0.2.26",
+  "version": "0.3.0",
   "description": "Sosise is a web application boilerplate/framework with an expressive, elegant syntax. A Sosise provides a structure and starting point for creating your application, allowing you to focus on creating something amazing while we sweat the details.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -8,10 +8,7 @@
     "/build"
   ],
   "keywords": [
-    "sosise",
-    "sosise-cli",
-    "sosise-installer",
-    "installer",
+    "sosise-core",
     "framework",
     "express",
     "laravel"
@@ -32,6 +29,7 @@
   "dependencies": {
     "@sentry/node": "^5.29.2",
     "@sentry/tracing": "^5.29.2",
+    "bullmq": "^1.14.7",
     "collect.js": "^4.28.6",
     "colors": "^1.4.0",
     "commander": "^6.2.1",

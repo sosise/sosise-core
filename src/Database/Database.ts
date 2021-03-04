@@ -29,7 +29,7 @@ export default class Database {
         // Iterate through singleton instances and try to find already instantiated one
         // If found return it
         for (const element of Database.instances) {
-            if (element.connectionName === connectionName && element.instance !== null) {
+            if (element.connectionName === connectionName && element.instance) {
                 return element.instance;
             }
         }
