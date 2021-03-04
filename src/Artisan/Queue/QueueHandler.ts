@@ -14,6 +14,12 @@ export default class QueueHandler {
         // Get list of worker files
         let listOfWorkerFiles = fs.readdirSync(process.cwd() + this.workersPath);
 
+        // Proceed only when migrations path exists
+        if (!fs.existsSync(process.cwd() + this.workersPath)) {
+            console.log(`Ups, you don't have any workers, you can create them with ./artisan make:queueworker MyWorker`.yellow);
+            return;
+        }
+
         // Filter out only js files
         listOfWorkerFiles = listOfWorkerFiles.filter((element) => {
             return (element.includes('js') && !element.includes('map'));
@@ -121,7 +127,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} Job payload: ${jobPayload}`.red);
+            console.log(`Job id: ${jobId} payload: ${jobPayload}`.red);
         }
         console.log('');
     }
@@ -149,7 +155,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} Job payload: ${jobPayload}`.yellow);
+            console.log(`Job id: ${jobId} payload: ${jobPayload}`.yellow);
         }
         console.log('');
     }
@@ -177,7 +183,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} Job payload: ${jobPayload}`.blue);
+            console.log(`Job id: ${jobId} payload: ${jobPayload}`.blue);
         }
         console.log('');
     }
@@ -205,7 +211,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} Job payload: ${jobPayload}`.gray);
+            console.log(`Job id: ${jobId} payload: ${jobPayload}`.gray);
         }
         console.log('');
     }
@@ -233,7 +239,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} Job payload: ${jobPayload}`.green);
+            console.log(`Job id: ${jobId} payload: ${jobPayload}`.green);
         }
         console.log('');
     }
