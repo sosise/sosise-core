@@ -11,14 +11,14 @@ export default class QueueHandler {
      * Iterate through queue workers and try to listen
      */
     public async listen(queueName: string): Promise<void> {
-        // Get list of worker files
-        let listOfWorkerFiles = fs.readdirSync(process.cwd() + this.workersPath);
-
         // Proceed only when migrations path exists
         if (!fs.existsSync(process.cwd() + this.workersPath)) {
             console.log(`Ups, you don't have any workers, you can create them with ./artisan make:queueworker MyWorker`.yellow);
             return;
         }
+
+        // Get list of worker files
+        let listOfWorkerFiles = fs.readdirSync(process.cwd() + this.workersPath);
 
         // Filter out only js files
         listOfWorkerFiles = listOfWorkerFiles.filter((element) => {
