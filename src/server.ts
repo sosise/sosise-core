@@ -4,9 +4,11 @@ import { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
+import redis from 'redis';
 import session from 'express-session';
 import SessionFileStore from 'session-file-store';
 import SessionMemoryStore from 'memorystore';
+import SessionRedisStore from 'connect-redis';
 import SessionInitializationException from './Exceptions/Session/SessionInitializationException';
 import fs from 'fs';
 
@@ -37,6 +39,11 @@ export default class Server {
                     case 'memory':
                         const MemoryStore = SessionMemoryStore(session);
                         sessionConfig.store = new MemoryStore(sessionConfig.drivers[sessionConfig.driver]);
+                        break;
+
+                    case 'redis':
+                        const RedisStore = SessionRedisStore(session);
+                        sessionConfig.store = new RedisStore({client: redis.createClient(), ...sessionConfig.drivers[sessionConfig.driver]});
                         break;
 
                     default:
