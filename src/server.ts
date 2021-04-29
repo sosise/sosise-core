@@ -16,7 +16,7 @@ export default class Server {
     public run(): void {
         // Instantiate app
         const app = express();
-        const port = process.env.LISTEN_PORT || 10000;
+        const port = process.env.LISTEN_PORT || process.env.PORT || 10000;
 
         // Session support
         // Check if session config exists
@@ -43,7 +43,7 @@ export default class Server {
 
                     case 'redis':
                         const RedisStore = SessionRedisStore(session);
-                        sessionConfig.store = new RedisStore({client: redis.createClient(), ...sessionConfig.drivers[sessionConfig.driver]});
+                        sessionConfig.store = new RedisStore({ client: redis.createClient(), ...sessionConfig.drivers[sessionConfig.driver] });
                         break;
 
                     default:
