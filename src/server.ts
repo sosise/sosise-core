@@ -1,7 +1,6 @@
 // After config, comes the application
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
-import bodyParser from 'body-parser';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
 import redis from 'redis';
@@ -74,8 +73,10 @@ export default class Server {
         });
 
         // Setting up POST params parser
-        app.use(bodyParser.json()); // support json encoded bodies
-        app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+        app.use(express.json());
+        app.use(express.urlencoded({
+            extended: true
+        }));
 
         // RequestHandler creates a separate execution context using domains, so that every
         // transaction/span/breadcrumb is attached to its own Hub instance
