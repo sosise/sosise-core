@@ -11,6 +11,8 @@ import SessionRedisStore from 'connect-redis';
 import SessionInitializationException from './Exceptions/Session/SessionInitializationException';
 import fs from 'fs';
 import compression from 'compression';
+import expressformdata from 'express-form-data';
+import os from 'os';
 
 export default class Server {
     public run(): void {
@@ -77,6 +79,15 @@ export default class Server {
         app.use(express.urlencoded({
             extended: true
         }));
+
+        // Setting up multipart/form-data
+        app.use(expressformdata.parse({
+            uploadDir: os.tmpdir(),
+            autoClean: true
+        }));
+        app.use(expressformdata.format());
+        app.use(expressformdata.stream());
+        app.use(expressformdata.union());
 
         // RequestHandler creates a separate execution context using domains, so that every
         // transaction/span/breadcrumb is attached to its own Hub instance
