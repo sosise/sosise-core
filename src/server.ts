@@ -11,11 +11,17 @@ import SessionMemoryStore from 'memorystore';
 import SessionRedisStore from 'connect-redis';
 import SessionInitializationException from './Exceptions/Session/SessionInitializationException';
 import fs from 'fs';
+import compression from 'compression';
 
 export default class Server {
     public run(): void {
         // Instantiate app
         const app = express();
+
+        // Use gzip compression in responses
+        app.use(compression());
+
+        // Port
         const port = process.env.LISTEN_PORT || process.env.PORT || 10000;
 
         // Session support
