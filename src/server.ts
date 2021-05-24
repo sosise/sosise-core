@@ -1,26 +1,27 @@
 // After config, comes the application
-import express from 'express';
+import Express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
-import redis from 'redis';
-import session from 'express-session';
+import Redis from 'redis';
+import ExpressSession from 'express-session';
 import SessionFileStore from 'session-file-store';
 import SessionMemoryStore from 'memorystore';
 import SessionRedisStore from 'connect-redis';
 import SessionInitializationException from './Exceptions/Session/SessionInitializationException';
 import fs from 'fs';
-import compression from 'compression';
-import expressformdata from 'express-form-data';
+import Compression from 'compression';
+import ExpressFormData from 'express-form-data';
+import BodyParser from 'body-parser';
 import os from 'os';
 
 export default class Server {
     public run(): void {
         // Instantiate app
-        const app = express();
+        const app = Express();
 
         // Use gzip compression in responses
-        app.use(compression());
+        app.use(Compression());
 
         // Port
         const port = process.env.LISTEN_PORT || process.env.PORT || 10000;
@@ -39,24 +40,24 @@ export default class Server {
                 // Initialize session store
                 switch (sessionConfig.driver) {
                     case 'file':
-                        const FileStore = SessionFileStore(session);
+                        const FileStore = SessionFileStore(ExpressSession);
                         sessionConfig.store = new FileStore(sessionConfig.drivers[sessionConfig.driver]);
                         break;
 
                     case 'memory':
-                        const MemoryStore = SessionMemoryStore(session);
+                        const MemoryStore = SessionMemoryStore(ExpressSession);
                         sessionConfig.store = new MemoryStore(sessionConfig.drivers[sessionConfig.driver]);
                         break;
 
                     case 'redis':
-                        const RedisStore = SessionRedisStore(session);
-                        sessionConfig.store = new RedisStore({ client: redis.createClient(), ...sessionConfig.drivers[sessionConfig.driver] });
+                        const RedisStore = SessionRedisStore(ExpressSession);
+                        sessionConfig.store = new RedisStore({ client: Redis.createClient(), ...sessionConfig.drivers[sessionConfig.driver] });
                         break;
 
                     default:
                         throw new SessionInitializationException('Session driver is not supported, let me know which driver you need, I will add it');
                 }
-                app.use(session(sessionConfig));
+                app.use(ExpressSession(sessionConfig));
             }
         }
 
@@ -75,19 +76,25 @@ export default class Server {
         });
 
         // Setting up POST params parser
-        app.use(express.json());
-        app.use(express.urlencoded({
+        app.use(Express.json());
+        app.use(Express.urlencoded({
             extended: true
         }));
 
         // Setting up multipart/form-data
-        app.use(expressformdata.parse({
-            uploadDir: os.tmpdir(),
-            autoClean: true
+
+        app.use(BodyParser.raw({
+            limit: '50mb',
+            type: '*/*'
         }));
-        app.use(expressformdata.format());
-        app.use(expressformdata.stream());
-        app.use(expressformdata.union());
+
+        // app.use(ExpressFormData.parse({
+        //     uploadDir: os.tmpdir(),
+        //     autoClean: true
+        // }));
+        // app.use(ExpressFormData.format());
+        // app.use(ExpressFormData.stream());
+        // app.use(ExpressFormData.union());
 
         // RequestHandler creates a separate execution context using domains, so that every
         // transaction/span/breadcrumb is attached to its own Hub instance
