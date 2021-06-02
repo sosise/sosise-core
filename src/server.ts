@@ -11,9 +11,7 @@ import SessionRedisStore from 'connect-redis';
 import SessionInitializationException from './Exceptions/Session/SessionInitializationException';
 import fs from 'fs';
 import Compression from 'compression';
-import ExpressFormData from 'express-form-data';
 import BodyParser from 'body-parser';
-import os from 'os';
 
 export default class Server {
     public run(): void {
