@@ -64,7 +64,9 @@ export default class Migrate {
 
         // Filter out only js files
         listOfMigrationFiles = listOfMigrationFiles.filter((element) => {
-            return (element.includes('js') && !element.includes('map'));
+            if (element.match(/js$/) && !element.match(/map$/)) {
+                return true;
+            }
         });
 
         // Now iterate through each migration file and try to migrate it

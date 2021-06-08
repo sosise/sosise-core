@@ -22,7 +22,9 @@ export default class QueueHandler {
 
         // Filter out only js files
         listOfWorkerFiles = listOfWorkerFiles.filter((element) => {
-            return (element.includes('js') && !element.includes('map'));
+            if (element.match(/js$/) && !element.match(/map$/)) {
+                return true;
+            }
         });
 
         // Now iterate through each worker file and search one we need
