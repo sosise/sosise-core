@@ -82,7 +82,7 @@ export default class Server {
         // Setting up multipart/form-data
 
         app.use(BodyParser.raw({
-            limit: '50mb',
+            limit: '150mb',
             type: '*/*'
         }));
 
