@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import colors from 'colors';
+import { inspect } from 'util';
 import LoggerRepositoryInterface from './LoggerRepositoryInterface';
 
 export default class LoggerPrettyConsoleRepository implements LoggerRepositoryInterface {
@@ -57,8 +58,11 @@ export default class LoggerPrettyConsoleRepository implements LoggerRepositoryIn
             }
         })();
 
+        // Prepare params string
+        const paramsString = (params !== null ? inspect(params, { depth: null, maxArrayLength: null, colors: false }) : null);
+
         // Prepare a string
-        const outputString: string = `${colors.dim(dayjs().format('YYYY-MM-DD HH:mm:ss'))} ${levelString} ${message} ${(params !== null) ? colors.cyan(params) : ''}`;
+        const outputString: string = `${colors.dim(dayjs().format('YYYY-MM-DD HH:mm:ss'))} ${levelString} ${message} ${(paramsString !== null) ? colors.cyan(paramsString) : ''}`;
 
         // Return a composed string
         return outputString;
