@@ -60,4 +60,20 @@ export default class Helper {
     public static sleep(milliseconds: number): Promise<void> {
         return new Promise((resolve) => setTimeout(resolve, milliseconds));
     }
+
+    /**
+     * Path to the project with ending slash
+     * e.g. /tmp/myproject/
+     */
+    public static projectPath(): string {
+        return process.cwd() + '/';
+    }
+
+    /**
+     * Path to the storage with ending slash
+     * e.g. /tmp/myproject/storage/
+     */
+    public static storagePath(): string {
+        return process.cwd() + '/storage/';
+    }
 }
