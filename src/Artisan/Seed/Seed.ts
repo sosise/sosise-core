@@ -3,6 +3,7 @@ import fs from 'fs';
 import Database from '../../Database/Database';
 import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
 import commander from 'commander';
+import colors from 'colors';
 
 export default class Seed {
 
@@ -60,18 +61,18 @@ export default class Seed {
 
             // Do not run seed if environment is not local and seed is restricted to be run only in local environment
             if (process.env.APP_ENV !== 'local' && instance.onlyInLocalEnvironment && !this.cli.force) {
-                console.log(`Skipping seed ${seedName}, it is restricted to a local environment only. Please use -f to force`.yellow);
+                console.log(colors.yellow(`Skipping seed ${seedName}, it is restricted to a local environment only. Please use -f to force`));
                 continue;
             }
 
             // Log
-            console.log(`Start seeding ${seedName}`.yellow);
+            console.log(colors.yellow(`Start seeding ${seedName}`));
 
             // Call run method
             await instance.run();
 
             // Log
-            console.log(`Done seeding ${seedName}`.green);
+            console.log(colors.green(`Done seeding ${seedName}`));
         }
     }
 }

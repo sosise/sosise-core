@@ -43,7 +43,7 @@ export default class CommandRegistration {
             // Show user commands if they exist
             if (listOfCommandFiles.length > 0) {
                 this.command.command('');
-                this.command.command('User-defined'.green);
+                this.command.command(colors.green('User-defined'));
             }
 
             // Iterate through files
@@ -60,7 +60,7 @@ export default class CommandRegistration {
                 // Register command and specify what to do when command is executed
                 const newCommand = commander
                     .command(commandClassInstance.signature)
-                    .description(`${commandClassInstance.description}`.dim)
+                    .description(colors.dim(`${commandClassInstance.description}`))
                     .action(async (cli) => {
                         // Perform double execution prevention only if singleExecution param is set to true in current command
                         if (commandClassInstance.singleExecution) {

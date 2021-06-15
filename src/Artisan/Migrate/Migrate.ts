@@ -4,6 +4,7 @@ import lodash from 'lodash';
 import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
 import Database from '../../Database/Database';
 import MigrationDoesNotExistsOnFilesystemException from '../../Exceptions/Database/MigrationDoesNotExistsOnFilesystemException';
+import colors from 'colors';
 
 export default class Migrate {
 
@@ -80,7 +81,7 @@ export default class Migrate {
             }
 
             // Log
-            console.log(`Start migrating ${migrationName}`.yellow);
+            console.log(colors.yellow(`Start migrating ${migrationName}`));
 
             // Get migration file path
             const migrationFilePath = `${process.cwd()}${this.migrationsPath}/${migrationName}.js`;
@@ -101,7 +102,7 @@ export default class Migrate {
             });
 
             // Log
-            console.log(`Done migrating ${migrationName}`.green);
+            console.log(colors.green(`Done migrating ${migrationName}`));
         }
     }
 
@@ -121,7 +122,7 @@ export default class Migrate {
         // Iterate through all migrations we want to rollback
         for (const migrationName of migrationNamesToRollback) {
             // Log
-            console.log(`Rolling back migration ${migrationName}`.yellow);
+            console.log(colors.yellow(`Rolling back migration ${migrationName}`));
 
             // Get migration file path
             const migrationFilePath = `${process.cwd()}${this.migrationsPath}/${migrationName}.js`;
@@ -144,7 +145,7 @@ export default class Migrate {
             await this.dbConnection.table('migrations').where('batch', lastBatchNumber).delete();
 
             // Log
-            console.log(`Done rolling back migration ${migrationName}`.green);
+            console.log(colors.green(`Done rolling back migration ${migrationName}`));
         }
     }
 
@@ -156,7 +157,7 @@ export default class Migrate {
         const allTables = await this.dbConnection.schema.raw('SHOW TABLES;');
 
         // Log
-        console.log('Drop all tables'.dim);
+        console.log(colors.dim('Drop all tables'));
 
         // Iterate through all tables and drop them
         for (const tableRow of allTables[0]) {
@@ -167,12 +168,12 @@ export default class Migrate {
             await this.dbConnection.schema.dropTableIfExists(tableName);
 
             // Log
-            console.log(`Table ${tableName} dropped`.green);
+            console.log(colors.green(`Table ${tableName} dropped`));
         }
 
         // Log
         console.log();
-        console.log(`Migrating all migrations`.dim);
+        console.log(colors.dim(`Migrating all migrations`));
 
         // Create migrations table if needed
         await this.createMigrationsTableIfNeeded();

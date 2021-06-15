@@ -20,6 +20,7 @@ import MakeSeed from './Artisan/Make/Seed';
 import Seed from './Artisan/Seed/Seed';
 import QueueHandler from './Artisan/Queue/QueueHandler';
 import QueueWorker from './Artisan/Make/QueueWorker';
+import colors from 'colors';
 
 export default class Artisan {
     /**
@@ -33,13 +34,13 @@ export default class Artisan {
             // Get version of the sosise-core
             const packageJsonFileContent = fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8');
             const artisanString = figlet.textSync('Artisan').magenta;
-            const versionString = `          sosise-core: ${JSON.parse(packageJsonFileContent).version}`.dim;
+            const versionString = colors.dim(`          sosise-core: ${JSON.parse(packageJsonFileContent).version}`);
 
             command
-                .name('./artisan'.green)
+                .name(colors.green('./artisan'))
                 .description(`${artisanString}\n${versionString}`)
-                .usage('[command] [options]'.green)
-                .addHelpCommand('help [command]', 'Display help for command'.dim);
+                .usage(colors.green('[command] [options]'))
+                .addHelpCommand('help [command]', colors.dim('Display help for command'));
 
             // Register available commands
             const commandRegistration = new CommandRegistration(command);
@@ -47,11 +48,11 @@ export default class Artisan {
 
             // Make commands
             command.command('');
-            command.command('Make'.green);
+            command.command(colors.green('Make'));
 
             command
                 .command('make:controller <name>')
-                .description('Create a new controller'.dim)
+                .description(colors.dim('Create a new controller'))
                 .action((name) => {
                     const instance = new Controller(name);
                     instance.createFile();
@@ -59,7 +60,7 @@ export default class Artisan {
 
             command
                 .command('make:unifier <name>')
-                .description('Create a new unifier'.dim)
+                .description(colors.dim('Create a new unifier'))
                 .action((name) => {
                     const instance = new Unifier(name);
                     instance.createFile();
@@ -67,9 +68,9 @@ export default class Artisan {
 
             command
                 .command('make:migration <name>')
-                .description('Create a new database migration'.dim)
-                .option('-c, --create', 'Migration will create table'.dim)
-                .option('-u, --update', 'Migration will update table'.dim)
+                .description(colors.dim('Create a new database migration'))
+                .option('-c, --create', colors.dim('Migration will create table'))
+                .option('-u, --update', colors.dim('Migration will update table'))
                 .action((name, options) => {
                     // If user wants to use creation migration
                     if (options.create) {
@@ -92,7 +93,7 @@ export default class Artisan {
 
             command
                 .command('make:seed <name>')
-                .description('Create a new seed'.dim)
+                .description(colors.dim('Create a new seed'))
                 .action((name) => {
                     const instance = new MakeSeed(name);
                     instance.createFile();
@@ -100,7 +101,7 @@ export default class Artisan {
 
             command
                 .command('make:service <name>')
-                .description('Create a new service'.dim)
+                .description(colors.dim('Create a new service'))
                 .action((name) => {
                     const instance = new Service(name);
                     instance.createFile();
@@ -108,8 +109,8 @@ export default class Artisan {
 
             command
                 .command('make:repository <name>')
-                .option('-t, --test', 'Make test repository also'.dim)
-                .description('Create a new repository and repository interface'.dim)
+                .option('-t, --test', colors.dim('Make test repository also'))
+                .description(colors.dim('Create a new repository and repository interface'))
                 .action((name, options) => {
                     const instance = new Repository(name);
                     instance.createRepositoryFile();
@@ -123,7 +124,7 @@ export default class Artisan {
 
             command
                 .command('make:command <name>')
-                .description('Create a new command'.dim)
+                .description(colors.dim('Create a new command'))
                 .action((name) => {
                     const instance = new MakeCommand(name);
                     instance.createFile();
@@ -131,7 +132,7 @@ export default class Artisan {
 
             command
                 .command('make:middleware <name>')
-                .description('Create a new middleware'.dim)
+                .description(colors.dim('Create a new middleware'))
                 .action((name) => {
                     const instance = new Middleware(name);
                     instance.createFile();
@@ -139,7 +140,7 @@ export default class Artisan {
 
             command
                 .command('make:type <name>')
-                .description('Create a new type interface'.dim)
+                .description(colors.dim('Create a new type interface'))
                 .action((name) => {
                     const instance = new Type(name);
                     instance.createFile();
@@ -147,7 +148,7 @@ export default class Artisan {
 
             command
                 .command('make:enum <name>')
-                .description('Create a new enum'.dim)
+                .description(colors.dim('Create a new enum'))
                 .action((name) => {
                     const instance = new Enum(name);
                     instance.createFile();
@@ -155,7 +156,7 @@ export default class Artisan {
 
             command
                 .command('make:exception <name>')
-                .description('Create a new exception'.dim)
+                .description(colors.dim('Create a new exception'))
                 .action((name) => {
                     const instance = new Exception(name);
                     instance.createFile();
@@ -163,7 +164,7 @@ export default class Artisan {
 
             command
                 .command('make:config <name>')
-                .description('Create a new config'.dim)
+                .description(colors.dim('Create a new config'))
                 .action((name) => {
                     const instance = new Config(name);
                     instance.createFile();
@@ -171,9 +172,9 @@ export default class Artisan {
 
             command
                 .command('make:test <name>')
-                .description('Create a new test'.dim)
-                .option('-u, --unit', 'Make unit test'.dim)
-                .option('-f, --functional', 'Make unit test'.dim)
+                .description(colors.dim('Create a new test'))
+                .option('-u, --unit', colors.dim('Make unit test'))
+                .option('-f, --functional', colors.dim('Make unit test'))
                 .action((name, options) => {
                     const instance = new Test(name);
 
@@ -195,7 +196,7 @@ export default class Artisan {
 
             command
                 .command('make:queueworker <name>')
-                .description('Create a new queue worker'.dim)
+                .description(colors.dim('Create a new queue worker'))
                 .action((name) => {
                     const instance = new QueueWorker(name);
                     instance.createFile();
@@ -203,11 +204,11 @@ export default class Artisan {
 
             // Make commands
             command.command('');
-            command.command('Migrate'.green);
+            command.command(colors.green('Migrate'));
 
             command
                 .command('migrate')
-                .description('Run the database migrations'.dim)
+                .description(colors.dim('Run the database migrations'))
                 .action(async () => {
                     try {
                         const instance = new Migrate();
@@ -225,14 +226,14 @@ export default class Artisan {
 
             command
                 .command('migrate:rollback')
-                .description('Rollback the last database migration'.dim)
+                .description(colors.dim('Rollback the last database migration'))
                 .option('-f, --force', 'Force dropping all tables and re-run all migrations', false)
                 .action(async (cli) => {
                     try {
                         // Stop the command if env is NOT local and no force is used
                         if (process.env.APP_ENV !== 'local' && !cli.force) {
-                            console.log(`Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`.red);
-                            console.log(`See ./artisan migrate:rollback --help for more information`.dim);
+                            console.log(colors.red(`Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`));
+                            console.log(colors.dim(`See ./artisan migrate:rollback --help for more information`));
                             process.exit(0);
                         }
                         const instance = new Migrate();
@@ -250,14 +251,14 @@ export default class Artisan {
 
             command
                 .command('migrate:fresh')
-                .description('Drop all tables and re-run all migrations'.dim)
+                .description(colors.dim('Drop all tables and re-run all migrations'))
                 .option('-f, --force', 'Force dropping all tables and re-run all migrations', false)
                 .action(async (cli) => {
                     try {
                         // Stop the command if env is NOT local and no force is used
                         if (process.env.APP_ENV !== 'local' && !cli.force) {
-                            console.log(`Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`.red);
-                            console.log(`See ./artisan migrate:fresh --help for more information`.dim);
+                            console.log(colors.red(`Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`));
+                            console.log(colors.dim(`See ./artisan migrate:fresh --help for more information`));
                             process.exit(0);
                         }
                         const instance = new Migrate();
@@ -274,11 +275,11 @@ export default class Artisan {
 
             // Make commands
             command.command('');
-            command.command('Seed'.green);
+            command.command(colors.green('Seed'));
 
             command
                 .command('seed')
-                .description('Run the database seeds'.dim)
+                .description(colors.dim('Run the database seeds'))
                 .option('-f, --force', 'Force seeding even if seeds are restricted to be run in a local environment', false)
                 .action(async (cli) => {
                     try {
@@ -296,11 +297,11 @@ export default class Artisan {
 
             // Make commands
             command.command('');
-            command.command('Queue'.green);
+            command.command(colors.green('Queue'));
 
             command
                 .command('queue:listen <queueName>')
-                .description('Listen to a given queue'.dim)
+                .description(colors.dim('Listen to a given queue'))
                 .action(async (queueName) => {
                     try {
                         const instance = new QueueHandler();
@@ -316,11 +317,11 @@ export default class Artisan {
 
             command
                 .command('queue:list <queueName>')
-                .description('List jobs in a queue'.dim)
+                .description(colors.dim('List jobs in a queue'))
                 .action(async (queueName) => {
                     try {
                         // Log
-                        console.log(`Inspecting queue "${queueName}"`.magenta);
+                        console.log(colors.magenta(`Inspecting queue "${queueName}"`));
                         console.log('');
 
                         const instance = new QueueHandler();
@@ -342,7 +343,7 @@ export default class Artisan {
 
             command
                 .command('queue:retry <queueName>')
-                .description('Retry all jobs marked as failed'.dim)
+                .description(colors.dim('Retry all jobs marked as failed'))
                 .action(async (queueName) => {
                     try {
                         const instance = new QueueHandler();
@@ -359,7 +360,7 @@ export default class Artisan {
 
             command
                 .command('queue:flush <queueName>')
-                .description('Flush all jobs marked as failed'.dim)
+                .description(colors.dim('Flush all jobs marked as failed'))
                 .action(async (queueName) => {
                     try {
                         const instance = new QueueHandler();
@@ -376,7 +377,7 @@ export default class Artisan {
 
             // Make commands
             command.command('');
-            command.command('Help'.green);
+            command.command(colors.green('Help'));
 
             // Parse cli arguments and execute actions
             command.parse(argv);

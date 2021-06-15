@@ -13,7 +13,7 @@ export default class QueueHandler {
     public async listen(queueName: string): Promise<void> {
         // Proceed only when migrations path exists
         if (!fs.existsSync(process.cwd() + this.workersPath)) {
-            console.log(`Ups, you don't have any workers, you can create them with ./artisan make:queueworker MyWorker`.yellow);
+            console.log(colors.yellow(`Ups, you don't have any workers, you can create them with ./artisan make:queueworker MyWorker`));
             return;
         }
 
@@ -44,7 +44,7 @@ export default class QueueHandler {
             // Now check if queueName is that one which we should listen to
             if (instance.queueName === queueName) {
                 // Log
-                console.log(`Start listening queue: "${queueName}"`.green);
+                console.log(colors.green(`Start listening queue: "${queueName}"`));
 
                 // Execute method listen of the worker
                 await instance.listen();
@@ -55,7 +55,7 @@ export default class QueueHandler {
         }
 
         // Log, if we've reached this line, means that no worker found for given queue name
-        console.log(`Sorry there is no worker with specified queue name ${queueName}, take a look at src/app/Console/QueueWorkers`.yellow);
+        console.log(colors.yellow(`Sorry there is no worker with specified queue name ${queueName}, take a look at src/app/Console/QueueWorkers`));
     }
 
     /**
@@ -79,7 +79,7 @@ export default class QueueHandler {
         await Promise.all(promiseList);
 
         // Log
-        console.log(`Sent ${jobs.length} failed jobs back to waiting queue`.green);
+        console.log(colors.green(`Sent ${jobs.length} failed jobs back to waiting queue`));
     }
 
     /**
@@ -103,7 +103,7 @@ export default class QueueHandler {
         await Promise.all(promiseList);
 
         // Log
-        console.log(`Flushed (removed) ${jobs.length} failed jobs`.green);
+        console.log(colors.green(`Flushed (removed) ${jobs.length} failed jobs`));
     }
 
     /**
@@ -120,8 +120,8 @@ export default class QueueHandler {
         const jobs = await queueGetters.getFailed(0, await queueGetters.getFailedCount());
 
         // Log
-        console.log(`Failed Jobs (${jobs.length})`.red);
-        console.log('---------'.red);
+        console.log(colors.red(`Failed Jobs (${jobs.length})`));
+        console.log(colors.red('---------'));
         for (const job of jobs) {
             const jobId = job.id;
             const jobPayload = inspect(job.data, {
@@ -129,7 +129,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} payload: ${jobPayload}`.red);
+            console.log(colors.red(`Job id: ${jobId} payload: ${jobPayload}`));
         }
         console.log('');
     }
@@ -148,8 +148,8 @@ export default class QueueHandler {
         const jobs = await queueGetters.getWaiting(0, await queueGetters.getWaitingCount());
 
         // Log
-        console.log(`Waiting Jobs (${jobs.length})`.yellow);
-        console.log('---------'.yellow);
+        console.log(colors.yellow(`Waiting Jobs (${jobs.length})`));
+        console.log(colors.yellow('---------'));
         for (const job of jobs) {
             const jobId = job.id;
             const jobPayload = inspect(job.data, {
@@ -157,7 +157,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} payload: ${jobPayload}`.yellow);
+            console.log(colors.yellow(`Job id: ${jobId} payload: ${jobPayload}`));
         }
         console.log('');
     }
@@ -176,8 +176,8 @@ export default class QueueHandler {
         const jobs = await queueGetters.getDelayed(0, await queueGetters.getDelayedCount());
 
         // Log
-        console.log(`Delayed Jobs (${jobs.length})`.blue);
-        console.log('---------'.blue);
+        console.log(colors.blue(`Delayed Jobs (${jobs.length})`));
+        console.log(colors.blue('---------'));
         for (const job of jobs) {
             const jobId = job.id;
             const jobPayload = inspect(job.data, {
@@ -185,7 +185,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} payload: ${jobPayload}`.blue);
+            console.log(colors.blue(`Job id: ${jobId} payload: ${jobPayload}`));
         }
         console.log('');
     }
@@ -204,8 +204,8 @@ export default class QueueHandler {
         const jobs = await queueGetters.getCompleted(0, await queueGetters.getCompletedCount());
 
         // Log
-        console.log(`Completed Jobs (${jobs.length})`.gray);
-        console.log('---------'.gray);
+        console.log(colors.gray(`Completed Jobs (${jobs.length})`));
+        console.log(colors.gray('---------'));
         for (const job of jobs) {
             const jobId = job.id;
             const jobPayload = inspect(job.data, {
@@ -213,7 +213,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} payload: ${jobPayload}`.gray);
+            console.log(colors.gray(`Job id: ${jobId} payload: ${jobPayload}`));
         }
         console.log('');
     }
@@ -232,8 +232,8 @@ export default class QueueHandler {
         const jobs = await queueGetters.getActive(0, await queueGetters.getActiveCount());
 
         // Log
-        console.log(`Active Jobs (${jobs.length})`.green);
-        console.log('---------'.green);
+        console.log(colors.green(`Active Jobs (${jobs.length})`));
+        console.log(colors.green('---------'));
         for (const job of jobs) {
             const jobId = job.id;
             const jobPayload = inspect(job.data, {
@@ -241,7 +241,7 @@ export default class QueueHandler {
                 maxArrayLength: null,
                 colors: false
             });
-            console.log(`Job id: ${jobId} payload: ${jobPayload}`.green);
+            console.log(colors.green(`Job id: ${jobId} payload: ${jobPayload}`));
         }
         console.log('');
     }
