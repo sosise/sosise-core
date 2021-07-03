@@ -1,7 +1,7 @@
-import ExceptionResponse from '../../Types/ExceptionResponse';
-import Exception from '../Exception';
+import Exception from "../Exception";
+import ExceptionResponse from "../../Types/ExceptionResponse";
 
-export default class DefaultConnectionNotSetException extends Exception {
+export default class DatabaseMigrationsNotSupported extends Exception {
     /**
      * Constructor
      */

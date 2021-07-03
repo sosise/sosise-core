@@ -1,10 +1,11 @@
 import fs from 'fs';
 import knex from 'knex';
-import lodash from 'lodash';
+import lodash, { bind } from 'lodash';
 import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
 import Database from '../../Database/Database';
 import MigrationDoesNotExistsOnFilesystemException from '../../Exceptions/Database/MigrationDoesNotExistsOnFilesystemException';
 import colors from 'colors';
+import DatabaseMigrationsNotSupported from '../../Exceptions/Database/DatabaseMigrationsNotSupported';
 
 export default class Migrate {
 
@@ -154,16 +155,13 @@ export default class Migrate {
      */
     public async fresh(): Promise<void> {
         // Get all tables
-        const allTables = await this.dbConnection.schema.raw('SHOW TABLES;');
+        const allTables = await this.getAllTables();
 
         // Log
         console.log(colors.dim('Drop all tables'));
 
         // Iterate through all tables and drop them
-        for (const tableRow of allTables[0]) {
-            // Get table name
-            const tableName = tableRow[Object.keys(tableRow)[0]];
-
+        for (const tableName of allTables) {
             // Drop table
             await this.dbConnection.schema.dropTableIfExists(tableName);
 
@@ -180,5 +178,47 @@ export default class Migrate {
 
         // Now run migrate
         await this.run();
+    }
+
+    /**
+     * Get all tables from database
+     */
+    private async getAllTables(): Promise<string[]> {
+        // Since knex does not has method to get all tables from database, I had to write my own
+        // Attention depending on database type, different queries are used
+        switch (this.dbConnection.client.constructor.name) {
+            case 'Client_MySQL':
+            case 'Client_MySQL2':
+                {
+                    // Prepare query and bindings
+                    const query = 'SELECT table_name FROM information_schema.tables WHERE table_schema = ?';
+                    const bindings = [this.dbConnection.client.database()];
+
+                    // Send request to database
+                    const result = await this.dbConnection.raw(query, bindings);
+
+                    // Get table names from result
+                    const tableNames = result[0].map((row: any) => row.TABLE_NAME);
+
+                    // Return table names array
+                    return tableNames;
+                }
+            case 'Client_SQLite3':
+                {
+                    // Prepare query and bindings
+                    const query = "SELECT name AS table_name FROM sqlite_master WHERE type='table'";
+
+                    // Send request to database
+                    const result = await this.dbConnection.raw(query, []);
+
+                    // Get table names from result
+                    const tableNames = result.map((row: any) => row.table_name).filter((tableName: string) => tableName !== 'sqlite_sequence');
+
+                    // Return table names array
+                    return tableNames;
+                }
+        }
+
+        throw new DatabaseMigrationsNotSupported('Selected default database is not supported for migrations.');
     }
 }
