@@ -1,4 +1,4 @@
-import knex from 'knex';
+import { Knex } from 'knex';
 import fs from 'fs';
 import Database from '../../Database/Database';
 import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
@@ -7,7 +7,7 @@ import colors from 'colors';
 
 export default class Seed {
 
-    protected dbConnection: knex;
+    protected dbConnection: Knex;
     protected seedsPath = '/build/database/seeds';
     protected cli: commander.Command;
 

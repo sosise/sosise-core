@@ -1,4 +1,4 @@
-import knex from 'knex';
+import { Knex } from 'knex';
 import DefaultConnectionNotSetException from '../Exceptions/Database/DefaultConnectionNotSetException';
 import Database from './Database';
 
@@ -7,7 +7,7 @@ import Database from './Database';
  */
 export default abstract class BaseSchema {
 
-    protected dbConnection: knex;
+    protected dbConnection: Knex;
 
     /**
      * Constructor

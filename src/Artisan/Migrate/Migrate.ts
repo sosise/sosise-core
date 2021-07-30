@@ -1,5 +1,5 @@
 import fs from 'fs';
-import knex from 'knex';
+import { Knex } from 'knex';
 import lodash, { bind } from 'lodash';
 import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
 import Database from '../../Database/Database';
@@ -9,7 +9,7 @@ import DatabaseMigrationsNotSupported from '../../Exceptions/Database/DatabaseMi
 
 export default class Migrate {
 
-    protected dbConnection: knex;
+    protected dbConnection: Knex;
     protected migrationsPath = '/build/database/migrations';
 
     /**

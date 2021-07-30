@@ -1,10 +1,10 @@
-import knex from 'knex';
+import { knex, Knex } from 'knex';
 import DatabaseConfigurationException from '../Exceptions/Database/DatabaseConfigurationException';
 
 export default class Database {
 
     public static instances: { connectionName: string, instance: Database }[] = [];
-    public client: knex;
+    public client: Knex;
 
     /**
      * Constructor
