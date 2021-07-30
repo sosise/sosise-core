@@ -1,3 +1,7 @@
+## 0.6.1 - 30 July, 2021
+### Changelog
+- Collect.js removed from framework, since it's author does not want to update his project and completely refuses pull requests
+
 ## 0.6.0 - 30 July, 2021 (BREAKING CHANGES)
 ### Changelog
 - npm audit for `sosise` + `sosise-core`
