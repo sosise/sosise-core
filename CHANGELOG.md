@@ -1,4 +1,4 @@
-## 0.6.2 - 17 August, 2021
+## 0.6.3 - 17 August, 2021
 ### Changelog
 - ./artisan make:exception message variable was fixed, previously it was undefined
 
