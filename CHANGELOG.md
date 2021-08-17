@@ -1,3 +1,7 @@
+## 0.6.2 - 17 August, 2021
+### Changelog
+- ./artisan make:exception message variable was fixed, previously it was undefined
+
 ## 0.6.1 - 30 July, 2021
 ### Changelog
 - Collect.js removed from framework, since it's author does not want to update his project and completely refuses pull requests

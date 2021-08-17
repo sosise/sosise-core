@@ -25,7 +25,7 @@ export default class %name% extends Exception {
         const response: ExceptionResponse = {
             code: this.code, // optional
             httpCode: this.httpCode, // optional
-            message: exception.message,
+            message: this.message,
             data: {
                 yourCustomData: this.exampleVariable
             }
