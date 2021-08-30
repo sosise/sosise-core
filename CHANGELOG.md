@@ -1,3 +1,8 @@
+## 0.6.4 - 30 August, 2021
+### Changelog
+- npm audit for `sosise` + `sosise-core`
+- npm update for `sosise` + `sosise-core`
+
 ## 0.6.3 - 17 August, 2021
 ### Changelog
 - ./artisan make:exception message variable was fixed, previously it was undefined
