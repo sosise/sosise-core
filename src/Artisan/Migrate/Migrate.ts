@@ -151,6 +151,29 @@ export default class Migrate {
     }
 
     /**
+     * Show rollback migrations
+     */
+    public async printRollbackMigrations(): Promise<void> {
+        // First of all get all rows from migrations table
+        const migrationRows = await this.dbConnection.table('migrations');
+
+        // Get the max batch number, this is the grouping number of migrations we want to rollback
+        const lastBatchNumber = lodash.max(lodash.map(migrationRows, 'batch'));
+
+        // Now filter only the migrations we want to rollback according to the batch number
+        const migrationNamesToRollback = lodash.map(lodash.filter(migrationRows, { batch: lastBatchNumber }), 'migration').reverse();
+
+        // Log
+        console.log(colors.dim(`Following migrations would be rolled back:`));
+
+        // Iterate through all migrations we want to rollback
+        for (const migrationName of migrationNamesToRollback) {
+            // Log
+            console.log(colors.yellow(`${migrationName}`));
+        }
+    }
+
+    /**
      * Drop all tables and re-run all migrations
      */
     public async fresh(): Promise<void> {

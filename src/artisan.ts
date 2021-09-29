@@ -12,6 +12,7 @@ import Middleware from './Artisan/Make/Middleware';
 import Migrate from './Artisan/Migrate/Migrate';
 import Migration from './Artisan/Make/Migration';
 import path from 'path';
+import prompts from 'prompts';
 import QueueHandler from './Artisan/Queue/QueueHandler';
 import QueueWorker from './Artisan/Make/QueueWorker';
 import Repository from './Artisan/Make/Repository';
@@ -247,7 +248,23 @@ export default class Artisan {
                         }
                         const instance = new Migrate();
                         await instance.createMigrationsTableIfNeeded();
-                        await instance.rollback();
+
+                        // Print rollback migrations
+                        await instance.printRollbackMigrations();
+
+                        // Rollback confirmation
+                        const confirmed = await prompts({
+                            type: 'confirm',
+                            name: 'confirmed',
+                            message: 'Are you sure that you want to rollback following migrations?'
+                        });
+                        if (confirmed.confirmed) {
+                            // Rollback migrations
+                            await instance.rollback();
+                        } else {
+                            console.log(colors.yellow(`No migrations rolled back`));
+                        }
+
                         process.exit(0);
                     } catch (error) {
                         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
