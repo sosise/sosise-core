@@ -1,6 +1,6 @@
+import colors from 'colors';
 import commander from 'commander';
 import fs from 'fs';
-import colors from 'colors';
 
 export default class CommandRegistration {
 

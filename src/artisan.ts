@@ -1,26 +1,26 @@
-import { Command, version } from 'commander';
+import colors from 'colors';
+import CommandRegistration from './Command/CommandRegistration';
+import Config from './Artisan/Make/Config';
 import Controller from './Artisan/Make/Controller';
-import Unifier from './Artisan/Make/Unifier';
+import Enum from './Artisan/Make/Enum';
+import Exception from './Artisan/Make/Exception';
+import figlet from 'figlet';
+import fs from 'fs';
+import MakeCommand from './Artisan/Make/Command';
+import MakeSeed from './Artisan/Make/Seed';
+import Middleware from './Artisan/Make/Middleware';
 import Migrate from './Artisan/Migrate/Migrate';
 import Migration from './Artisan/Make/Migration';
-import Service from './Artisan/Make/Service';
-import Repository from './Artisan/Make/Repository';
-import MakeCommand from './Artisan/Make/Command';
-import Middleware from './Artisan/Make/Middleware';
-import Type from './Artisan/Make/Type';
-import Enum from './Artisan/Make/Enum';
-import CommandRegistration from './Command/CommandRegistration';
-import Exception from './Artisan/Make/Exception';
-import fs from 'fs';
 import path from 'path';
-import figlet from 'figlet';
-import Config from './Artisan/Make/Config';
-import Test from './Artisan/Make/Test';
-import MakeSeed from './Artisan/Make/Seed';
-import Seed from './Artisan/Seed/Seed';
 import QueueHandler from './Artisan/Queue/QueueHandler';
 import QueueWorker from './Artisan/Make/QueueWorker';
-import colors from 'colors';
+import Repository from './Artisan/Make/Repository';
+import Seed from './Artisan/Seed/Seed';
+import Service from './Artisan/Make/Service';
+import Test from './Artisan/Make/Test';
+import Type from './Artisan/Make/Type';
+import Unifier from './Artisan/Make/Unifier';
+import { Command, option, version } from 'commander';
 
 export default class Artisan {
     /**
@@ -110,10 +110,19 @@ export default class Artisan {
             command
                 .command('make:repository <name>')
                 .option('-t, --test', colors.dim('Make test repository also'))
+                .option('-h, --http', colors.dim('Make repository, with an http client'))
                 .description(colors.dim('Create a new repository and repository interface'))
                 .action((name, options) => {
                     const instance = new Repository(name);
-                    instance.createRepositoryFile();
+
+                    // Determine which repository to create
+                    if (options.http) {
+                        instance.createHttpRepositoryFile();
+                    } else {
+                        instance.createDatabaseRepositoryFile();
+                    }
+
+                    // Interface is always the same
                     instance.createRepositoryInterfaceFile();
 
                     // Create a test repository if needed

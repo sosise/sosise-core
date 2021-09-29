@@ -1,7 +1,7 @@
 import Base from './Base';
-import MakeException from '../../Exceptions/Artisan/MakeException';
-import fs from 'fs';
 import colors from 'colors';
+import fs from 'fs';
+import MakeException from '../../Exceptions/Artisan/MakeException';
 
 export default class Config extends Base {
     protected templatePath = __dirname + '/../FileTemplates/ConfigTemplate.txt';

@@ -1,0 +1,30 @@
+import Axios, { AxiosInstance } from 'axios';
+import %name%Interface from './%name%Interface';
+
+export default class %name% implements %name%Interface {
+
+    private httpClient: AxiosInstance;
+
+    /**
+     * Constructor
+     */
+    constructor() {
+        // Instantiate httpClient
+        this.httpClient = Axios.create({
+            baseURL: 'https://example.com',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+    }
+
+    /**
+     * Get all customers
+     */
+    public async getAllCustomers(): Promise<any> {
+        // Make request
+        const response = await this.httpClient.get('/customers');
+
+        return response.data;
+    }
+}

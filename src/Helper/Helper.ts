@@ -34,7 +34,15 @@ export default class Helper {
     /**
      * Die and dump
      */
-    public static dd(params?: any): void {
+    public static dd(...params: any): void {
+        if (params.length === 1) {
+            params = params[0];
+        }
+
+        if (params.length === 0) {
+            params = undefined;
+        }
+
         console.log(inspect(params, {
             depth: null,
             maxArrayLength: null,
@@ -46,7 +54,15 @@ export default class Helper {
     /**
      * Dump
      */
-    public static dump(params?: any): void {
+    public static dump(...params: any): void {
+        if (params.length === 1) {
+            params = params[0];
+        }
+
+        if (params.length === 0) {
+            params = undefined;
+        }
+
         console.log(inspect(params, {
             depth: null,
             maxArrayLength: null,

@@ -1,5 +1,5 @@
-import ExceptionResponse from '../../Types/ExceptionResponse';
 import Exception from '../Exception';
+import ExceptionResponse from '../../Types/ExceptionResponse';
 
 export default class FakeMailSendingException extends Exception {
 

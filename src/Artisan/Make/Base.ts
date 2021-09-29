@@ -1,6 +1,6 @@
-import MakeException from '../../Exceptions/Artisan/MakeException';
-import fs from 'fs';
 import colors from 'colors';
+import fs from 'fs';
+import MakeException from '../../Exceptions/Artisan/MakeException';
 
 export default abstract class Base {
 

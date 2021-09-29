@@ -1,17 +1,17 @@
-// After config, comes the application
-import Express from 'express';
-import { Request, Response, NextFunction } from 'express';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
-import Redis from 'redis';
+import BodyParser from 'body-parser';
+import Compression from 'compression';
+import Express from 'express';
 import ExpressSession from 'express-session';
+import fs from 'fs';
+import Redis from 'redis';
 import SessionFileStore from 'session-file-store';
+import SessionInitializationException from './Exceptions/Session/SessionInitializationException';
 import SessionMemoryStore from 'memorystore';
 import SessionRedisStore from 'connect-redis';
-import SessionInitializationException from './Exceptions/Session/SessionInitializationException';
-import fs from 'fs';
-import Compression from 'compression';
-import BodyParser from 'body-parser';
+import { NextFunction, Request, Response } from 'express';
+// After config, comes the application
 
 export default class Server {
     public run(): void {

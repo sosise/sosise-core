@@ -1,7 +1,7 @@
-import { QueueGetters } from 'bullmq';
-import fs from 'fs';
 import colors from 'colors';
+import fs from 'fs';
 import { inspect } from 'util';
+import { QueueGetters } from 'bullmq';
 
 export default class QueueHandler {
 

@@ -1,5 +1,5 @@
-import dayjs from 'dayjs';
 import colors from 'colors';
+import dayjs from 'dayjs';
 import fs from 'fs';
 import MakeException from '../../Exceptions/Artisan/MakeException';
 

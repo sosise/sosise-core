@@ -1,9 +1,9 @@
-import dayjs from 'dayjs';
 import colors from 'colors';
+import dayjs from 'dayjs';
 import fs from 'fs';
+import LoggerRepositoryInterface from './LoggerRepositoryInterface';
 import os from 'os';
 import { inspect } from 'util';
-import LoggerRepositoryInterface from './LoggerRepositoryInterface';
 
 export default class LoggerFileRepository implements LoggerRepositoryInterface {
 

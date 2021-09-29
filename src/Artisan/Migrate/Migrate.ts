@@ -1,11 +1,11 @@
-import fs from 'fs';
-import { Knex } from 'knex';
-import lodash, { bind } from 'lodash';
-import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
-import Database from '../../Database/Database';
-import MigrationDoesNotExistsOnFilesystemException from '../../Exceptions/Database/MigrationDoesNotExistsOnFilesystemException';
 import colors from 'colors';
+import Database from '../../Database/Database';
 import DatabaseMigrationsNotSupported from '../../Exceptions/Database/DatabaseMigrationsNotSupported';
+import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
+import fs from 'fs';
+import lodash, { bind } from 'lodash';
+import MigrationDoesNotExistsOnFilesystemException from '../../Exceptions/Database/MigrationDoesNotExistsOnFilesystemException';
+import { Knex } from 'knex';
 
 export default class Migrate {
 

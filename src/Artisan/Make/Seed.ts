@@ -1,7 +1,7 @@
 import Base from './Base';
-import fs from 'fs';
 import colors from 'colors';
 import dayjs from 'dayjs';
+import fs from 'fs';
 import MakeException from '../../Exceptions/Artisan/MakeException';
 
 export default class Seed extends Base {

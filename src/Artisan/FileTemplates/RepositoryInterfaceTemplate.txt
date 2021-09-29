@@ -1,6 +1,6 @@
 export default interface %name% {
     /**
-     * Example
+     * Get all customers
      */
-    example(limit: number): Promise<any>;
+    getAllCustomers(): Promise<any>;
 }
