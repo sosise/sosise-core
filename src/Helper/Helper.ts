@@ -37,9 +37,7 @@ export default class Helper {
     public static dd(...params: any): void {
         if (params.length === 1) {
             params = params[0];
-        }
-
-        if (params.length === 0) {
+        } else if (params.length === 0) {
             params = undefined;
         }
 
@@ -57,9 +55,7 @@ export default class Helper {
     public static dump(...params: any): void {
         if (params.length === 1) {
             params = params[0];
-        }
-
-        if (params.length === 0) {
+        } else if (params.length === 0) {
             params = undefined;
         }
 
