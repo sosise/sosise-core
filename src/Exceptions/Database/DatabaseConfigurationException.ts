@@ -5,7 +5,7 @@ export default class DatabaseConfigurationException extends Exception {
 
     public connectionName: string;
     protected httpCode = 500;
-    protected code = 3000;
+    protected code = 2000;
 
     /**
      * Constructor

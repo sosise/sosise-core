@@ -5,7 +5,7 @@ export default class IOCMakeException extends Exception {
 
     public className: string;
     protected httpCode = 500;
-    protected code = 3001;
+    protected code = 2001;
 
     /**
      * Constructor

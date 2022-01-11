@@ -4,7 +4,7 @@ import ExceptionResponse from '../../Types/ExceptionResponse';
 export default class MailSendingException extends Exception {
 
     protected httpCode = 500;
-    protected code = 3004;
+    protected code = 2004;
 
     /**
      * Constructor

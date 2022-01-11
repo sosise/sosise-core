@@ -5,7 +5,7 @@ export default class ValidationException extends Exception {
 
     public validationErrors: string[];
     protected httpCode = 422;
-    protected code = 3002;
+    protected code = 2002;
 
     /**
      * Constructor

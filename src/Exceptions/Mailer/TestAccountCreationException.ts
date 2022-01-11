@@ -4,7 +4,7 @@ import ExceptionResponse from '../../Types/ExceptionResponse';
 export default class TestAccountCreationException extends Exception {
 
     protected httpCode = 500;
-    protected code = 3003;
+    protected code = 2003;
 
     /**
      * Constructor
