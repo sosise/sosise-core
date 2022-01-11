@@ -19,7 +19,7 @@ export default class LoggerService {
             const loggingConfig = require(process.cwd() + '/build/config/logging').default;
 
             // Check if logging to file is enabled
-            if (loggingConfig.enableLoggingToFile) {
+            if (loggingConfig.enableLoggingToFiles) {
                 // Instantiate loggerFileRepository
                 this.loggerFileRepository = new LoggerFileRepository(loggingConfig);
             }
@@ -28,67 +28,67 @@ export default class LoggerService {
     /**
      * Log debug message
      */
-    public debug(message: string, params: any = null): void {
+    public debug(message: string, params: any = null, channel?: string | undefined): void {
         this.repository.debug(message, params);
-        this.logToFileIfEnabled('debug', message, params);
+        this.logToFileIfEnabled('debug', message, params, channel);
     }
 
     /**
      * Log info message
      */
-    public info(message: string, params: any = null): void {
+    public info(message: string, params: any = null, channel?: string | undefined): void {
         this.repository.info(message, params);
-        this.logToFileIfEnabled('info', message, params);
+        this.logToFileIfEnabled('info', message, params, channel);
     }
 
     /**
      * Log warning message
      */
-    public warning(message: string, params: any = null): void {
+    public warning(message: string, params: any = null, channel?: string | undefined): void {
         this.repository.warning(message, params);
-        this.logToFileIfEnabled('warning', message, params);
+        this.logToFileIfEnabled('warning', message, params, channel);
     }
 
     /**
      * Log error message
      */
-    public error(message: string, params: any = null): void {
+    public error(message: string, params: any = null, channel?: string | undefined): void {
         this.repository.error(message, params);
-        this.logToFileIfEnabled('error', message, params);
+        this.logToFileIfEnabled('error', message, params, channel);
     }
 
     /**
      * Log critical message
      */
-    public critical(message: string, params: any = null): void {
+    public critical(message: string, params: any = null, channel?: string | undefined): void {
         this.repository.critical(message, params);
-        this.logToFileIfEnabled('critical', message, params);
+        this.logToFileIfEnabled('critical', message, params, channel);
     }
 
     /**
      * Log to file if enabled
      */
-    private logToFileIfEnabled(level: 'debug' | 'info' | 'warning' | 'error' | 'critical', message: string, params: any = null) {
-        // Do nothing if loggerFileRepository is undefined
+    private logToFileIfEnabled(level: 'debug' | 'info' | 'warning' | 'error' | 'critical', message: string, params: any = null, channel?: string | undefined) {
+        // Do nothing if loggerFileRepository is null
         if (!this.loggerFileRepository) {
             return;
         }
 
         switch (level) {
             case 'debug':
-                this.loggerFileRepository.debug(message, params);
+                this.loggerFileRepository.debug(message, params, channel);
                 break;
             case 'info':
-                this.loggerFileRepository.info(message, params);
+                this.loggerFileRepository.info(message, params, channel);
                 break;
             case 'warning':
-                this.loggerFileRepository.warning(message, params);
+                this.loggerFileRepository.warning(message, params, channel);
                 break;
             case 'error':
-                this.loggerFileRepository.error(message, params);
+                this.loggerFileRepository.error(message, params, channel);
                 break;
             case 'critical':
-                this.loggerFileRepository.critical(message, params);
+                this.loggerFileRepository.critical(message, params, channel);
                 break;
         }
     }

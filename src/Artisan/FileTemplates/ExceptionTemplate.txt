@@ -3,10 +3,20 @@ import ExceptionResponse from 'sosise-core/build/Types/ExceptionResponse';
 
 export default class %name% extends Exception {
 
-    // This variables are optional, you may remove them
+    // This variable is optional, you may remove it
     public exampleVariable: string;
+
+    // HTTP Code of the response with this exception
     protected httpCode = 500;
-    protected code = 3001;
+
+    // Error code which is rendered in the response
+    protected code = %code%;
+
+    // If set to false no exception will be sent to sentry
+    protected sendToSentry = true;
+
+    // In which logging channel should this exception be logged, see src/config/logging.ts
+    protected loggingChannel = 'default';
 
     /**
      * Constructor
@@ -23,11 +33,11 @@ export default class %name% extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            code: this.code, // optional
-            httpCode: this.httpCode, // optional
-            message: this.message,
+            code: exception.code,
+            httpCode: exception.httpCode,
+            message: exception.message,
             data: {
-                yourCustomData: this.exampleVariable
+                yourCustomData: exception.exampleVariable
             }
         };
         return response;

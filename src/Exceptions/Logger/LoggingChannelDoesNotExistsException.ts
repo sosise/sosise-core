@@ -1,16 +1,16 @@
 import Exception from '../Exception';
 import ExceptionResponse from '../../Types/ExceptionResponse';
 
-export default class IOCMakeException extends Exception {
+export default class LoggingChannelDoesNotExistsException extends Exception {
 
-    // Class name which could't be found in the IOC
-    public className: string;
+    // Which channel does not exists
+    protected channel: string;
 
     // HTTP Code of the response with this exception
     protected httpCode = 500;
 
     // Error code which is rendered in the response
-    protected code = 2001;
+    protected code = 2006;
 
     // If set to false no exception will be sent to sentry
     protected sendToSentry = true;
@@ -21,9 +21,9 @@ export default class IOCMakeException extends Exception {
     /**
      * Constructor
      */
-    constructor(message: string, className: string) {
+    constructor(message: string, channel: string) {
         super(message);
-        this.className = className;
+        this.channel = channel;
     }
 
     /**
@@ -35,7 +35,7 @@ export default class IOCMakeException extends Exception {
             httpCode: exception.httpCode,
             message: exception.message,
             data: {
-                classToResolve: exception.className
+                channel: exception.channel
             }
         };
         return response;

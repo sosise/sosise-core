@@ -2,6 +2,13 @@ import Exception from '../Exception';
 import ExceptionResponse from '../../Types/ExceptionResponse';
 
 export default class MakeException extends Exception {
+
+    // If set to false no exception will be sent to sentry
+    protected sendToSentry = true;
+
+    // In which logging channel should this exception be logged, see src/config/logging.ts
+    protected loggingChannel = 'default';
+
     /**
      * Constructor
      */
@@ -14,7 +21,7 @@ export default class MakeException extends Exception {
      */
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
-            message: this.message,
+            message: exception.message,
             data: {
                 stack: exception.stack!.split('\n')
             }

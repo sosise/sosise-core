@@ -1,11 +1,11 @@
-import colors from 'colors';
 import dayjs from 'dayjs';
 import fs from 'fs';
-import LoggerRepositoryInterface from './LoggerRepositoryInterface';
+import LoggerStorageRepositoryInterface from './LoggerStorageRepositoryInterface';
 import os from 'os';
 import { inspect } from 'util';
+import LoggingChannelDoesNotExistsException from '../../Exceptions/Logger/LoggingChannelDoesNotExistsException';
 
-export default class LoggerFileRepository implements LoggerRepositoryInterface {
+export default class LoggerFileRepository implements LoggerStorageRepositoryInterface {
 
     private loggingConfig: any;
 
@@ -20,56 +20,36 @@ export default class LoggerFileRepository implements LoggerRepositoryInterface {
     /**
      * Log info message
      */
-    public debug(message: string, params: any): void {
-        if (this.loggingConfig.useColorizedOutputInLogFiles) {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyString('debug', message, params) + os.EOL);
-        } else {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyStringNoColor('debug', message, params) + os.EOL);
-        }
+    public debug(message: string, params: any, channel: string | undefined): void {
+        fs.appendFileSync(this.getLogFilePath(channel), this.makePrettyStringNoColor('debug', message, params) + os.EOL);
     }
 
     /**
      * Log info message
      */
-    public info(message: string, params: any): void {
-        if (this.loggingConfig.useColorizedOutputInLogFiles) {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyString('info', message, params) + os.EOL);
-        } else {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyStringNoColor('info', message, params) + os.EOL);
-        }
+    public info(message: string, params: any, channel: string | undefined): void {
+        fs.appendFileSync(this.getLogFilePath(channel), this.makePrettyStringNoColor('info', message, params) + os.EOL);
     }
 
     /**
      * Log warning message
      */
-    public warning(message: string, params: any): void {
-        if (this.loggingConfig.useColorizedOutputInLogFiles) {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyString('warning', message, params) + os.EOL);
-        } else {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyStringNoColor('warning', message, params) + os.EOL);
-        }
+    public warning(message: string, params: any, channel: string | undefined): void {
+        fs.appendFileSync(this.getLogFilePath(channel), this.makePrettyStringNoColor('warning', message, params) + os.EOL);
     }
 
     /**
      * Log error message
      */
-    public error(message: string, params: any): void {
-        if (this.loggingConfig.useColorizedOutputInLogFiles) {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyString('error', message, params) + os.EOL);
-        } else {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyStringNoColor('error', message, params) + os.EOL);
-        }
+    public error(message: string, params: any, channel: string | undefined): void {
+        fs.appendFileSync(this.getLogFilePath(channel), this.makePrettyStringNoColor('error', message, params) + os.EOL);
     }
 
     /**
      * Log critical message
      */
-    public critical(message: string, params: any): void {
-        if (this.loggingConfig.useColorizedOutputInLogFiles) {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyString('critical', message, params) + os.EOL);
-        } else {
-            fs.appendFileSync(this.getLogFilePath(), this.makePrettyStringNoColor('critical', message, params) + os.EOL);
-        }
+    public critical(message: string, params: any, channel: string | undefined): void {
+        fs.appendFileSync(this.getLogFilePath(channel), this.makePrettyStringNoColor('critical', message, params) + os.EOL);
     }
 
     /**
@@ -84,37 +64,27 @@ export default class LoggerFileRepository implements LoggerRepositoryInterface {
     /**
      * Get current logfilepath
      */
-    private getLogFilePath(): string {
-        return `${this.loggingConfig.logFilesDirectory}/sosise-${dayjs().format('YYYY-MM-DD')}.log`;
+    private getLogFilePath(channel: string | undefined): string {
+        // If channel is given, try to get it from the config
+        if (channel) {
+            this.throwExceptionIfChannelDoesNotExists(channel);
+            const specificLogFileNamePrefix = this.loggingConfig.channels[channel].logFileNamePrefix;
+            return `${this.loggingConfig.logFilesDirectory}/${specificLogFileNamePrefix}-${dayjs().format('YYYY-MM-DD')}.log`;
+        }
+
+        this.throwExceptionIfChannelDoesNotExists('default');
+        const defaultLogFileNamePrefix = this.loggingConfig.channels.default.logFileNamePrefix;
+        return `${this.loggingConfig.logFilesDirectory}/${defaultLogFileNamePrefix}-${dayjs().format('YYYY-MM-DD')}.log`;
     }
 
     /**
-     * Compose and return a pretty string for logger
+     * Throws exception if channel does not exists
      */
-    private makePrettyString(level: 'debug' | 'info' | 'warning' | 'error' | 'critical', message: string, params: any = null): string {
-        const levelString: string = (() => {
-            switch (level) {
-                case 'debug':
-                    return colors.magenta('DEBUG');
-                case 'info':
-                    return colors.green('INFO ');
-                case 'warning':
-                    return colors.yellow('WARN ');
-                case 'error':
-                    return colors.red('ERROR');
-                case 'critical':
-                    return colors.bgRed('CRIT ');
-            }
-        })();
-
-        // Prepare params string
-        const paramsString = (params !== null ? inspect(params, { depth: null, maxArrayLength: null, colors: false }) : '');
-
-        // Prepare a string
-        const outputString: string = `${colors.dim(dayjs().format('YYYY-MM-DD HH:mm:ss'))} ${levelString} ${message} ${colors.cyan(paramsString)}`;
-
-        // Return a composed string
-        return outputString;
+    private throwExceptionIfChannelDoesNotExists(channel: string) {
+        if (this.loggingConfig.channels[channel] !== undefined) {
+            return;
+        }
+        throw new LoggingChannelDoesNotExistsException('Logging channel does not exists', channel);
     }
 
     /**

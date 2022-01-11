@@ -115,7 +115,24 @@ export default class Server {
         app.use('/', apiRoutes);
 
         // The error handler must be before any other error middleware and after all controllers
-        app.use(Sentry.Handlers.errorHandler());
+        app.use(Sentry.Handlers.errorHandler({
+            shouldHandleError(error) {
+                // Send exception to sentry when property sendToSentry exists and is true
+                // @ts-ignore
+                if (error.sendToSentry !== undefined && error.sendToSentry === true) {
+                    return true;
+                }
+
+                // Do not send exception to sentry when property sendToSentry exists and is false
+                // @ts-ignore
+                if (error.sendToSentry !== undefined && error.sendToSentry === false) {
+                    return false;
+                }
+
+                // When property was not found in the exception, send to sentry by default
+                return true;
+            },
+        }));
 
         // Exception handler
         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
