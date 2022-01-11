@@ -4,7 +4,7 @@ import ExceptionResponse from '../../Types/ExceptionResponse';
 export default class FakeMailSendingException extends Exception {
 
     protected httpCode = 500;
-    3005;
+    protected code = 2005;
 
     /**
      * Constructor
