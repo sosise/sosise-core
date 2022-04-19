@@ -34,12 +34,13 @@ export default class Artisan {
 
             // Get version of the sosise-core
             const packageJsonFileContent = fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8');
-            const artisanString = figlet.textSync('Artisan').magenta;
-            const versionString = colors.dim(`          sosise-core: ${JSON.parse(packageJsonFileContent).version}`);
+            const artisanString = fs.readFileSync(__dirname + '/Artisan/FileTemplates/ArtisanAscii.txt', 'utf-8').magenta;
+            const versionString = colors.dim(`                     sosise-core: ${JSON.parse(packageJsonFileContent).version}`);
+            const documentationLink = colors.dim(`            https://sosise.github.io/sosise-docs/`);
 
             command
                 .name(colors.green('./artisan'))
-                .description(`${artisanString}\n${versionString}`)
+                .description(`${artisanString}\n\n${versionString}\n\n\n${documentationLink}\n\n`)
                 .usage(colors.green('[command] [options]'))
                 .addHelpCommand('help [command]', colors.dim('Display help for command'));
 
