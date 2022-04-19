@@ -11,6 +11,7 @@ import SessionInitializationException from './Exceptions/Session/SessionInitiali
 import SessionMemoryStore from 'memorystore';
 import SessionRedisStore from 'connect-redis';
 import { NextFunction, Request, Response } from 'express';
+
 // After config, comes the application
 
 export default class Server {
@@ -61,17 +62,7 @@ export default class Server {
 
         // Initialize sentry
         const sentryConfig = require(process.cwd() + '/build/config/sentry').default;
-        Sentry.init({
-            environment: process.env.APP_ENV,
-            dsn: sentryConfig.dsn,
-            integrations: [
-                // enable HTTP calls tracing
-                new Sentry.Integrations.Http({ tracing: true }),
-                // enable Express.js middleware tracing
-                new Tracing.Integrations.Express({ app }),
-            ],
-            tracesSampleRate: 1.0,
-        });
+        Sentry.init(sentryConfig);
 
         // Setting up POST params parser
         app.use(Express.json());
@@ -96,9 +87,10 @@ export default class Server {
 
         // RequestHandler creates a separate execution context using domains, so that every
         // transaction/span/breadcrumb is attached to its own Hub instance
-        app.use(Sentry.Handlers.requestHandler());
+        // app.use(Sentry.Handlers.requestHandler());
+
         // TracingHandler creates a trace for every incoming request
-        app.use(Sentry.Handlers.tracingHandler());
+        // app.use(Sentry.Handlers.tracingHandler());
 
         // Dynamic middlewares registration
         const middlewares = require(process.cwd() + '/build/app/Http/Middlewares/Kernel').middlewares;

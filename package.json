@@ -28,7 +28,6 @@
   "license": "MIT",
   "dependencies": {
     "@sentry/node": "^5.29.2",
-    "@sentry/tracing": "^5.29.2",
     "@types/compression": "^1.7.0",
     "body-parser": "^1.19.0",
     "bullmq": "^1.73.0",
