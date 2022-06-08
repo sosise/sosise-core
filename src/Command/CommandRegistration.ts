@@ -1,6 +1,8 @@
 import colors from 'colors';
 import commander from 'commander';
 import fs from 'fs';
+import findprocess from 'find-process';
+import Helper from '../Helper/Helper';
 
 export default class CommandRegistration {
 
@@ -75,6 +77,7 @@ export default class CommandRegistration {
 
                             // Now open each of them and check if signature matches current execution
                             // If yes check if pid exists
+                            const expiredPids: string[] = [];
                             for (const pidFile of listOfPidFiles) {
                                 try {
                                     const fileContent = fs.readFileSync(tmpDirectory + pidFile, 'utf-8');
@@ -82,23 +85,38 @@ export default class CommandRegistration {
 
                                     // If pid file contains signature what we are executing right now
                                     if (fileObject.signature === commandClassInstance.signature) {
-                                        // Now check if pid exists
-                                        try {
-                                            // Try to send signal 0 to the pid
-                                            process.kill(fileObject.pid, 0);
+                                        // Get process info by pid
+                                        const processInfo = await findprocess('pid', fileObject.pid);
 
-                                            // At this point we are sure that process exists
-                                            // Pid found in process list, exit, preventing executing again
-                                            console.log(colors.yellow(`Command ${commandClassInstance.signature} is running, do not run it until it's end`));
-                                            process.exit(1);
-                                        } catch (error) {
-                                            // If pid not found, do nothing
+                                        // In case we've iformation about the pid
+                                        if (processInfo[0]) {
+                                            // Now check if the process is really ours, or the Operating System has occupied the pid
+                                            if (processInfo[0].cmd.match(new RegExp(commandClassInstance.signature, 'i'))) {
+                                                // Yep the process is really ours, we should wait
+                                                console.log(colors.yellow(`Command ${commandClassInstance.signature} is running, do not run it until it's end`));
+                                                process.exit(1);
+                                            }
+                                            // TODO Only for debugging
+                                            // else {
+                                            //     console.log('The process is not ours anymore, just delete the pid and go on');
+                                            // }
                                         }
+                                        // TODO Only for debugging
+                                        // else {
+                                        //     console.log('The process does not exists anymore, just delete pid and go on');
+                                        // }
+
+                                        // At this point we know that: OS has occupied our PID or the process does not exists anymore
+                                        // Delete the PID file
+                                        fs.rmSync(tmpDirectory + pidFile);
                                     }
                                 } catch (error) {
                                     // File not in our format, just skip it
                                 }
                             }
+
+                            // At this point we know that process is not running, remove all expired pid files with our signature
+                            expiredPids.map((value, index) => fs.rmSync(`${tmpDirectory}${value}`));
 
                             // Create pid file, may be used to prevent double execution
                             fs.writeFileSync(tmpDirectory + process.pid + '.pid', JSON.stringify({
