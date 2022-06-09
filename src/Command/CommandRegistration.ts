@@ -1,8 +1,8 @@
 import colors from 'colors';
 import commander from 'commander';
 import fs from 'fs';
-import findprocess from 'find-process';
-import Helper from '../Helper/Helper';
+import { exec } from 'child_process';
+import util from 'util';
 
 export default class CommandRegistration {
 
@@ -32,6 +32,28 @@ export default class CommandRegistration {
         } catch (error) {
             return [];
         }
+    }
+
+    /**
+     * Get process by pid
+     */
+    private async checkIfProcessExistsByPidAndCmd(pid: number, cmd: string): Promise<boolean> {
+        // Promisify exec
+        const promiseExec = util.promisify(exec);
+
+        // Execute ps
+        const result = await promiseExec('ps');
+
+        // Logic
+        const psLines = result.stdout.split('\n');
+        for (const line of psLines) {
+            if (line.match(new RegExp(pid.toString(), 'i'))) {
+                if (line.match(new RegExp(cmd, 'i'))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -85,28 +107,14 @@ export default class CommandRegistration {
 
                                     // If pid file contains signature what we are executing right now
                                     if (fileObject.signature === commandClassInstance.signature) {
-                                        // Get process info by pid
-                                        const processInfo = await findprocess('pid', fileObject.pid);
-
-                                        // In case we've iformation about the pid
-                                        if (processInfo[0]) {
-                                            // Now check if the process is really ours, or the Operating System has occupied the pid
-                                            if (processInfo[0].cmd.match(new RegExp(commandClassInstance.signature, 'i'))) {
-                                                // Yep the process is really ours, we should wait
-                                                console.log(colors.yellow(`Command ${commandClassInstance.signature} is running, do not run it until it's end`));
-                                                process.exit(1);
-                                            }
-                                            // TODO Only for debugging
-                                            // else {
-                                            //     console.log('The process is not ours anymore, just delete the pid and go on');
-                                            // }
+                                        // Check if process exists by pid and signature
+                                        if (await this.checkIfProcessExistsByPidAndCmd(fileObject.pid, commandClassInstance.signature)) {
+                                            // Yep the process is really ours, we should wait
+                                            console.log(colors.yellow(`Command ${commandClassInstance.signature} is running, do not run it until it's end`));
+                                            process.exit(1);
                                         }
-                                        // TODO Only for debugging
-                                        // else {
-                                        //     console.log('The process does not exists anymore, just delete pid and go on');
-                                        // }
 
-                                        // At this point we know that: OS has occupied our PID or the process does not exists anymore
+                                        // At this point we know that: OS has occupied our PID !OR! the process does not exists anymore
                                         // Delete the PID file
                                         fs.rmSync(tmpDirectory + pidFile);
                                     }
