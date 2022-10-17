@@ -3,6 +3,7 @@ import commander from 'commander';
 import fs from 'fs';
 import { exec } from 'child_process';
 import util from 'util';
+import Helper from '../Helper/Helper';
 
 export default class CommandRegistration {
 
@@ -54,6 +55,35 @@ export default class CommandRegistration {
             }
         }
         return false;
+    }
+
+    /**
+     * Create or update (touch) command execution file
+     * This is needed for monitoring, to ensure that command has not frozen
+     */
+    private async createOrUpdateCommandExecutionFile(commandFile: string): Promise<void> {
+        // Get command name
+        const commandFileNameWithoutExtension = commandFile.replace('.js', '');
+
+        // Get touch file path
+        const touchFilePath = Helper.storagePath() + 'framework/';
+
+        // In case storage/framework folder does not exists
+        if (!fs.existsSync(touchFilePath)) {
+            fs.mkdirSync(touchFilePath);
+            fs.writeFileSync(touchFilePath + '.gitignore', '*\n!.gitignore');
+        }
+
+        // Touch or create file
+        const currentDateTime = new Date();
+        const fileBody = `[${commandFileNameWithoutExtension}] started at ${currentDateTime}`;
+
+        if (!fs.existsSync(touchFilePath + commandFileNameWithoutExtension)) {
+            fs.writeFileSync(touchFilePath + commandFileNameWithoutExtension, fileBody);
+        } else {
+            fs.utimesSync(touchFilePath + commandFileNameWithoutExtension, currentDateTime, currentDateTime);
+            fs.writeFileSync(touchFilePath + commandFileNameWithoutExtension, fileBody);
+        }
     }
 
     /**
@@ -132,6 +162,9 @@ export default class CommandRegistration {
                                 pid: process.pid
                             }));
                         }
+
+                        // Create or update (touch) command execution file, this is needed for monitoring
+                        await this.createOrUpdateCommandExecutionFile(commandFile);
 
                         // Run handle method of the command
                         commandClassInstance.handle(cli).then(() => {
