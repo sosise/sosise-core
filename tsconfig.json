@@ -9,7 +9,7 @@
         "skipLibCheck": true,
         "incremental": false,
         "noUnusedParameters": false,
-        "removeComments": true,
+        "removeComments": false,
         "declaration": true,
         "strictNullChecks": true,
         "allowSyntheticDefaultImports": true,
