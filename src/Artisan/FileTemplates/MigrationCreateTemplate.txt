@@ -13,7 +13,9 @@ export default class %name% extends BaseSchema {
     public async up(): Promise<void> {
         await this.dbConnection.schema.createTable(this.tableName, (table) => {
             table.increments('id');
-            table.timestamps(true);
+            // table.timestamps(true);
+            table.timestamp('created_at').notNullable().defaultTo(this.dbConnection.fn.now());
+            table.timestamp('updated_at').notNullable().defaultTo(this.dbConnection.raw(`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`));
         });
     }
 
