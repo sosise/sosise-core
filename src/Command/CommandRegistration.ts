@@ -26,7 +26,7 @@ export default class CommandRegistration {
 
             // Filter out only js files with postfix Command
             listOfCommandFiles = listOfCommandFiles.filter((element) => {
-                return (element.includes('js') && element.includes('Command')) && (!element.includes('map'));
+                return (element.includes('js') && element.includes('Command')) && (!element.includes('.map'));
             });
 
             return listOfCommandFiles;
