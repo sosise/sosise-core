@@ -59,11 +59,11 @@ export default class CommandRegistration {
 
     /**
      * Create or update (touch) command execution file
-     * This is needed for monitoring, to ensure that command has not frozen
+     * This is needed for monitoring, to ensure that command not frozen
      */
-    private async createOrUpdateCommandExecutionFile(commandFile: string): Promise<void> {
+    private createOrUpdateCommandExecutionFile(commandFilename: string): void {
         // Get command name
-        const commandFileNameWithoutExtension = commandFile.replace('.js', '');
+        const commandFileNameWithoutExtension = commandFilename.replace('.js', '');
 
         // Get touch file path
         const touchFilePath = Helper.storagePath() + 'framework/';
@@ -76,7 +76,7 @@ export default class CommandRegistration {
 
         // Touch or create file
         const currentDateTime = new Date();
-        const fileBody = `[${commandFileNameWithoutExtension}] started at ${currentDateTime}`;
+        const fileBody = `[${commandFileNameWithoutExtension}] file created at ${currentDateTime}`;
 
         if (!fs.existsSync(touchFilePath + commandFileNameWithoutExtension)) {
             fs.writeFileSync(touchFilePath + commandFileNameWithoutExtension, fileBody);
@@ -163,11 +163,16 @@ export default class CommandRegistration {
                             }));
                         }
 
-                        // Create or update (touch) command execution file, this is needed for monitoring
-                        await this.createOrUpdateCommandExecutionFile(commandFile);
+                        // Create or update (touch) command execution start file, this is needed for monitoring
+                        // This ensures that command has started
+                        this.createOrUpdateCommandExecutionFile(`${commandFile}-start`);
 
                         // Run handle method of the command
                         commandClassInstance.handle(cli).then(() => {
+                            // Create or update (touch) command execution start file, this is needed for monitoring
+                            // This ensures that command has ended
+                            this.createOrUpdateCommandExecutionFile(`${commandFile}-end`);
+
                             process.exit(0);
                         }).catch(async (error) => {
                             const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
