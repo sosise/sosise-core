@@ -2,24 +2,24 @@ import BaseSchema from 'sosise-core/build/Database/BaseSchema';
 import * as faker from 'faker';
 
 /**
- * If you need more information, see: http://knexjs.org/#Schema ; https://www.npmjs.com/package/faker
+ * For additional information, refer to: http://knexjs.org/#Schema ; https://www.npmjs.com/package/faker
  */
 export default class %name% extends BaseSchema {
     /**
-     * Restrict running the seed only in a local environment (APP_ENV=local)
+     * Allows running the seeder only in a local environment (APP_ENV=local)
      */
     protected onlyInLocalEnvironment = false;
 
     /**
-     * Table name where data should be inserted in
+     * Specifies the table where the data should be inserted
      */
     protected tableName = 'table_name_comes_here';
 
     /**
-     * Run seed
+     * Executes the seeder
      */
     public async run(): Promise<void> {
-        // Prepare data to seed
+        // Prepare data for seeding
         const data: any = [];
 
         // Generate 100 rows
@@ -30,7 +30,7 @@ export default class %name% extends BaseSchema {
             });
         }
 
-        // Insert to table
+        // Insert data into the table
         await this.dbConnection.table(this.tableName).insert(data);
     }
 }

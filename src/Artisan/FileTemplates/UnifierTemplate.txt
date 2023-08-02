@@ -2,7 +2,7 @@ import Validator from 'validatorjs';
 import ValidationException from 'sosise-core/build/Exceptions/Validation/ValidationException';
 
 /**
- * If you need more validation rules, see: https://github.com/mikeerickson/validatorjs
+ * For more information, refer to: https://github.com/mikeerickson/validatorjs
  */
 export default class %name% {
 
@@ -32,7 +32,7 @@ export default class %name% {
             id: ['required', 'numeric', 'min:1'],
         });
 
-        // If it fails throw exception
+        // If validation fails, throw an exception
         if (validator.fails()) {
             throw new ValidationException('Validation exception', (validator.errors.all() as any));
         }

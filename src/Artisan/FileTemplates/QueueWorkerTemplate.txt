@@ -28,7 +28,7 @@ export default class %name% {
     }
 
     /**
-     * Listen queue, please do not delete this method
+     * Listen to the queue (please do not delete this method)
      */
     private async listen(): Promise<void> {
         // Instantiate queue scheduler
@@ -39,7 +39,7 @@ export default class %name% {
 
         // Report job exceptions
         myWorker.on('failed', async (job: Job, error) => {
-            // Some exception occured during job handling
+            // Some exception occurred during job handling
             // Report the exception
             const exceptionHandler = new Handler();
             exceptionHandler.reportCommandException(error);

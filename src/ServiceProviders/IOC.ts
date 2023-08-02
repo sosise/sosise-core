@@ -1,6 +1,5 @@
 import IOCMakeException from '../Exceptions/IOC/IOCMakeException';
-import LoggerJsonConsoleRepository from '../Repositories/Logger/LoggerJsonConsoleRepository';
-import LoggerPrettyConsoleRepository from '../Repositories/Logger/LoggerPrettyConsoleRepository';
+import CacheService from '../Services/Cache/CacheService';
 import LoggerService from '../Services/Logger/LoggerService';
 
 export default class IOC {
@@ -21,10 +20,10 @@ export default class IOC {
              * LoggerService
              */
             LoggerService: () => {
-                if (process.env.APP_ENV === 'local') {
-                    return new LoggerService(new LoggerPrettyConsoleRepository());
-                }
-                return new LoggerService(new LoggerJsonConsoleRepository());
+                return new LoggerService();
+            },
+            CacheService: () => {
+                return new CacheService();
             }
         },
 
@@ -34,10 +33,7 @@ export default class IOC {
              * LoggerService
              */
             LoggerService: () => {
-                if (process.env.APP_ENV === 'local') {
-                    return new LoggerService(new LoggerPrettyConsoleRepository());
-                }
-                return new LoggerService(new LoggerJsonConsoleRepository());
+                return new LoggerService();
             }
         },
     };

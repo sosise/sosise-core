@@ -1,4 +1,6 @@
 import LoggerFileRepository from "../../Repositories/Logger/LoggerFileRepository";
+import LoggerJsonConsoleRepository from "../../Repositories/Logger/LoggerJsonConsoleRepository";
+import LoggerPrettyConsoleRepository from "../../Repositories/Logger/LoggerPrettyConsoleRepository";
 import LoggerRepositoryInterface from "../../Repositories/Logger/LoggerRepositoryInterface";
 
 export default class LoggerService {
@@ -12,16 +14,21 @@ export default class LoggerService {
     /**
      * Constructor
      */
-    constructor(repository: LoggerRepositoryInterface) {
-        this.repository = repository;
-
+    constructor() {
         // Require logging configuration
         const loggingConfig = require(process.cwd() + '/build/config/logging').default;
         this.enableLoggingToConsole = loggingConfig.enableLoggingToConsole;
         this.enableLoggingToFiles = loggingConfig.enableLoggingToFiles;
         this.logLevel = loggingConfig.logLevel;
 
-        // Check if logging configuration file exists
+        // Determine which repository should be used
+        if (process.env.APP_ENV === 'local') {
+            this.repository = new LoggerPrettyConsoleRepository();
+        } else {
+            this.repository = new LoggerJsonConsoleRepository();
+        }
+
+        // In case logging to files is enabled
         if (this.enableLoggingToFiles) {
             // Instantiate loggerFileRepository
             this.loggerFileRepository = new LoggerFileRepository(loggingConfig);
@@ -167,11 +174,13 @@ export default class LoggerService {
     private checkIfBitIssetAtPosition(byte: any, positionOfBit: number): boolean {
         // to shift the kth bit
         // at 1st position
+        // tslint:disable-next-line:no-bitwise
         const newNum = byte >> (positionOfBit - 1);
 
         // Since, last bit is now
         // kth bit, so doing AND with 1
         // will give result.
+        // tslint:disable-next-line:no-bitwise
         return (newNum & 1) === 1;
     }
 }

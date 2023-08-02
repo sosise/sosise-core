@@ -13,7 +13,7 @@ export default class %name% extends BaseCommand {
     protected description: string = 'This is a example command';
 
     /**
-     * When command is executed prevent from double execution
+     * When the command is executed, prevent it from double execution
      */
     protected singleExecution: boolean = false;
 
@@ -32,7 +32,7 @@ export default class %name% extends BaseCommand {
      * Execute the console command
      */
     public async handle(cli: commander.Command): Promise<void> {
-        // When debug option is true
+        // Check if the debug option is provided
         if (cli.debug) {
             console.log('Debug option provided');
         }
