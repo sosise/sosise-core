@@ -51,7 +51,7 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
         }
 
         // Return
-        return value;
+        return JSON.parse(value);
     }
 
     /**
@@ -70,7 +70,7 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
         await this.delAsync(key);
 
         // Return
-        return value;
+        return JSON.parse(value);
     }
 
     /**
@@ -78,7 +78,7 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
      */
     public async put(key: string, data: any, ttlInSeconds?: number): Promise<void> {
         // Set cache key
-        await this.setAsync(key, data);
+        await this.setAsync(key, JSON.stringify(data));
 
         // Get ttl
         const ttl = (!ttlInSeconds ? this.cacheConfig.defaultTTLInSeconds : ttlInSeconds);
