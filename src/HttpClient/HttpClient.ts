@@ -129,7 +129,8 @@ export default class HttpClient {
         }, config.timeout ?? HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
 
         // Do request
-        const response = await this.makeRequest(config, retryConfig);
+        // const response = await this.makeRequest(config, retryConfig);
+        const response = await this.makeRequest({ ...config, cancelToken: source.token }, retryConfig);
 
         // Clear timeout, since request does not went into it
         clearTimeout(timeout);
