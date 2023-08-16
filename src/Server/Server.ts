@@ -7,15 +7,22 @@ import ExpressSession from 'express-session';
 import fs from 'fs';
 import Redis from 'redis';
 import SessionFileStore from 'session-file-store';
-import SessionInitializationException from './Exceptions/Session/SessionInitializationException';
 import SessionMemoryStore from 'memorystore';
 import SessionRedisStore from 'connect-redis';
 import { NextFunction, Request, Response } from 'express';
-
-// After config, comes the application
+import SessionInitializationException from '../Exceptions/Session/SessionInitializationException';
+import colors from 'colors';
+import ServerInformation from './ServerInformation';
 
 export default class Server {
-    public run(): void {
+    /**
+     * Run server
+     */
+    public async run(): Promise<void> {
+        // Print server information
+        const serverInformation = new ServerInformation();
+        await serverInformation.printServerInformation();
+
         // Instantiate app
         const app = Express();
 
@@ -133,6 +140,7 @@ export default class Server {
         });
 
         // Start the server
-        app.listen(port, () => console.log(`Listening at http://localhost:${port}`));
+        // app.listen(port, () => console.log(`Listening at http://localhost:${port}`));
+        app.listen(port, () => console.log(colors.white('Listening at ') + colors.blue(`http://0.0.0.0:${port}`)));
     }
 }
