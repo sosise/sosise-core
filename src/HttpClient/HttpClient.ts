@@ -106,7 +106,7 @@ export default class HttpClient {
         const source = axios.CancelToken.source();
         const timeout = setTimeout(() => {
             source.cancel('Timeout');
-        }, config.timeout ?? HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
+        }, config.timeout || this.config?.timeout || HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
 
         // Do request
         const response = await this.axiosInstance.request({ ...config, cancelToken: source.token });
@@ -122,11 +122,14 @@ export default class HttpClient {
      * Make request with retry
      */
     public async requestWithRetry(config: AxiosRequestConfig, retryConfig: HttpClientRetryConfig): Promise<AxiosResponse> {
+
+        Helper.dd(config.timeout || this.config?.timeout || HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
+
         // Prepare cancel token for emergency timeout
         const source = axios.CancelToken.source();
         const timeout = setTimeout(() => {
             source.cancel('Timeout');
-        }, config.timeout ?? HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
+        }, config.timeout || this.config?.timeout || HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
 
         // Do request
         // const response = await this.makeRequest(config, retryConfig);
