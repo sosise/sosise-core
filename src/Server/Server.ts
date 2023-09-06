@@ -81,7 +81,7 @@ export default class Server {
 
         app.use(BodyParser.raw({
             limit: '150mb',
-            type: '*/*'
+            // type: '*/*'
         }));
 
         // app.use(ExpressFormData.parse({
