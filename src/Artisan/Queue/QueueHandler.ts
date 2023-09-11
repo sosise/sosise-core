@@ -83,6 +83,30 @@ export default class QueueHandler {
     }
 
     /**
+     * Retry delayed jobs by queue name
+     */
+    public async retryDelayedByQueueName(queueName: string): Promise<void> {
+        // Get queue config
+        const queueConfig = require(process.cwd() + '/build/config/queue').default;
+
+        // Instantiate queue getter
+        const queueGetters = new QueueGetters(queueName, { connection: { host: queueConfig.redis.host, port: queueConfig.redis.port } });
+
+        // Get all delayed jobs
+        const jobs = await queueGetters.getDelayed(0, await queueGetters.getDelayedCount());
+
+        // Retry all delayed jobs in parallel
+        const promiseList: any[] = [];
+        for (const job of jobs) {
+            promiseList.push(job.retry());
+        }
+        await Promise.all(promiseList);
+
+        // Log
+        console.log(colors.green(`Sent ${jobs.length} delayed jobs back to waiting queue`));
+    }
+
+    /**
      * Flush all jobs marked as failed
      */
     public async flushFailed(queueName: string): Promise<void> {

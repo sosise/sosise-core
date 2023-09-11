@@ -386,6 +386,23 @@ export default class Artisan {
                 });
 
             command
+                .command('queue:accelerate <queueName>')
+                .description(colors.dim('Accelerate (retry) all jobs marked as delayed'))
+                .action(async (queueName) => {
+                    try {
+                        const instance = new QueueHandler();
+                        await instance.retryDelayedByQueueName(queueName);
+                        process.exit(0);
+                    } catch (error) {
+                        const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                        const exceptionHandler = new Handler();
+                        exceptionHandler.reportCommandException(error).then(() => {
+                            process.exit(1);
+                        });
+                    }
+                });
+
+            command
                 .command('queue:flush <queueName>')
                 .description(colors.dim('Flush all jobs marked as failed'))
                 .action(async (queueName) => {
