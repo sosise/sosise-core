@@ -98,7 +98,7 @@ export default class QueueHandler {
         // Retry all delayed jobs in parallel
         const promiseList: any[] = [];
         for (const job of jobs) {
-            promiseList.push(job.retry());
+            promiseList.push(job.changeDelay(0));
         }
         await Promise.all(promiseList);
 
