@@ -161,8 +161,8 @@ export default class Helper {
     public static assemblePagination(data: any[], page: number, pageSize: number): { page: number, pageSize: number, totalPages: number, totalElements: number } {
         // Create pagination object
         const pagination: { page: number, pageSize: number, totalPages: number, totalElements: number } = {
-            page,
-            pageSize,
+            page: Number(page),
+            pageSize: Number(pageSize),
             totalPages: Math.ceil(data.length / pageSize),
             totalElements: data.length
         };
