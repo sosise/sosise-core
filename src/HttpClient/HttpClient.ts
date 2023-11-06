@@ -4,6 +4,7 @@ import https, { AgentOptions } from "https";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import HttpClientRetryConfig from "../Types/HttpClientRetryConfig";
 import Helper from "../Helper/Helper";
+import HttpClientRequestConfig from "../Types/HttpClientRequestConfig";
 
 export default class HttpClient {
 
@@ -101,7 +102,7 @@ export default class HttpClient {
     /**
      * Make request
      */
-    public async request(config: AxiosRequestConfig): Promise<AxiosResponse> {
+    public async request(config: HttpClientRequestConfig): Promise<AxiosResponse> {
         // Prepare cancel token for emergency timeout
         const source = axios.CancelToken.source();
         const timeout = setTimeout(() => {
@@ -109,7 +110,7 @@ export default class HttpClient {
         }, config.timeout || this.config?.timeout || HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
 
         // Do request
-        const response = await this.axiosInstance.request({ ...config, cancelToken: source.token });
+        const response = await this.makeRequest({ ...config, cancelToken: source.token });
 
         // Clear timeout, since request does not went into it
         clearTimeout(timeout);
@@ -121,7 +122,7 @@ export default class HttpClient {
     /**
      * Make request with retry
      */
-    public async requestWithRetry(config: AxiosRequestConfig, retryConfig: HttpClientRetryConfig): Promise<AxiosResponse> {
+    public async requestWithRetry(config: HttpClientRequestConfig, retryConfig: HttpClientRetryConfig): Promise<AxiosResponse> {
         // Prepare cancel token for emergency timeout
         const source = axios.CancelToken.source();
         const timeout = setTimeout(() => {
@@ -129,7 +130,6 @@ export default class HttpClient {
         }, config.timeout || this.config?.timeout || HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
 
         // Do request
-        // const response = await this.makeRequest(config, retryConfig);
         const response = await this.makeRequest({ ...config, cancelToken: source.token }, retryConfig);
 
         // Clear timeout, since request does not went into it
@@ -142,7 +142,7 @@ export default class HttpClient {
     /**
      * Make request
      */
-    private async makeRequest(config: AxiosRequestConfig, retryConfig: HttpClientRetryConfig, retryCounter: number = 1): Promise<AxiosResponse> {
+    private async makeRequest(config: HttpClientRequestConfig, retryConfig?: HttpClientRetryConfig, retryCounter: number = 1): Promise<AxiosResponse> {
         try {
             // Make request
             const response = await this.axiosInstance.request(config);
@@ -151,7 +151,7 @@ export default class HttpClient {
             return response;
         } catch (error) {
             // In case we have retries left
-            if (retryCounter < retryConfig.requestMaxRetries) {
+            if (retryConfig && retryCounter < retryConfig.requestMaxRetries) {
                 // Calculate next wait interval
                 let waitInterval = 0;
                 switch (retryConfig.requestRetryStrategy) {
@@ -169,8 +169,44 @@ export default class HttpClient {
                 // Retry
                 return this.makeRequest(config, retryConfig, retryCounter + 1);
             } else {
-                // No retries left, throw original exception
-                throw error;
+                // No retries left
+                // In case error does not contain response
+                if (!error.response) {
+                    // Determine which exception to throw, default axios exception or user given exception
+                    if (!config.defaultException) {
+                        throw error;
+                    }
+
+                    // Otherwise throw user given exception
+                    throw new config.defaultException(error.message, 500, null);
+                }
+
+                // At this step we are sure that we've got a HTTP response, now we need to check if user gave us
+                // Instructions what to return in case of httpCode's
+                if (config.returnInCaseOfStatusCodes) {
+                    for (const [httpCode, whatToReturn] of Object.entries(config.returnInCaseOfStatusCodes)) {
+                        if (Number(error.response.status) === Number(httpCode)) {
+                            return {
+                                data: whatToReturn,
+                                status: 200,
+                                statusText: 'OK',
+                                headers: error.response.headers,
+                                // @ts-ignore
+                                config: null,
+                                request: null,
+                            };
+                        }
+                    }
+                }
+
+                // Nope no instructions found
+                // Determine which exception to throw, default axios exception or given user exception
+                if (!config.defaultException) {
+                    throw error;
+                }
+
+                // Otherwise throw user given exception
+                throw new config.defaultException(error.response?.data?.message ?? error.message, error.response.status, error.response.data.data ?? null);
             }
         }
     }
