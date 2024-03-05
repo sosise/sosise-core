@@ -40,6 +40,12 @@ export default class HttpClient {
         if (axiosConfig.ignoreSelfSignedCertificates === true) {
             httpsAgentConfig.rejectUnauthorized = false;
         }
+        if (axiosConfig.keepAlive !== undefined) {
+            httpsAgentConfig.keepAlive = axiosConfig.keepAlive;
+        }
+        if (axiosConfig.keepAliveMsecs !== undefined) {
+            httpsAgentConfig.keepAliveMsecs = axiosConfig.keepAliveMsecs;
+        }
 
         // Prepare https agent
         let httpsAgent = new https.Agent(httpsAgentConfig);
@@ -62,9 +68,15 @@ export default class HttpClient {
             // @ts-ignore
             httpsAgent = new HttpsProxyAgent(httpsProxyAgentConfig);
 
-            // If self signed certificates should be used
+            // Prepare https agent (proxy agent) config
             if (axiosConfig.ignoreSelfSignedCertificates === true) {
                 httpsAgent.options.rejectUnauthorized = false;
+            }
+            if (axiosConfig.keepAlive !== undefined) {
+                httpsAgentConfig.keepAlive = axiosConfig.keepAlive;
+            }
+            if (axiosConfig.keepAliveMsecs !== undefined) {
+                httpsAgentConfig.keepAliveMsecs = axiosConfig.keepAliveMsecs;
             }
 
             // Remove proxy object from axiosConfig object, they will conflict with each other
