@@ -1,13 +1,24 @@
-import Validator from 'validatorjs';
+import Validator from 'sosise-core/build/Validator/Validator';
 import ValidationException from 'sosise-core/build/Exceptions/Validation/ValidationException';
 
+enum ItemType {
+    AVAILABLE = 'available',
+    NOT_AVAILABLE = 'not-available',
+}
+
 /**
- * For more information, refer to: https://github.com/mikeerickson/validatorjs
+ * For more information, refer to: https://sosise.github.io/sosise-docs/#/documentation/unifiers
  */
 export default class %name% {
 
     private params: any;
-    public customerId: number;
+    public age: number;
+    public confirmation: 'yes' | 'no';
+    public items: {
+        id: number;
+        title: string | null;
+        availability?: ItemType
+    }[] = [];
 
     /**
      * Constructor
@@ -28,13 +39,45 @@ export default class %name% {
      */
     private validate() {
         // Create validator
-        const validator = new Validator(this.params, {
-            id: ['required', 'numeric', 'min:1'],
-        });
+        const validator = new Validator(this.params);
+
+        // Validate
+        validator
+            .field('age')
+            .required()
+            .shouldBeNumber()
+            .min(18);
+
+        validator
+            .field('confirmation')
+            .required()
+            .inList(['yes', 'no']);
+
+        validator
+            .field('items')
+            .required()
+            .shouldBeArray()
+            .min(1)
+            .validateArrayOfObjects(childValidator => {
+                childValidator
+                    .field('id')
+                    .required()
+                    .shouldBeNumber();
+
+                childValidator
+                    .field('title')
+                    .required()
+                    .shouldBeString();
+
+                childValidator
+                    .field('availability')
+                    .sometimes()
+                    .enum(ItemType);
+            });
 
         // If validation fails, throw an exception
         if (validator.fails()) {
-            throw new ValidationException('Validation exception', (validator.errors.all() as any));
+            throw new ValidationException('Validation exception', validator.errors);
         }
     }
 
@@ -42,6 +85,8 @@ export default class %name% {
      * Request data mapping
      */
     private map() {
-        this.customerId = this.params.id;
+        this.age = this.params.age;
+        this.confirmation = this.params.confirmation;
+        this.items = this.params.items;
     }
 }
