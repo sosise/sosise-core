@@ -1,4 +1,4 @@
-import commander from 'commander';
+import commander from "commander";
 
 export interface OptionType {
     flag: string;

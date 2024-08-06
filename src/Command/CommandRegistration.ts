@@ -1,9 +1,9 @@
-import colors from 'colors';
-import commander from 'commander';
-import fs from 'fs';
-import { exec } from 'child_process';
-import util from 'util';
-import Helper from '../Helper/Helper';
+import { exec } from "child_process";
+import colors from "colors";
+import commander from "commander";
+import fs from "fs";
+import util from "util";
+import Helper from "../Helper/Helper";
 
 export default class CommandRegistration {
 

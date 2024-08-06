@@ -1,5 +1,5 @@
-import DatabaseConfigurationException from '../Exceptions/Database/DatabaseConfigurationException';
-import { knex, Knex } from 'knex';
+import { knex, Knex } from "knex";
+import DatabaseConfigurationException from "../Exceptions/Database/DatabaseConfigurationException";
 
 export default class Database {
 

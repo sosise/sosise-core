@@ -1,7 +1,7 @@
-import Base from './Base';
-import colors from 'colors';
-import fs from 'fs';
-import MakeException from '../../Exceptions/Artisan/MakeException';
+import colors from "colors";
+import fs from "fs";
+import MakeException from "../../Exceptions/Artisan/MakeException";
+import Base from "./Base";
 
 export default class Middleware extends Base {
     protected templatePath = __dirname + '/../FileTemplates/MiddlewareTemplate.txt';

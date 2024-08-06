@@ -1,5 +1,5 @@
-import dayjs from 'dayjs';
-import { inspect } from 'util';
+import dayjs from "dayjs";
+import { inspect } from "util";
 
 export default class Helper {
     /**

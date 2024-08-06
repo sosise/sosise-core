@@ -1,7 +1,7 @@
+import { createClient, RedisClient } from "redis";
+import { promisify } from "util";
 import RedisException from "../../Exceptions/Cache/RedisException";
 import CacheRepositoryInterface from "./CacheRepositoryInterface";
-import { RedisClient, createClient } from 'redis';
-import { promisify } from 'util';
 
 export default class CacheRedisRepository implements CacheRepositoryInterface {
 

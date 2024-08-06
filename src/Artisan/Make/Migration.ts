@@ -1,7 +1,7 @@
-import colors from 'colors';
-import dayjs from 'dayjs';
-import fs from 'fs';
-import MakeException from '../../Exceptions/Artisan/MakeException';
+import colors from "colors";
+import dayjs from "dayjs";
+import fs from "fs";
+import MakeException from "../../Exceptions/Artisan/MakeException";
 
 export default class Migration {
 

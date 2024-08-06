@@ -1,7 +1,7 @@
-import figlet from 'figlet';
-import colors from 'colors';
-import Database from '../Database/Database';
-import { createClient } from 'redis';
+import colors from "colors";
+import figlet from "figlet";
+import { createClient } from "redis";
+import Database from "../Database/Database";
 
 export default class ServerInformation {
     /**

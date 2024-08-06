@@ -1,18 +1,18 @@
-import * as Sentry from '@sentry/node';
-import * as Tracing from '@sentry/tracing';
-import BodyParser from 'body-parser';
-import Compression from 'compression';
-import Express from 'express';
-import ExpressSession from 'express-session';
-import fs from 'fs';
-import Redis from 'redis';
-import SessionFileStore from 'session-file-store';
-import SessionMemoryStore from 'memorystore';
-import SessionRedisStore from 'connect-redis';
-import { NextFunction, Request, Response } from 'express';
-import SessionInitializationException from '../Exceptions/Session/SessionInitializationException';
-import colors from 'colors';
-import ServerInformation from './ServerInformation';
+import BodyParser from "body-parser";
+import colors from "colors";
+import Compression from "compression";
+import SessionRedisStore from "connect-redis";
+import Express from "express";
+import { NextFunction, Request, Response } from "express";
+import ExpressSession from "express-session";
+import fs from "fs";
+import SessionMemoryStore from "memorystore";
+import Redis from "redis";
+import SessionFileStore from "session-file-store";
+import * as Sentry from "@sentry/node";
+import * as Tracing from "@sentry/tracing";
+import SessionInitializationException from "../Exceptions/Session/SessionInitializationException";
+import ServerInformation from "./ServerInformation";
 
 export default class Server {
     /**

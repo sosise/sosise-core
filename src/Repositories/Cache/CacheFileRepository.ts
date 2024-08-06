@@ -1,5 +1,5 @@
-import CacheRepositoryInterface from "./CacheRepositoryInterface";
 import fs from "fs";
+import CacheRepositoryInterface from "./CacheRepositoryInterface";
 
 export default class CacheFileRepository implements CacheRepositoryInterface {
 

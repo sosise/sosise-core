@@ -1,4 +1,4 @@
-import { Job, JobsOptions, Queue as BullQueue } from 'bullmq';
+import { Job, JobsOptions, Queue as BullQueue } from "bullmq";
 
 export default class Queue {
 

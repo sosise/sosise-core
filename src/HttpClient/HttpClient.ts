@@ -1,10 +1,10 @@
-import HttpClientConfig from "../Types/HttpClientConfig";
 import axios, { Axios, AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import https, { AgentOptions } from "https";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import HttpClientRetryConfig from "../Types/HttpClientRetryConfig";
 import Helper from "../Helper/Helper";
+import HttpClientConfig from "../Types/HttpClientConfig";
 import HttpClientRequestConfig from "../Types/HttpClientRequestConfig";
+import HttpClientRetryConfig from "../Types/HttpClientRetryConfig";
 
 export default class HttpClient {
 

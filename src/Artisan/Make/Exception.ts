@@ -1,8 +1,8 @@
-import Base from './Base';
-import fs from 'fs';
-import path from 'path';
-import colors from 'colors';
-import MakeException from '../../Exceptions/Artisan/MakeException';
+import colors from "colors";
+import fs from "fs";
+import path from "path";
+import MakeException from "../../Exceptions/Artisan/MakeException";
+import Base from "./Base";
 
 export default class Exception extends Base {
 

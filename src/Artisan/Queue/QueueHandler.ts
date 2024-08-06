@@ -1,7 +1,7 @@
-import colors from 'colors';
-import fs from 'fs';
-import { inspect } from 'util';
-import { QueueGetters } from 'bullmq';
+import { QueueGetters } from "bullmq";
+import colors from "colors";
+import fs from "fs";
+import { inspect } from "util";
 
 export default class QueueHandler {
 

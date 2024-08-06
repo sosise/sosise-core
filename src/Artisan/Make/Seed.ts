@@ -1,8 +1,8 @@
-import Base from './Base';
-import colors from 'colors';
-import dayjs from 'dayjs';
-import fs from 'fs';
-import MakeException from '../../Exceptions/Artisan/MakeException';
+import colors from "colors";
+import dayjs from "dayjs";
+import fs from "fs";
+import MakeException from "../../Exceptions/Artisan/MakeException";
+import Base from "./Base";
 
 export default class Seed extends Base {
     protected templatePath = __dirname + '/../FileTemplates/SeedTemplate.txt';

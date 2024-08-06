@@ -1,6 +1,6 @@
-import Database from './Database';
-import DefaultConnectionNotSetException from '../Exceptions/Database/DefaultConnectionNotSetException';
-import { Knex } from 'knex';
+import { Knex } from "knex";
+import DefaultConnectionNotSetException from "../Exceptions/Database/DefaultConnectionNotSetException";
+import Database from "./Database";
 
 /**
  * Used for migrations

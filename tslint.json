@@ -9,7 +9,8 @@
         "semicolon": [
             true,
             "always"
-        ]
+        ],
+        "callable-types": false
     },
     "rulesDirectory": []
 }

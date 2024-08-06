@@ -1,5 +1,5 @@
-import Exception from '../Exception';
-import ExceptionResponse from '../../Types/ExceptionResponse';
+import ExceptionResponse from "../../Types/ExceptionResponse";
+import Exception from "../Exception";
 
 export default class ValidationException extends Exception {
 

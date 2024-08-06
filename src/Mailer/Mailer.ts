@@ -1,10 +1,10 @@
-import FakeMailSendingException from '../Exceptions/Mailer/FakeMailSendingException';
-import IOC from '../ServiceProviders/IOC';
-import LoggerService from '../Services/Logger/LoggerService';
-import Mail from 'nodemailer/lib/mailer';
-import MailSendingException from '../Exceptions/Mailer/MailSendingException';
-import Nodemailer from 'nodemailer';
-import TestAccountCreationException from '../Exceptions/Mailer/TestAccountCreationException';
+import Nodemailer from "nodemailer";
+import Mail from "nodemailer/lib/mailer";
+import FakeMailSendingException from "../Exceptions/Mailer/FakeMailSendingException";
+import MailSendingException from "../Exceptions/Mailer/MailSendingException";
+import TestAccountCreationException from "../Exceptions/Mailer/TestAccountCreationException";
+import IOC from "../ServiceProviders/IOC";
+import LoggerService from "../Services/Logger/LoggerService";
 
 export default class Mailer {
 

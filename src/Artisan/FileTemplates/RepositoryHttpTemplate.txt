@@ -1,20 +1,28 @@
-import Axios, { AxiosInstance } from 'axios';
-import %name%Interface from './%name%Interface';
+import HttpClient from "sosise-core/build/HttpClient/HttpClient";
+import HttpClientRetryConfig from "sosise-core/build/Types/HttpClientRetryConfig";
+import %name%Interface from "./%name%Interface";
 
 export default class %name% implements %name%Interface {
 
-    private httpClient: AxiosInstance;
+    private httpClient: HttpClient;
+    private retryConfig: HttpClientRetryConfig = {
+        requestMaxRetries: 3,
+        requestRetryInterval: 1000,
+        requestRetryStrategy: 'linear',
+    };
 
     /**
      * Constructor
      */
     constructor() {
-        // Instantiate httpClient
-        this.httpClient = Axios.create({
+        // Instantiate http client
+        this.httpClient = new HttpClient({
             baseURL: 'https://example.com',
             headers: {
                 'Accept': 'application/json'
-            }
+            },
+            keepAlive: true,
+            keepAliveMsecs: 15000,
         });
     }
 
@@ -23,8 +31,51 @@ export default class %name% implements %name%Interface {
      */
     public async getAllCustomers(): Promise<any> {
         // Make request
-        const response = await this.httpClient.get('/customers');
+        const response = await this.httpClient.request({
+            url: '/customers',
+            method: 'GET',
+            params: {
+                id: 13,
+                name: 'Max',
+            },
+        });
 
+        // Return
+        return response.data;
+    }
+
+    /**
+     * Get all customers
+     */
+    public async createCustomer(name: string): Promise<any> {
+        // Make request
+        const response = await this.httpClient.request({
+            url: '/customers',
+            method: 'POST',
+            data: {
+                name
+            }
+        });
+
+        // Return
+        return response.data.id;
+    }
+
+    /**
+     * Bank transaction
+     */
+    public async bankTransaction(cardNumber: string, amount: number): Promise<any> {
+        // Make request
+        const response = await this.httpClient.requestWithRetry({
+            url: '/transaction',
+            method: 'POST',
+            data: {
+                cardNumber,
+                amount,
+            }
+        }, this.retryConfig);
+
+        // Return
         return response.data;
     }
 }

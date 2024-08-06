@@ -1,5 +1,5 @@
-import dayjs from 'dayjs';
-import LoggerRepositoryInterface from './LoggerRepositoryInterface';
+import dayjs from "dayjs";
+import LoggerRepositoryInterface from "./LoggerRepositoryInterface";
 
 export default class LoggerJsonConsoleRepository implements LoggerRepositoryInterface {
     /**

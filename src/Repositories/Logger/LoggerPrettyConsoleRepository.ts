@@ -1,7 +1,7 @@
-import colors from 'colors';
-import dayjs from 'dayjs';
-import LoggerRepositoryInterface from './LoggerRepositoryInterface';
-import { inspect } from 'util';
+import colors from "colors";
+import dayjs from "dayjs";
+import { inspect } from "util";
+import LoggerRepositoryInterface from "./LoggerRepositoryInterface";
 
 export default class LoggerPrettyConsoleRepository implements LoggerRepositoryInterface {
     /**

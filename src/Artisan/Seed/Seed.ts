@@ -1,9 +1,9 @@
-import colors from 'colors';
-import commander from 'commander';
-import Database from '../../Database/Database';
-import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
-import fs from 'fs';
-import { Knex } from 'knex';
+import colors from "colors";
+import commander from "commander";
+import fs from "fs";
+import { Knex } from "knex";
+import Database from "../../Database/Database";
+import DefaultConnectionNotSetException from "../../Exceptions/Database/DefaultConnectionNotSetException";
 
 export default class Seed {
 
