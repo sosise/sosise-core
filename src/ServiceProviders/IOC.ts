@@ -41,7 +41,7 @@ export default class IOC {
     /**
      * Get service from IOC
      */
-    public static make<T>(serviceName: { new(): T } | string): T {
+    public static make<T>(serviceName: T): any {
         // Require ioc config
         const iocConfig = require(process.cwd() + '/build/config/ioc').default;
 
@@ -57,12 +57,12 @@ export default class IOC {
 
         // Check if requested name exists in ioc.ts config
         if (iocConfig.nonSingletons[configKey]) {
-            return iocConfig.nonSingletons[configKey]() as T;
+            return iocConfig.nonSingletons[configKey]();
         }
 
         // Check if requested name exists in local coreServices property
         if (this.coreServices.nonSingletons[configKey]) {
-            return this.coreServices.nonSingletons[configKey]() as T;
+            return this.coreServices.nonSingletons[configKey]();
         }
 
         // Nope requested name does not exists in ioc.ts config
@@ -72,7 +72,7 @@ export default class IOC {
     /**
      * Get service singleton from IOC
      */
-    public static makeSingleton<T>(serviceName: { new(): T } | string): T {
+    public static makeSingleton<T>(serviceName: T): any {
         // Require ioc config
         const iocConfig = require(process.cwd() + '/build/config/ioc').default;
 
@@ -90,13 +90,13 @@ export default class IOC {
         // If found return it
         for (const element of IOC.singletonInstances) {
             if (element.serviceName === configKey && element.instance !== null) {
-                return element.instance as T;
+                return element.instance;
             }
         }
 
         // Check if requested name exists in ioc.ts config
         if (iocConfig.singletons[configKey]) {
-            const userDefinedServiceInstance = iocConfig.singletons[configKey]() as T;
+            const userDefinedServiceInstance = iocConfig.singletons[configKey]();
             IOC.singletonInstances.push({
                 serviceName: configKey,
                 instance: userDefinedServiceInstance
@@ -106,7 +106,7 @@ export default class IOC {
 
         // Check if requested name exists in local coreServices property
         if (this.coreServices.singletons[configKey]) {
-            const coreDefinedServiceInstance = this.coreServices.singletons[configKey]() as T;
+            const coreDefinedServiceInstance = this.coreServices.singletons[configKey]();
             IOC.singletonInstances.push({
                 serviceName: configKey,
                 instance: coreDefinedServiceInstance
