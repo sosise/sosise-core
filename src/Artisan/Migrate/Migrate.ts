@@ -240,6 +240,20 @@ export default class Migrate {
                     // Return table names array
                     return tableNames;
                 }
+            case 'Client_CockroachDB':
+                {
+                    // Fetch all table names from the current database
+                    const rows = await this.dbConnection
+                        .select('table_name')
+                        .from('information_schema.tables')
+                        .where('table_schema', 'public');
+
+                    // Map the result to extract table names
+                    const tableNames = rows.map((row: any) => row.table_name);
+
+                    // Return table names array
+                    return tableNames;
+                }
         }
 
         throw new DatabaseMigrationsNotSupported('Selected default database is not supported for migrations.');
