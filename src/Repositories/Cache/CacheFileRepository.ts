@@ -1,4 +1,5 @@
 import fs from "fs";
+import CacheException from "../../Exceptions/Cache/CacheException";
 import CacheRepositoryInterface from "./CacheRepositoryInterface";
 
 export default class CacheFileRepository implements CacheRepositoryInterface {
@@ -39,6 +40,13 @@ export default class CacheFileRepository implements CacheRepositoryInterface {
 
         // Cached item was not found by key
         return undefined;
+    }
+
+    /**
+     * Get multiple cache items by multiple keys
+     */
+    public getMany(keys: string[]): Promise<any[] | undefined[]> {
+        throw new CacheException(`Not implemented in cache file repository`);
     }
 
     /**

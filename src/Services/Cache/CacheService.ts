@@ -42,6 +42,13 @@ export default class CacheService {
     }
 
     /**
+     * Get multiple cache items by multiple keys
+     */
+    public getMany(keys: string[]): Promise<any[] | undefined[]> {
+        return this.cacheRepository.getMany(keys);
+    }
+
+    /**
      * Get cache item and delete it from cache immediately
      */
     public pull(key: string): Promise<any | null> {

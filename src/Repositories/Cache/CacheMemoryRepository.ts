@@ -1,4 +1,5 @@
 import NodeCache from "node-cache";
+import CacheException from "../../Exceptions/Cache/CacheException";
 import CacheRepositoryInterface from "./CacheRepositoryInterface";
 
 export default class CacheMemoryRepository implements CacheRepositoryInterface {
@@ -26,6 +27,13 @@ export default class CacheMemoryRepository implements CacheRepositoryInterface {
 
         // Otherwise
         return cache;
+    }
+
+    /**
+     * Get multiple cache items by multiple keys
+     */
+    public getMany(keys: string[]): Promise<any[] | undefined[]> {
+        throw new CacheException(`Not implemented in cache memory repository`);
     }
 
     /**
@@ -112,7 +120,6 @@ export default class CacheMemoryRepository implements CacheRepositoryInterface {
      * Get all cache keys with timestamps
      */
     public async getAllCacheKeysWithTimestamps(): Promise<{ key: string, expiresAtTimestamp: number }[]> {
-        // Not applicable for memory cache, since this method is only needed for cache expiration, which node-cache does out of the box
-        return [];
+        throw new CacheException(`Not applicable for memory cache`);
     }
 }

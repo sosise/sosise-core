@@ -104,23 +104,25 @@ export default class ServerInformation {
             case 'redis':
                 console.log(colors.white(`  Redis Host\t\t\t\t\t`) + colors.gray(`${cacheConfig.driverConfiguration.redis.host}`));
                 console.log(colors.white(`  Redis Port\t\t\t\t\t`) + colors.gray(`${cacheConfig.driverConfiguration.redis.port}`));
-                const checkRedisConnection1 = () => {
-                    return new Promise<void>((resolve) => {
+                const checkRedisConnection1 = async () => {
+                    try {
                         const client = createClient({
-                            host: cacheConfig.driverConfiguration.redis.host,
-                            port: cacheConfig.driverConfiguration.redis.port,
+                            url: `redis://${cacheConfig.driverConfiguration.redis.host}:${cacheConfig.driverConfiguration.redis.port}`,
+                            // Disable reconnection attempts
+                            socket: {
+                                reconnectStrategy: () => false
+                            }
                         });
-                        client.on('ready', () => {
-                            console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.green(`[OK]`));
-                            client.quit();
-                            resolve();
-                        });
-                        client.on('error', (error) => {
-                            console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.red(`[CRIT] ${error.message}`));
-                            client.quit();
-                            resolve();
-                        });
-                    });
+                        await client.connect();
+                        console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.green(`[OK]`));
+
+                        // Quit the client after the connection is established, since we do not need it here, it's just
+                        // For testing the connection
+                        await client.quit();
+                    } catch (error) {
+                        // Catch any errors from the connection or quit
+                        console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.red(`[CRIT] ${error.message}`));
+                    }
                 };
                 await checkRedisConnection1();
         }
@@ -150,23 +152,25 @@ export default class ServerInformation {
         console.log(colors.underline.bold.bgGreen('Queue information'));
         console.log(colors.white(`  Redis Host\t\t\t\t\t`) + colors.gray(`${queueConfig.redis.host}`));
         console.log(colors.white(`  Redis Port\t\t\t\t\t`) + colors.gray(`${queueConfig.redis.port}`));
-        const checkRedisConnection2 = () => {
-            return new Promise<void>((resolve) => {
+        const checkRedisConnection2 = async () => {
+            try {
                 const client = createClient({
-                    host: queueConfig.redis.host,
-                    port: queueConfig.redis.port,
+                    url: `redis://${queueConfig.redis.host}:${queueConfig.redis.port}`,
+                    // Disable reconnection attempts
+                    socket: {
+                        reconnectStrategy: () => false
+                    }
                 });
-                client.on('ready', () => {
-                    console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.green(`[OK]`));
-                    client.quit();
-                    resolve();
-                });
-                client.on('error', (error) => {
-                    console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.red(`[CRIT] ${error.message}`));
-                    client.quit();
-                    resolve();
-                });
-            });
+                await client.connect();
+                console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.green(`[OK]`));
+
+                // Quit the client after the connection is established, since we do not need it here, it's just
+                // For testing the connection
+                await client.quit();
+            } catch (error) {
+                // Catch any errors from the connection or quit
+                console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.red(`[CRIT] ${error.message}`));
+            }
         };
         await checkRedisConnection2();
         console.log();
@@ -188,28 +192,29 @@ export default class ServerInformation {
             case 'redis':
                 console.log(colors.white(`  Redis Host\t\t\t\t\t`) + colors.gray(`${cacheConfig.driverConfiguration.redis.host}`));
                 console.log(colors.white(`  Redis Port\t\t\t\t\t`) + colors.gray(`${cacheConfig.driverConfiguration.redis.port}`));
-                const checkRedisConnection3 = () => {
-                    return new Promise<void>((resolve) => {
+                const checkRedisConnection3 = async () => {
+                    try {
                         const client = createClient({
-                            host: sessionConfig.drivers.redis.host,
-                            port: sessionConfig.drivers.redis.port,
+                            url: `redis://${sessionConfig.drivers.redis.host}:${sessionConfig.drivers.redis.port}`,
+                            // Disable reconnection attempts
+                            socket: {
+                                reconnectStrategy: () => false
+                            }
                         });
-                        client.on('ready', () => {
-                            console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.green(`[OK]`));
-                            client.quit();
-                            resolve();
-                        });
-                        client.on('error', (error) => {
-                            console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.red(`[CRIT] ${error.message}`));
-                            client.quit();
-                            resolve();
-                        });
-                    });
+                        await client.connect();
+                        console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.green(`[OK]`));
+
+                        // Quit the client after the connection is established, since we do not need it here, it's just
+                        // For testing the connection
+                        await client.quit();
+                    } catch (error) {
+                        // Catch any errors from the connection or quit
+                        console.log(colors.white(`  Connection Status\t\t\t\t`) + colors.red(`[CRIT] ${error.message}`));
+                    }
                 };
                 await checkRedisConnection3();
         }
         console.log();
-
         console.log();
         console.log();
     }

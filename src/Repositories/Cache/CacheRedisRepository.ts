@@ -1,19 +1,12 @@
-import { createClient, RedisClient } from "redis";
-import { promisify } from "util";
+import { createClient, RedisClientType } from "redis";
+import CacheException from "../../Exceptions/Cache/CacheException";
 import RedisException from "../../Exceptions/Cache/RedisException";
 import CacheRepositoryInterface from "./CacheRepositoryInterface";
 
 export default class CacheRedisRepository implements CacheRepositoryInterface {
 
     private cacheConfig: any;
-    private cacheInstance: RedisClient;
-    private getAsync: any;
-    private setAsync: any;
-    private expireAsync: any;
-    private delAsync: any;
-    private existsAsync: any;
-    private keysAsync: any;
-    private flushdbAsync: any;
+    private cacheInstance: RedisClientType;
 
     /**
      * Constructor
@@ -21,55 +14,53 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
     constructor(cacheConfig: any) {
         this.cacheConfig = cacheConfig;
         this.cacheInstance = createClient({
-            host: this.cacheConfig.driverConfiguration.redis.host,
-            port: this.cacheConfig.driverConfiguration.redis.port,
+            url: `redis://${this.cacheConfig.driverConfiguration.redis.host}:${this.cacheConfig.driverConfiguration.redis.port}`,
         });
+
         this.cacheInstance.on('error', (err) => {
             throw new RedisException(`Redis connection error! Error: ${err}`);
         });
 
-        // Create promise wrappers for the set and get functions
-        this.setAsync = promisify(this.cacheInstance.set).bind(this.cacheInstance);
-        this.getAsync = promisify(this.cacheInstance.get).bind(this.cacheInstance);
-        this.expireAsync = promisify(this.cacheInstance.expire).bind(this.cacheInstance);
-        this.delAsync = promisify(this.cacheInstance.del).bind(this.cacheInstance);
-        this.existsAsync = promisify(this.cacheInstance.exists).bind(this.cacheInstance);
-        this.keysAsync = promisify(this.cacheInstance.keys).bind(this.cacheInstance);
-        this.flushdbAsync = promisify(this.cacheInstance.flushdb).bind(this.cacheInstance);
+        // Connect to Redis
+        this.cacheInstance.connect().catch((err) => {
+            throw new RedisException(`Failed to connect to Redis! Error: ${err}`);
+        });
     }
 
     /**
      * Get cache item
      */
     public async get(key: string): Promise<any | undefined> {
-        // Get cached value
-        const value = await this.getAsync(key);
+        const value = await this.cacheInstance.get(key);
 
-        // In case cache not found
         if (value === null) {
             return undefined;
         }
 
-        // Return
         return JSON.parse(value);
+    }
+
+    /**
+     * Get multiple cache items by multiple keys
+     */
+    public async getMany(keys: string[]): Promise<any[]> {
+        const values = await this.cacheInstance.mGet(keys);
+
+        // Map Redis values: parse JSON if value exists, replace null with undefined for missing keys
+        return values.map(value => value === null ? undefined : JSON.parse(value));
     }
 
     /**
      * Get cache item and delete it from cache immediately
      */
     public async pull(key: string): Promise<any | undefined> {
-        // Get cached value
-        const value = await this.getAsync(key);
+        const value = await this.cacheInstance.get(key);
 
-        // In case cache not found
         if (value === null) {
             return undefined;
         }
 
-        // Delete cache by key
-        await this.delAsync(key);
-
-        // Return
+        await this.cacheInstance.del(key);
         return JSON.parse(value);
     }
 
@@ -77,56 +68,43 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
      * Put data into cache for certain time
      */
     public async put(key: string, data: any, ttlInSeconds?: number): Promise<void> {
-        // Set cache key
-        await this.setAsync(key, JSON.stringify(data));
+        await this.cacheInstance.set(key, JSON.stringify(data));
 
-        // Get ttl
-        const ttl = (!ttlInSeconds ? this.cacheConfig.defaultTTLInSeconds : ttlInSeconds);
-
-        // Set cache ttl
-        await this.expireAsync(key, ttl);
+        const ttl = ttlInSeconds || this.cacheConfig.defaultTTLInSeconds;
+        await this.cacheInstance.expire(key, ttl);
     }
 
     /**
      * Put data into cache forever
      */
-    public putForever(key: string, data: any): Promise<void> {
-        // Set cache key
-        return this.setAsync(key, data);
+    public async putForever(key: string, data: any): Promise<void> {
+        await this.cacheInstance.set(key, JSON.stringify(data));
     }
 
     /**
      * Check whether the key exists in the cache
      */
     public async has(key: string): Promise<boolean> {
-        // Check if key exists
-        const exists = await this.existsAsync(key);
+        const exists = await this.cacheInstance.exists(key);
 
-        // In case redis returns zero
-        if (exists === 0) {
-            return false;
-        }
-
-        // Otherwise
-        return true;
+        return exists === 1;
     }
 
     /**
      * Get cache keys
      */
-    public async keys(regex: RegExp): Promise<string[]> {
-        // First of all get all keys
-        const allKeys = await this.keysAsync('*');
+    public async keys(regex?: RegExp): Promise<string[]> {
+        // Get all keys from Redis
+        const allKeys = await this.cacheInstance.keys('*');
 
-        // In case regex is not given, return all keys
+        // If no regex is provided, return all keys
         if (!regex) {
             return allKeys;
         }
 
-        // Otherwise we need to filter keys
+        // Filter keys based on the provided regex
         const filteredKeys = allKeys.filter(key => regex.test(key));
 
-        // Return
         return filteredKeys;
     }
 
@@ -134,15 +112,15 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
      * Remove item from the cache
      */
     public async delete(key: string): Promise<void> {
-        return this.delAsync(key);
+        await this.cacheInstance.del(key);
     }
 
     /**
      * Delete items from the cache
      */
     public async deleteMany(keys: string[]): Promise<void> {
-        for (const key of keys) {
-            await this.delAsync(key);
+        if (keys.length > 0) {
+            await this.cacheInstance.del(keys);
         }
     }
 
@@ -150,14 +128,13 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
      * Clear the entire cache
      */
     public async flush(): Promise<void> {
-        return this.flushdbAsync();
+        await this.cacheInstance.flushDb();
     }
 
     /**
      * Get all cache keys with timestamps
      */
     public async getAllCacheKeysWithTimestamps(): Promise<{ key: string, expiresAtTimestamp: number }[]> {
-        // Not applicable for redis cache, since this method is only needed for cache expiration, which node-cache does out of the box
-        return [];
+        throw new CacheException(`Not applicable for redis cache`);
     }
 }

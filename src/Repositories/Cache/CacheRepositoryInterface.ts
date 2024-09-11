@@ -5,6 +5,11 @@ export default interface CacheRepositoryInterface {
     get(key: string): Promise<any | undefined>;
 
     /**
+     * Get multiple cache items by multiple keys
+     */
+    getMany(keys: string[]): Promise<any[] | undefined[]>;
+
+    /**
      * Get cache item and delete it from cache immediately
      */
     pull(key: string): Promise<any | undefined>;
