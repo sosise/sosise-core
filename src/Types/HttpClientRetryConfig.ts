@@ -4,4 +4,5 @@ export default interface HttpClientRetryConfig {
     requestMaxRetries: number;
     requestRetryInterval: Milliseconds;
     requestRetryStrategy: 'linear' | 'exponential';
+    requestDoNotRetryForHttpCodes?: number[];
 }

@@ -162,8 +162,11 @@ export default class HttpClient {
             // Return
             return response;
         } catch (error) {
+            // Add method and url to error message, for better readability
+            error.message = `[${config.method?.toUpperCase()}] ${config.url!.split('?')[0]} ` + error.message;
+
             // In case we have retries left
-            if (retryConfig && retryCounter < retryConfig.requestMaxRetries) {
+            if (retryConfig && this.checkIfRequestShouldBeRetriedAccordingToHttpReturnCode(error.response.status, retryConfig) && retryCounter < retryConfig.requestMaxRetries) {
                 // Calculate next wait interval
                 let waitInterval = 0;
                 switch (retryConfig.requestRetryStrategy) {
@@ -222,4 +225,25 @@ export default class HttpClient {
             }
         }
     }
+
+    /**
+     * Check if request should be retried according to http return code
+     */
+    private checkIfRequestShouldBeRetriedAccordingToHttpReturnCode(httpCode: number, retryConfig: HttpClientRetryConfig): boolean {
+        // In case user did not specified http codes list in case when we do not have to retry
+        if (!retryConfig.requestDoNotRetryForHttpCodes) {
+            // Yep we should retry
+            return true;
+        }
+        // In case returned http code is in the list of codes when we do not have to retry request
+        if (retryConfig.requestDoNotRetryForHttpCodes.includes(httpCode)) {
+            // Do not retry request
+            return false;
+        }
+
+        // All other cases we have to retry request
+        // That means the returned http code is not in the list of codes when we do not have to retry request
+        return true;
+    }
+
 }
