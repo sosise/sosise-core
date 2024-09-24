@@ -63,6 +63,13 @@ export default class CacheService {
     }
 
     /**
+     * Put multiple key-value pairs into cache for certain time
+     */
+    public putMany(data: { key: string, value: any }[], ttlInSeconds?: number): Promise<void> {
+        return this.cacheRepository.putMany(data, ttlInSeconds);
+    }
+
+    /**
      * Put data into cache forever
      */
     public putForever(key: string, data: any): Promise<void> {

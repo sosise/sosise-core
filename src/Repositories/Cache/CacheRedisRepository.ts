@@ -68,10 +68,25 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
      * Put data into cache for certain time
      */
     public async put(key: string, data: any, ttlInSeconds?: number): Promise<void> {
-        await this.cacheInstance.set(key, JSON.stringify(data));
-
         const ttl = ttlInSeconds || this.cacheConfig.defaultTTLInSeconds;
-        await this.cacheInstance.expire(key, ttl);
+        await this.cacheInstance.set(key, JSON.stringify(data), { EX: ttl });
+    }
+
+    /**
+     * Put multiple key-value pairs into cache for certain time
+     */
+    public async putMany(data: { key: string, value: any }[], ttlInSeconds?: number): Promise<void> {
+        // Create pipeline
+        const pipeline = this.cacheInstance.multi();
+
+        // Add all keys and values to the Redis pipeline
+        for (const { key, value } of data) {
+            const ttl = ttlInSeconds || this.cacheConfig.defaultTTLInSeconds;
+            pipeline.set(key, JSON.stringify(value), { EX: ttl });
+        }
+
+        // Execute the pipeline
+        await pipeline.exec();
     }
 
     /**

@@ -20,6 +20,11 @@ export default interface CacheRepositoryInterface {
     put(key: string, data: any, ttlInSeconds?: number): Promise<void>;
 
     /**
+     * Put multiple key-value pairs into cache for certain time
+     */
+    putMany(data: { key: string, value: any }[], ttlInSeconds?: number): Promise<void>;
+
+    /**
      * Put data into cache forever
      */
     putForever(key: string, data: any): Promise<void>;

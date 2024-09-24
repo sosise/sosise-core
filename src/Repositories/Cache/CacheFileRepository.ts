@@ -113,6 +113,13 @@ export default class CacheFileRepository implements CacheRepositoryInterface {
     }
 
     /**
+     * Put multiple key-value pairs into cache for certain time
+     */
+    public async putMany(data: { key: string, value: any }[], ttlInSeconds?: number): Promise<void> {
+        throw new CacheException(`Not implemented in cache file repository`);
+    }
+
+    /**
      * Put data into cache forever
      */
     public async putForever(key: string, data: any): Promise<void> {
