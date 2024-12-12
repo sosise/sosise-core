@@ -1,14 +1,13 @@
-import colors from "colors";
-import fs from "fs";
-import { Knex } from "knex";
-import lodash, { bind } from "lodash";
-import Database from "../../Database/Database";
-import DatabaseMigrationsNotSupported from "../../Exceptions/Database/DatabaseMigrationsNotSupported";
-import DefaultConnectionNotSetException from "../../Exceptions/Database/DefaultConnectionNotSetException";
-import MigrationDoesNotExistsOnFilesystemException from "../../Exceptions/Database/MigrationDoesNotExistsOnFilesystemException";
+import colors from 'colors';
+import fs from 'fs';
+import { Knex } from 'knex';
+import lodash from 'lodash';
+import Database from '../../Database/Database';
+import DatabaseMigrationsNotSupported from '../../Exceptions/Database/DatabaseMigrationsNotSupported';
+import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
+import MigrationDoesNotExistsOnFilesystemException from '../../Exceptions/Database/MigrationDoesNotExistsOnFilesystemException';
 
 export default class Migrate {
-
     protected dbConnection: Knex;
     protected migrationsPath = '/build/database/migrations';
 
@@ -31,7 +30,7 @@ export default class Migrate {
      */
     public async createMigrationsTableIfNeeded(): Promise<void> {
         // If table does not exists
-        if (!await this.dbConnection.schema.hasTable('migrations')) {
+        if (!(await this.dbConnection.schema.hasTable('migrations'))) {
             // Create table
             await this.dbConnection.schema.createTable('migrations', (table) => {
                 table.increments('id');
@@ -99,7 +98,7 @@ export default class Migrate {
             // Insert to migrations table
             await this.dbConnection.table('migrations').insert({
                 migration: migrationName,
-                batch
+                batch,
             });
 
             // Log
@@ -118,7 +117,9 @@ export default class Migrate {
         const lastBatchNumber = lodash.max(lodash.map(migrationRows, 'batch'));
 
         // Now filter only the migrations we want to rollback according to the batch number
-        const migrationNamesToRollback = lodash.map(lodash.filter(migrationRows, { batch: lastBatchNumber }), 'migration').reverse();
+        const migrationNamesToRollback = lodash
+            .map(lodash.filter(migrationRows, { batch: lastBatchNumber }), 'migration')
+            .reverse();
 
         // Iterate through all migrations we want to rollback
         for (const migrationName of migrationNamesToRollback) {
@@ -130,7 +131,9 @@ export default class Migrate {
 
             // If migration exists in database but does not exists on filesystem
             if (!fs.existsSync(migrationFilePath)) {
-                throw new MigrationDoesNotExistsOnFilesystemException(`Migration ${migrationFilePath} does not exists on filesystem`);
+                throw new MigrationDoesNotExistsOnFilesystemException(
+                    `Migration ${migrationFilePath} does not exists on filesystem`,
+                );
             }
 
             // Import migration file
@@ -161,7 +164,9 @@ export default class Migrate {
         const lastBatchNumber = lodash.max(lodash.map(migrationRows, 'batch'));
 
         // Now filter only the migrations we want to rollback according to the batch number
-        const migrationNamesToRollback = lodash.map(lodash.filter(migrationRows, { batch: lastBatchNumber }), 'migration').reverse();
+        const migrationNamesToRollback = lodash
+            .map(lodash.filter(migrationRows, { batch: lastBatchNumber }), 'migration')
+            .reverse();
 
         // Log
         console.log(colors.dim(`Following migrations would be rolled back:`));
@@ -211,49 +216,48 @@ export default class Migrate {
         // Attention depending on database type, different queries are used
         switch (this.dbConnection.client.constructor.name) {
             case 'Client_MySQL':
-            case 'Client_MySQL2':
-                {
-                    // Prepare query and bindings
-                    const query = 'SELECT table_name FROM information_schema.tables WHERE table_schema = ?';
-                    const bindings = [this.dbConnection.client.database()];
+            case 'Client_MySQL2': {
+                // Prepare query and bindings
+                const query = 'SELECT table_name FROM information_schema.tables WHERE table_schema = ?';
+                const bindings = [this.dbConnection.client.database()];
 
-                    // Send request to database
-                    const result = await this.dbConnection.raw(query, bindings);
+                // Send request to database
+                const result = await this.dbConnection.raw(query, bindings);
 
-                    // Get table names from result
-                    const tableNames = result[0].map((row: any) => row.TABLE_NAME);
+                // Get table names from result
+                const tableNames = result[0].map((row: any) => row.TABLE_NAME);
 
-                    // Return table names array
-                    return tableNames;
-                }
-            case 'Client_SQLite3':
-                {
-                    // Prepare query and bindings
-                    const query = "SELECT name AS table_name FROM sqlite_master WHERE type='table'";
+                // Return table names array
+                return tableNames;
+            }
+            case 'Client_SQLite3': {
+                // Prepare query and bindings
+                const query = "SELECT name AS table_name FROM sqlite_master WHERE type='table'";
 
-                    // Send request to database
-                    const result = await this.dbConnection.raw(query, []);
+                // Send request to database
+                const result = await this.dbConnection.raw(query, []);
 
-                    // Get table names from result
-                    const tableNames = result.map((row: any) => row.table_name).filter((tableName: string) => tableName !== 'sqlite_sequence');
+                // Get table names from result
+                const tableNames = result
+                    .map((row: any) => row.table_name)
+                    .filter((tableName: string) => tableName !== 'sqlite_sequence');
 
-                    // Return table names array
-                    return tableNames;
-                }
-            case 'Client_CockroachDB':
-                {
-                    // Fetch all table names from the current database
-                    const rows = await this.dbConnection
-                        .select('table_name')
-                        .from('information_schema.tables')
-                        .where('table_schema', 'public');
+                // Return table names array
+                return tableNames;
+            }
+            case 'Client_CockroachDB': {
+                // Fetch all table names from the current database
+                const rows = await this.dbConnection
+                    .select('table_name')
+                    .from('information_schema.tables')
+                    .where('table_schema', 'public');
 
-                    // Map the result to extract table names
-                    const tableNames = rows.map((row: any) => row.table_name);
+                // Map the result to extract table names
+                const tableNames = rows.map((row: any) => row.table_name);
 
-                    // Return table names array
-                    return tableNames;
-                }
+                // Return table names array
+                return tableNames;
+            }
         }
 
         throw new DatabaseMigrationsNotSupported('Selected default database is not supported for migrations.');

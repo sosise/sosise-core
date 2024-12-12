@@ -1,6 +1,6 @@
-import colors from "colors";
-import fs from "fs";
-import MakeException from "../../Exceptions/Artisan/MakeException";
+import colors from 'colors';
+import fs from 'fs';
+import MakeException from '../../Exceptions/Artisan/MakeException';
 
 export default class Test {
     protected unitTestTemplatePath = __dirname + '/../FileTemplates/UnitTestTemplate.txt';

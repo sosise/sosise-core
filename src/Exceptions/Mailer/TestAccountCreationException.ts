@@ -2,7 +2,6 @@ import Exception from '../Exception';
 import ExceptionResponse from '../../Types/ExceptionResponse';
 
 export default class TestAccountCreationException extends Exception {
-
     // HTTP Code of the response with this exception
     protected httpCode = 500;
 
@@ -30,7 +29,7 @@ export default class TestAccountCreationException extends Exception {
             code: exception.code,
             httpCode: exception.httpCode,
             message: exception.message,
-            data: null
+            data: null,
         };
         return response;
     }

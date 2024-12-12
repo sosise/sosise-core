@@ -1,8 +1,7 @@
-import ExceptionResponse from "../../Types/ExceptionResponse";
-import Exception from "../Exception";
+import ExceptionResponse from '../../Types/ExceptionResponse';
+import Exception from '../Exception';
 
 export default class IOCMakeException extends Exception {
-
     // Class name which could't be found in the IOC
     public className: string;
 
@@ -35,8 +34,8 @@ export default class IOCMakeException extends Exception {
             httpCode: exception.httpCode,
             message: exception.message,
             data: {
-                classToResolve: exception.className
-            }
+                classToResolve: exception.className,
+            },
         };
         return response;
     }

@@ -1,10 +1,9 @@
-import IOCMakeException from "../Exceptions/IOC/IOCMakeException";
-import CacheService from "../Services/Cache/CacheService";
-import LoggerService from "../Services/Logger/LoggerService";
+import IOCMakeException from '../Exceptions/IOC/IOCMakeException';
+import CacheService from '../Services/Cache/CacheService';
+import LoggerService from '../Services/Logger/LoggerService';
 
 export default class IOC {
-
-    public static singletonInstances: { serviceName: string, instance: any }[] = [];
+    public static singletonInstances: { serviceName: string; instance: any }[] = [];
 
     /**
      * Core services are services what sosise-core provides out of the box.
@@ -24,7 +23,7 @@ export default class IOC {
             },
             CacheService: () => {
                 return new CacheService();
-            }
+            },
         },
 
         // Non singleton services
@@ -34,7 +33,7 @@ export default class IOC {
              */
             LoggerService: () => {
                 return new LoggerService();
-            }
+            },
         },
     };
 
@@ -66,7 +65,10 @@ export default class IOC {
         }
 
         // Nope requested name does not exists in ioc.ts config
-        throw new IOCMakeException('IOC could not resolve class, please check your config/ioc.ts config and register needed name there', configKey);
+        throw new IOCMakeException(
+            'IOC could not resolve class, please check your config/ioc.ts config and register needed name there',
+            configKey,
+        );
     }
 
     /**
@@ -99,7 +101,7 @@ export default class IOC {
             const userDefinedServiceInstance = iocConfig.singletons[configKey]();
             IOC.singletonInstances.push({
                 serviceName: configKey,
-                instance: userDefinedServiceInstance
+                instance: userDefinedServiceInstance,
             });
             return userDefinedServiceInstance;
         }
@@ -109,12 +111,15 @@ export default class IOC {
             const coreDefinedServiceInstance = this.coreServices.singletons[configKey]();
             IOC.singletonInstances.push({
                 serviceName: configKey,
-                instance: coreDefinedServiceInstance
+                instance: coreDefinedServiceInstance,
             });
             return coreDefinedServiceInstance;
         }
 
         // Nope requested name does not exists in ioc.ts config
-        throw new IOCMakeException('IOC could not resolve singleton class, please check your config/ioc.ts config and register needed name there', configKey);
+        throw new IOCMakeException(
+            'IOC could not resolve singleton class, please check your config/ioc.ts config and register needed name there',
+            configKey,
+        );
     }
 }

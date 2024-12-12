@@ -1,0 +1,14 @@
+{
+    "printWidth": 120,
+    "useTabs": false,
+    "tabWidth": 4,
+    "endOfLine": "lf",
+    "semi": true,
+    "singleQuote": true,
+    "bracketSpacing": true,
+    "insertPragma": false,
+    "requirePragma": false,
+    "json": {
+        "insertFinalNewline": false
+    }
+}

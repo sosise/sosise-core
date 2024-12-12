@@ -1,8 +1,7 @@
-import ExceptionResponse from "../../Types/ExceptionResponse";
-import Exception from "../Exception";
+import ExceptionResponse from '../../Types/ExceptionResponse';
+import Exception from '../Exception';
 
 export default class MailSendingException extends Exception {
-
     // HTTP Code of the response with this exception
     protected httpCode = 500;
 
@@ -30,7 +29,7 @@ export default class MailSendingException extends Exception {
             code: exception.code,
             httpCode: exception.httpCode,
             message: exception.message,
-            data: null
+            data: null,
         };
         return response;
     }

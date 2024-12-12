@@ -1,10 +1,9 @@
-import LoggerFileRepository from "../../Repositories/Logger/LoggerFileRepository";
-import LoggerJsonConsoleRepository from "../../Repositories/Logger/LoggerJsonConsoleRepository";
-import LoggerPrettyConsoleRepository from "../../Repositories/Logger/LoggerPrettyConsoleRepository";
-import LoggerRepositoryInterface from "../../Repositories/Logger/LoggerRepositoryInterface";
+import LoggerFileRepository from '../../Repositories/Logger/LoggerFileRepository';
+import LoggerJsonConsoleRepository from '../../Repositories/Logger/LoggerJsonConsoleRepository';
+import LoggerPrettyConsoleRepository from '../../Repositories/Logger/LoggerPrettyConsoleRepository';
+import LoggerRepositoryInterface from '../../Repositories/Logger/LoggerRepositoryInterface';
 
 export default class LoggerService {
-
     private repository: LoggerRepositoryInterface;
     private loggerFileRepository: LoggerFileRepository;
     private enableLoggingToConsole: boolean = false;
@@ -122,7 +121,12 @@ export default class LoggerService {
     /**
      * Log to file if enabled
      */
-    private logToFile(level: 'debug' | 'info' | 'warning' | 'error' | 'critical', message: string, params: any = null, channel?: string | undefined) {
+    private logToFile(
+        level: 'debug' | 'info' | 'warning' | 'error' | 'critical',
+        message: string,
+        params: any = null,
+        channel?: string | undefined,
+    ) {
         switch (level) {
             case 'debug':
                 this.loggerFileRepository.debug(message, params, channel);

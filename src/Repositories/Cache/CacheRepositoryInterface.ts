@@ -22,7 +22,7 @@ export default interface CacheRepositoryInterface {
     /**
      * Put multiple key-value pairs into cache for certain time
      */
-    putMany(data: { key: string, value: any }[], ttlInSeconds?: number): Promise<void>;
+    putMany(data: { key: string; value: any }[], ttlInSeconds?: number): Promise<void>;
 
     /**
      * Put data into cache forever
@@ -57,5 +57,5 @@ export default interface CacheRepositoryInterface {
     /**
      * Get all cache keys with expiration timestamps
      */
-    getAllCacheKeysWithTimestamps(): Promise<{ key: string, expiresAtTimestamp: number }[]>;
+    getAllCacheKeysWithTimestamps(): Promise<{ key: string; expiresAtTimestamp: number }[]>;
 }

@@ -1,5 +1,4 @@
 export default class Exception extends Error {
-
     public message: string;
 
     /**

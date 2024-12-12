@@ -1,12 +1,11 @@
-import colors from "colors";
-import commander from "commander";
-import fs from "fs";
-import { Knex } from "knex";
-import Database from "../../Database/Database";
-import DefaultConnectionNotSetException from "../../Exceptions/Database/DefaultConnectionNotSetException";
+import colors from 'colors';
+import commander from 'commander';
+import fs from 'fs';
+import { Knex } from 'knex';
+import Database from '../../Database/Database';
+import DefaultConnectionNotSetException from '../../Exceptions/Database/DefaultConnectionNotSetException';
 
 export default class Seed {
-
     protected dbConnection: Knex;
     protected seedsPath = '/build/database/seeds';
     protected cli: commander.Command;
@@ -61,7 +60,11 @@ export default class Seed {
 
             // Do not run seed if environment is not local and seed is restricted to be run only in local environment
             if (process.env.APP_ENV !== 'local' && instance.onlyInLocalEnvironment && !this.cli.force) {
-                console.log(colors.yellow(`Skipping seed ${seedName}, it is restricted to a local environment only. Please use -f to force`));
+                console.log(
+                    colors.yellow(
+                        `Skipping seed ${seedName}, it is restricted to a local environment only. Please use -f to force`,
+                    ),
+                );
                 continue;
             }
 

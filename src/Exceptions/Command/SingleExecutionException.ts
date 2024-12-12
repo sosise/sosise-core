@@ -1,8 +1,7 @@
-import ExceptionResponse from "../../Types/ExceptionResponse";
-import Exception from "../Exception";
+import ExceptionResponse from '../../Types/ExceptionResponse';
+import Exception from '../Exception';
 
 export default class SingleExecutionException extends Exception {
-
     // If set to false no exception will be sent to sentry
     protected sendToSentry = true;
 
@@ -23,8 +22,8 @@ export default class SingleExecutionException extends Exception {
         const response: ExceptionResponse = {
             message: exception.message,
             data: {
-                stack: exception.stack!.split('\n')
-            }
+                stack: exception.stack!.split('\n'),
+            },
         };
         return response;
     }

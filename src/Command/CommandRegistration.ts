@@ -1,12 +1,11 @@
-import { exec } from "child_process";
-import colors from "colors";
-import commander from "commander";
-import fs from "fs";
-import util from "util";
-import Helper from "../Helper/Helper";
+import { exec } from 'child_process';
+import colors from 'colors';
+import commander from 'commander';
+import fs from 'fs';
+import util from 'util';
+import Helper from '../Helper/Helper';
 
 export default class CommandRegistration {
-
     private command: commander.Command;
 
     /**
@@ -26,7 +25,7 @@ export default class CommandRegistration {
 
             // Filter out only js files with postfix Command
             listOfCommandFiles = listOfCommandFiles.filter((element) => {
-                return (element.includes('js') && element.includes('Command')) && (!element.includes('.map'));
+                return element.includes('js') && element.includes('Command') && !element.includes('.map');
             });
 
             return listOfCommandFiles;
@@ -124,7 +123,7 @@ export default class CommandRegistration {
                             // Get list of all *.pid files within tmp directory
                             let listOfPidFiles = fs.readdirSync(tmpDirectory);
                             listOfPidFiles = listOfPidFiles.filter((element) => {
-                                return (element.includes('.pid'));
+                                return element.includes('.pid');
                             });
 
                             // Now open each of them and check if signature matches current execution
@@ -138,9 +137,18 @@ export default class CommandRegistration {
                                     // If pid file contains signature what we are executing right now
                                     if (fileObject.signature === commandClassInstance.signature) {
                                         // Check if process exists by pid and signature
-                                        if (await this.checkIfProcessExistsByPidAndCmd(fileObject.pid, commandClassInstance.signature)) {
+                                        if (
+                                            await this.checkIfProcessExistsByPidAndCmd(
+                                                fileObject.pid,
+                                                commandClassInstance.signature,
+                                            )
+                                        ) {
                                             // Yep the process is really ours, we should wait
-                                            console.log(colors.yellow(`Command ${commandClassInstance.signature} is running, do not run it until it's end`));
+                                            console.log(
+                                                colors.yellow(
+                                                    `Command ${commandClassInstance.signature} is running, do not run it until it's end`,
+                                                ),
+                                            );
                                             process.exit(1);
                                         }
 
@@ -157,10 +165,13 @@ export default class CommandRegistration {
                             expiredPids.map((value, index) => fs.rmSync(`${tmpDirectory}${value}`));
 
                             // Create pid file, may be used to prevent double execution
-                            fs.writeFileSync(tmpDirectory + process.pid + '.pid', JSON.stringify({
-                                signature: commandClassInstance.signature,
-                                pid: process.pid
-                            }));
+                            fs.writeFileSync(
+                                tmpDirectory + process.pid + '.pid',
+                                JSON.stringify({
+                                    signature: commandClassInstance.signature,
+                                    pid: process.pid,
+                                }),
+                            );
                         }
 
                         // Create or update (touch) command execution start file, this is needed for monitoring
@@ -168,18 +179,21 @@ export default class CommandRegistration {
                         this.createOrUpdateCommandExecutionFile(`${commandFile}-start`);
 
                         // Run handle method of the command
-                        commandClassInstance.handle(cli).then(() => {
-                            // Create or update (touch) command execution start file, this is needed for monitoring
-                            // This ensures that command has ended
-                            this.createOrUpdateCommandExecutionFile(`${commandFile}-end`);
+                        commandClassInstance
+                            .handle(cli)
+                            .then(() => {
+                                // Create or update (touch) command execution start file, this is needed for monitoring
+                                // This ensures that command has ended
+                                this.createOrUpdateCommandExecutionFile(`${commandFile}-end`);
 
-                            process.exit(0);
-                        }).catch(async (error) => {
-                            const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
-                            const exceptionHandler = new Handler();
-                            await exceptionHandler.reportCommandException(error);
-                            process.exit(1);
-                        });
+                                process.exit(0);
+                            })
+                            .catch(async (error) => {
+                                const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
+                                const exceptionHandler = new Handler();
+                                await exceptionHandler.reportCommandException(error);
+                                process.exit(1);
+                            });
                     });
 
                 // Add options to new command

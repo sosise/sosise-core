@@ -1,4 +1,4 @@
-import Validator from "./Validator";
+import Validator from './Validator';
 
 export default class ValidatorRules {
     private validator: Validator;
@@ -213,7 +213,10 @@ export default class ValidatorRules {
     public inList(values: any[], customErrorMessage?: string): this {
         const value = this.validator.value[this.paramName];
         if (value !== undefined && !values.includes(value)) {
-            this.setError(`The ${this.paramName} field must be one of the following values: ${values.join(', ')}.`, customErrorMessage);
+            this.setError(
+                `The ${this.paramName} field must be one of the following values: ${values.join(', ')}.`,
+                customErrorMessage,
+            );
         }
         return this;
     }
@@ -224,7 +227,10 @@ export default class ValidatorRules {
     public regex(pattern: RegExp, customErrorMessage?: string): this {
         const value = this.validator.value[this.paramName];
         if (value !== undefined && typeof value === 'string' && !pattern.test(value)) {
-            this.setError(`The ${this.paramName} field fails to match the required pattern: "${pattern}".`, customErrorMessage);
+            this.setError(
+                `The ${this.paramName} field fails to match the required pattern: "${pattern}".`,
+                customErrorMessage,
+            );
         }
         return this;
     }
@@ -237,7 +243,10 @@ export default class ValidatorRules {
         const otherValue = this.validator.value[otherParamName];
         if (currentValue !== undefined || otherValue !== undefined) {
             if (currentValue === otherValue) {
-                this.setError(`The ${this.paramName} field must be different from the ${otherParamName} field.`, customErrorMessage);
+                this.setError(
+                    `The ${this.paramName} field must be different from the ${otherParamName} field.`,
+                    customErrorMessage,
+                );
             }
         }
         return this;
@@ -252,7 +261,10 @@ export default class ValidatorRules {
         if (value !== undefined) {
             const enumValues = Object.values(enumObject);
             if (!enumValues.includes(value)) {
-                this.setError(`The ${this.paramName} field must be one of the enum values: ${enumValues.join(', ')}.`, customErrorMessage);
+                this.setError(
+                    `The ${this.paramName} field must be one of the enum values: ${enumValues.join(', ')}.`,
+                    customErrorMessage,
+                );
             }
         }
         return this;
@@ -275,7 +287,7 @@ export default class ValidatorRules {
      * Merges errors from a child validator into the current validator, optionally with an index for array elements.
      */
     private mergeErrors(childValidator: Validator, index?: number): void {
-        childValidator.errors.forEach(error => {
+        childValidator.errors.forEach((error) => {
             const indexedError = typeof index === 'number' ? `Item ${index + 1}: ${error}` : error;
             this.validator.setError(indexedError);
         });

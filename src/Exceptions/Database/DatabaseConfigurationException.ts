@@ -1,8 +1,7 @@
-import ExceptionResponse from "../../Types/ExceptionResponse";
-import Exception from "../Exception";
+import ExceptionResponse from '../../Types/ExceptionResponse';
+import Exception from '../Exception';
 
 export default class DatabaseConfigurationException extends Exception {
-
     // Connection name
     public connectionName: string;
 
@@ -35,8 +34,8 @@ export default class DatabaseConfigurationException extends Exception {
             httpCode: exception.httpCode,
             message: exception.message,
             data: {
-                connectionName: exception.connectionName
-            }
+                connectionName: exception.connectionName,
+            },
         };
         return response;
     }

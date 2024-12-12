@@ -1,4 +1,4 @@
-import Base from "./Base";
+import Base from './Base';
 
 export default class Controller extends Base {
     protected templatePath = __dirname + '/../FileTemplates/ControllerTemplate.txt';

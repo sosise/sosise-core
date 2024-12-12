@@ -1,8 +1,7 @@
-import ExceptionResponse from "../../Types/ExceptionResponse";
-import Exception from "../Exception";
+import ExceptionResponse from '../../Types/ExceptionResponse';
+import Exception from '../Exception';
 
 export default class LoggingChannelDoesNotExistsException extends Exception {
-
     // Which channel does not exists
     protected channel: string;
 
@@ -35,8 +34,8 @@ export default class LoggingChannelDoesNotExistsException extends Exception {
             httpCode: exception.httpCode,
             message: exception.message,
             data: {
-                channel: exception.channel
-            }
+                channel: exception.channel,
+            },
         };
         return response;
     }

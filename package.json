@@ -1,6 +1,6 @@
 {
   "name": "sosise-core",
-  "version": "0.11.7",
+  "version": "0.11.8",
   "description": "Sosise is a web application boilerplate/framework with an expressive, elegant syntax. A Sosise provides a structure and starting point for creating your application, allowing you to focus on creating something amazing while we sweat the details.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -21,8 +21,8 @@
     "build": "rm -rf build ; tsc ; cp -R src/Artisan/FileTemplates build/Artisan/FileTemplates",
     "watch": "npm build && tsc -w",
     "pub": "npm version patch --no-git-tag-version && npm run build && npm publish",
-    "cscheck": "./node_modules/.bin/tslint --project tsconfig.json",
-    "eccheck": "./node_modules/.bin/editorconfig-checker -exclude \"(node_modules|build)\""
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "author": "Igor Kov",
   "license": "MIT",
@@ -70,10 +70,13 @@
     "@types/prompts": "^2.0.14",
     "@types/session-file-store": "^1.2.1",
     "@types/sqlite3": "^3.1.7",
-    "editorconfig": "^0.15.3",
-    "editorconfig-checker": "^3.3.0",
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "tsc-watch": "^4.2.9",
     "tslint": "^6.1.3",
-    "typescript": "^4.1.3"
+    "typescript": "^4.1.3",
+    "typescript-eslint": "^8.18.0"
   }
 }

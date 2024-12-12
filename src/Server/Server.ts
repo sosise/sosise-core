@@ -1,18 +1,17 @@
-import BodyParser from "body-parser";
-import colors from "colors";
-import Compression from "compression";
-import SessionRedisStore from "connect-redis";
-import Express from "express";
-import { NextFunction, Request, Response } from "express";
-import ExpressSession from "express-session";
-import fs from "fs";
-import SessionMemoryStore from "memorystore";
-import Redis from "redis";
-import SessionFileStore from "session-file-store";
-import * as Sentry from "@sentry/node";
-import * as Tracing from "@sentry/tracing";
-import SessionInitializationException from "../Exceptions/Session/SessionInitializationException";
-import ServerInformation from "./ServerInformation";
+import BodyParser from 'body-parser';
+import colors from 'colors';
+import Compression from 'compression';
+import SessionRedisStore from 'connect-redis';
+import Express from 'express';
+import { NextFunction, Request, Response } from 'express';
+import ExpressSession from 'express-session';
+import fs from 'fs';
+import SessionMemoryStore from 'memorystore';
+import Redis from 'redis';
+import SessionFileStore from 'session-file-store';
+import * as Sentry from '@sentry/node';
+import SessionInitializationException from '../Exceptions/Session/SessionInitializationException';
+import ServerInformation from './ServerInformation';
 
 export default class Server {
     /**
@@ -57,11 +56,16 @@ export default class Server {
 
                     case 'redis':
                         const RedisStore = SessionRedisStore(ExpressSession);
-                        sessionConfig.store = new RedisStore({ client: Redis.createClient(), ...sessionConfig.drivers[sessionConfig.driver] });
+                        sessionConfig.store = new RedisStore({
+                            client: Redis.createClient(),
+                            ...sessionConfig.drivers[sessionConfig.driver],
+                        });
                         break;
 
                     default:
-                        throw new SessionInitializationException('Session driver is not supported, let me know which driver you need, I will add it');
+                        throw new SessionInitializationException(
+                            'Session driver is not supported, let me know which driver you need, I will add it',
+                        );
                 }
                 app.use(ExpressSession(sessionConfig));
             }
@@ -73,16 +77,20 @@ export default class Server {
 
         // Setting up POST params parser
         app.use(Express.json());
-        app.use(Express.urlencoded({
-            extended: true
-        }));
+        app.use(
+            Express.urlencoded({
+                extended: true,
+            }),
+        );
 
         // Setting up multipart/form-data
 
-        app.use(BodyParser.raw({
-            limit: '150mb',
-            // type: '*/*'
-        }));
+        app.use(
+            BodyParser.raw({
+                limit: '150mb',
+                // type: '*/*'
+            }),
+        );
 
         // app.use(ExpressFormData.parse({
         //     uploadDir: os.tmpdir(),
@@ -114,24 +122,26 @@ export default class Server {
         app.use('/', apiRoutes);
 
         // The error handler must be before any other error middleware and after all controllers
-        app.use(Sentry.Handlers.errorHandler({
-            shouldHandleError(error) {
-                // Send exception to sentry when property sendToSentry exists and is true
-                // @ts-ignore
-                if (error.sendToSentry !== undefined && error.sendToSentry === true) {
+        app.use(
+            Sentry.Handlers.errorHandler({
+                shouldHandleError(error) {
+                    // Send exception to sentry when property sendToSentry exists and is true
+                    // @ts-ignore
+                    if (error.sendToSentry !== undefined && error.sendToSentry === true) {
+                        return true;
+                    }
+
+                    // Do not send exception to sentry when property sendToSentry exists and is false
+                    // @ts-ignore
+                    if (error.sendToSentry !== undefined && error.sendToSentry === false) {
+                        return false;
+                    }
+
+                    // When property was not found in the exception, send to sentry by default
                     return true;
-                }
-
-                // Do not send exception to sentry when property sendToSentry exists and is false
-                // @ts-ignore
-                if (error.sendToSentry !== undefined && error.sendToSentry === false) {
-                    return false;
-                }
-
-                // When property was not found in the exception, send to sentry by default
-                return true;
-            },
-        }));
+                },
+            }),
+        );
 
         // Exception handler
         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;

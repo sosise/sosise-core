@@ -1,9 +1,8 @@
-import { knex, Knex } from "knex";
-import DatabaseConfigurationException from "../Exceptions/Database/DatabaseConfigurationException";
+import { knex, Knex } from 'knex';
+import DatabaseConfigurationException from '../Exceptions/Database/DatabaseConfigurationException';
 
 export default class Database {
-
-    public static instances: { connectionName: string, instance: Database }[] = [];
+    public static instances: { connectionName: string; instance: Database }[] = [];
     public client: Knex;
 
     /**
@@ -15,7 +14,10 @@ export default class Database {
 
         // Check if connection configuration exists
         if (databaseConfig.connections[connectionName] === undefined) {
-            throw new DatabaseConfigurationException('Database configuration with following name does not exists, please check config/database.ts', connectionName);
+            throw new DatabaseConfigurationException(
+                'Database configuration with following name does not exists, please check config/database.ts',
+                connectionName,
+            );
         }
 
         // Create client
@@ -40,7 +42,7 @@ export default class Database {
         // Remember in static property
         Database.instances.push({
             connectionName,
-            instance: self
+            instance: self,
         });
 
         // Return

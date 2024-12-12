@@ -1,7 +1,6 @@
-import ValidatorRules from "./ValidatorRules";
+import ValidatorRules from './ValidatorRules';
 
 export default class Validator {
-
     public value: { [key: string]: unknown };
     public errors: string[] = [];
 

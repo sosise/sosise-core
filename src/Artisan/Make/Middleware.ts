@@ -1,7 +1,7 @@
-import colors from "colors";
-import fs from "fs";
-import MakeException from "../../Exceptions/Artisan/MakeException";
-import Base from "./Base";
+import colors from 'colors';
+import fs from 'fs';
+import MakeException from '../../Exceptions/Artisan/MakeException';
+import Base from './Base';
 
 export default class Middleware extends Base {
     protected templatePath = __dirname + '/../FileTemplates/MiddlewareTemplate.txt';
@@ -13,7 +13,10 @@ export default class Middleware extends Base {
     public createFile(): void {
         try {
             let templateFileContent = fs.readFileSync(this.templatePath, 'utf8');
-            templateFileContent = templateFileContent.replace(new RegExp('%name%', 'g'), this.name.charAt(0).toUpperCase() + this.name.slice(1));
+            templateFileContent = templateFileContent.replace(
+                new RegExp('%name%', 'g'),
+                this.name.charAt(0).toUpperCase() + this.name.slice(1),
+            );
             const pathOfNewFile = `${process.cwd()}/${this.createPath}/${this.name}.ts`;
             this.throwExceptionIfFileAlreadyExists(pathOfNewFile);
             fs.writeFileSync(pathOfNewFile, templateFileContent);

@@ -1,15 +1,14 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
-import https, { AgentOptions } from "https";
-import { HttpsProxyAgent } from "https-proxy-agent";
-import Helper from "../Helper/Helper";
-import HttpClientConfig from "../Types/HttpClientConfig";
-import HttpClientRequestConfig from "../Types/HttpClientRequestConfig";
-import HttpClientRetryConfig from "../Types/HttpClientRetryConfig";
-import LoggerService from "../Services/Logger/LoggerService";
-import IOC from "../ServiceProviders/IOC";
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import https, { AgentOptions } from 'https';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import Helper from '../Helper/Helper';
+import HttpClientConfig from '../Types/HttpClientConfig';
+import HttpClientRequestConfig from '../Types/HttpClientRequestConfig';
+import HttpClientRetryConfig from '../Types/HttpClientRetryConfig';
+import LoggerService from '../Services/Logger/LoggerService';
+import IOC from '../ServiceProviders/IOC';
 
 export default class HttpClient {
-
     public static DEFAULT_USER_AGENT = 'sosise http client';
     public static DEFAULT_REQUEST_MAX_RETRIES = 1;
     public static DEFAULT_TIMEOUT_IN_MILLISECONDS = 5000;
@@ -36,7 +35,7 @@ export default class HttpClient {
         // Prepare headers
         axiosConfig.headers = {
             'User-Agent': this.getDefaultUserAgentOrConfiguredOne(),
-            ...axiosConfig.headers
+            ...axiosConfig.headers,
         };
 
         // Prepare https agent config
@@ -55,7 +54,11 @@ export default class HttpClient {
         let httpsAgent = new https.Agent(httpsAgentConfig);
 
         // In case https proxy is being used
-        if (axiosConfig.proxy && axiosConfig.proxy.protocol && axiosConfig.proxy.protocol.toLocaleLowerCase() === 'https') {
+        if (
+            axiosConfig.proxy &&
+            axiosConfig.proxy.protocol &&
+            axiosConfig.proxy.protocol.toLocaleLowerCase() === 'https'
+        ) {
             // Prepare https proxy agent config
             const httpsProxyAgentConfig: any = {
                 host: axiosConfig.proxy.host,
@@ -121,9 +124,12 @@ export default class HttpClient {
     public async request(config: HttpClientRequestConfig): Promise<AxiosResponse> {
         // Prepare cancel token for emergency timeout
         const source = axios.CancelToken.source();
-        const timeout = setTimeout(() => {
-            source.cancel('Timeout');
-        }, config.timeout || this.config?.timeout || HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
+        const timeout = setTimeout(
+            () => {
+                source.cancel('Timeout');
+            },
+            config.timeout || this.config?.timeout || HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS,
+        );
 
         // Do request
         const response = await this.makeRequest({ ...config, cancelToken: source.token });
@@ -138,12 +144,18 @@ export default class HttpClient {
     /**
      * Make request with retry
      */
-    public async requestWithRetry(config: HttpClientRequestConfig, retryConfig: HttpClientRetryConfig): Promise<AxiosResponse> {
+    public async requestWithRetry(
+        config: HttpClientRequestConfig,
+        retryConfig: HttpClientRetryConfig,
+    ): Promise<AxiosResponse> {
         // Prepare cancel token for emergency timeout
         const source = axios.CancelToken.source();
-        const timeout = setTimeout(() => {
-            source.cancel('Timeout');
-        }, config.timeout || this.config?.timeout || HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS);
+        const timeout = setTimeout(
+            () => {
+                source.cancel('Timeout');
+            },
+            config.timeout || this.config?.timeout || HttpClient.DEFAULT_TIMEOUT_IN_MILLISECONDS,
+        );
 
         // Do request
         const response = await this.makeRequest({ ...config, cancelToken: source.token }, retryConfig);
@@ -158,7 +170,11 @@ export default class HttpClient {
     /**
      * Make request
      */
-    private async makeRequest(config: HttpClientRequestConfig, retryConfig?: HttpClientRetryConfig, retryCounter: number = 1): Promise<AxiosResponse> {
+    private async makeRequest(
+        config: HttpClientRequestConfig,
+        retryConfig?: HttpClientRetryConfig,
+        retryCounter: number = 1,
+    ): Promise<AxiosResponse> {
         // Log
         const requestConfigCopy = config;
         delete requestConfigCopy.cancelToken;
@@ -177,7 +193,7 @@ export default class HttpClient {
                 requestConfig: requestConfigCopy,
                 response: {
                     status: response.status,
-                }
+                },
             });
 
             // Return
@@ -185,7 +201,9 @@ export default class HttpClient {
         } catch (error) {
             // Add method and url to error message, for better readability
             if (error.message[0] !== '[') {
-                error.message = `[${config.method?.toUpperCase()}] ${this.config?.baseURL ?? ''}${config.url!.split('?')[0]} ` + error.message;
+                error.message =
+                    `[${config.method?.toUpperCase()}] ${this.config?.baseURL ?? ''}${config.url!.split('?')[0]} ` +
+                    error.message;
             }
 
             // Log
@@ -195,7 +213,11 @@ export default class HttpClient {
             });
 
             // In case we have retries left
-            if (retryConfig && this.checkIfRequestShouldBeRetriedAccordingToHttpReturnCode(error.response?.status, retryConfig) && retryCounter < retryConfig.requestMaxRetries) {
+            if (
+                retryConfig &&
+                this.checkIfRequestShouldBeRetriedAccordingToHttpReturnCode(error.response?.status, retryConfig) &&
+                retryCounter < retryConfig.requestMaxRetries
+            ) {
                 // Calculate next wait interval
                 let waitInterval = 0;
                 switch (retryConfig.requestRetryStrategy) {
@@ -270,7 +292,11 @@ export default class HttpClient {
                 }
 
                 // Otherwise throw user given exception
-                throw new config.defaultException(error.response?.data?.message ?? error.message, error.response.status, error.response.data.data ?? null);
+                throw new config.defaultException(
+                    error.response?.data?.message ?? error.message,
+                    error.response.status,
+                    error.response.data.data ?? null,
+                );
             }
         }
     }
@@ -278,7 +304,10 @@ export default class HttpClient {
     /**
      * Check if request should be retried according to http return code
      */
-    private checkIfRequestShouldBeRetriedAccordingToHttpReturnCode(httpCode: number | undefined, retryConfig: HttpClientRetryConfig): boolean {
+    private checkIfRequestShouldBeRetriedAccordingToHttpReturnCode(
+        httpCode: number | undefined,
+        retryConfig: HttpClientRetryConfig,
+    ): boolean {
         // In case there happened an error without httpCode, e.g. Timeout
         if (!httpCode) {
             // Yep we should retry

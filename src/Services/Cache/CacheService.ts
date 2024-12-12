@@ -1,11 +1,10 @@
-import Helper from "../../Helper/Helper";
-import CacheFileRepository from "../../Repositories/Cache/CacheFileRepository";
-import CacheMemoryRepository from "../../Repositories/Cache/CacheMemoryRepository";
-import CacheRedisRepository from "../../Repositories/Cache/CacheRedisRepository";
-import CacheRepositoryInterface from "../../Repositories/Cache/CacheRepositoryInterface";
+import Helper from '../../Helper/Helper';
+import CacheFileRepository from '../../Repositories/Cache/CacheFileRepository';
+import CacheMemoryRepository from '../../Repositories/Cache/CacheMemoryRepository';
+import CacheRedisRepository from '../../Repositories/Cache/CacheRedisRepository';
+import CacheRepositoryInterface from '../../Repositories/Cache/CacheRepositoryInterface';
 
 export default class CacheService {
-
     private cacheRepository: CacheRepositoryInterface;
     private cacheConfig: any;
 
@@ -65,7 +64,7 @@ export default class CacheService {
     /**
      * Put multiple key-value pairs into cache for certain time
      */
-    public putMany(data: { key: string, value: any }[], ttlInSeconds?: number): Promise<void> {
+    public putMany(data: { key: string; value: any }[], ttlInSeconds?: number): Promise<void> {
         return this.cacheRepository.putMany(data, ttlInSeconds);
     }
 

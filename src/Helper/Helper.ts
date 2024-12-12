@@ -1,5 +1,5 @@
-import dayjs from "dayjs";
-import { inspect } from "util";
+import dayjs from 'dayjs';
+import { inspect } from 'util';
 
 export default class Helper {
     /**
@@ -44,11 +44,13 @@ export default class Helper {
             params = undefined;
         }
 
-        console.log(inspect(params, {
-            depth: null,
-            maxArrayLength: null,
-            colors: true
-        }));
+        console.log(
+            inspect(params, {
+                depth: null,
+                maxArrayLength: null,
+                colors: true,
+            }),
+        );
         process.exit(0);
     }
 
@@ -62,11 +64,13 @@ export default class Helper {
             params = undefined;
         }
 
-        console.log(inspect(params, {
-            depth: null,
-            maxArrayLength: null,
-            colors: true
-        }));
+        console.log(
+            inspect(params, {
+                depth: null,
+                maxArrayLength: null,
+                colors: true,
+            }),
+        );
     }
 
     /**
@@ -158,13 +162,17 @@ export default class Helper {
      * Assemble pagination
      * @return pagination object
      */
-    public static assemblePagination(data: any[], page: number, pageSize: number): { page: number, pageSize: number, totalPages: number, totalElements: number } {
+    public static assemblePagination(
+        data: any[],
+        page: number,
+        pageSize: number,
+    ): { page: number; pageSize: number; totalPages: number; totalElements: number } {
         // Create pagination object
-        const pagination: { page: number, pageSize: number, totalPages: number, totalElements: number } = {
+        const pagination: { page: number; pageSize: number; totalPages: number; totalElements: number } = {
             page: Number(page),
             pageSize: Number(pageSize),
             totalPages: Math.ceil(data.length / pageSize),
-            totalElements: data.length
+            totalElements: data.length,
         };
 
         // Return

@@ -1,5 +1,5 @@
-import dayjs from "dayjs";
-import LoggerRepositoryInterface from "./LoggerRepositoryInterface";
+import dayjs from 'dayjs';
+import LoggerRepositoryInterface from './LoggerRepositoryInterface';
 
 export default class LoggerJsonConsoleRepository implements LoggerRepositoryInterface {
     /**
@@ -11,7 +11,7 @@ export default class LoggerJsonConsoleRepository implements LoggerRepositoryInte
             logLevel: 'debug',
             timestamp: dayjs().unix(),
             message,
-            ...params
+            ...params,
         };
         console.log(JSON.stringify(output));
     }
@@ -25,7 +25,7 @@ export default class LoggerJsonConsoleRepository implements LoggerRepositoryInte
             logLevel: 'info',
             timestamp: dayjs().unix(),
             message,
-            ...params
+            ...params,
         };
         console.log(JSON.stringify(output));
     }
@@ -39,7 +39,7 @@ export default class LoggerJsonConsoleRepository implements LoggerRepositoryInte
             logLevel: 'warning',
             timestamp: dayjs().unix(),
             message,
-            ...params
+            ...params,
         };
         console.log(JSON.stringify(output));
     }
@@ -53,7 +53,7 @@ export default class LoggerJsonConsoleRepository implements LoggerRepositoryInte
             logLevel: 'error',
             timestamp: dayjs().unix(),
             message,
-            ...params
+            ...params,
         };
         console.log(JSON.stringify(output));
     }
@@ -67,7 +67,7 @@ export default class LoggerJsonConsoleRepository implements LoggerRepositoryInte
             logLevel: 'critical',
             timestamp: dayjs().unix(),
             message,
-            ...params
+            ...params,
         };
         console.log(JSON.stringify(output));
     }

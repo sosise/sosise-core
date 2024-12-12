@@ -1,8 +1,7 @@
-import ExceptionResponse from "../../Types/ExceptionResponse";
-import Exception from "../Exception";
+import ExceptionResponse from '../../Types/ExceptionResponse';
+import Exception from '../Exception';
 
 export default class RedisException extends Exception {
-
     // If set to false no exception will be sent to sentry
     protected sendToSentry = true;
 
@@ -22,7 +21,7 @@ export default class RedisException extends Exception {
     public handle(exception: this): ExceptionResponse {
         const response: ExceptionResponse = {
             message: exception.message,
-            data: null
+            data: null,
         };
         return response;
     }

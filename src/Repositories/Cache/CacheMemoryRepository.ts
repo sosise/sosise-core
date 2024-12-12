@@ -1,9 +1,8 @@
-import NodeCache from "node-cache";
-import CacheException from "../../Exceptions/Cache/CacheException";
-import CacheRepositoryInterface from "./CacheRepositoryInterface";
+import NodeCache from 'node-cache';
+import CacheException from '../../Exceptions/Cache/CacheException';
+import CacheRepositoryInterface from './CacheRepositoryInterface';
 
 export default class CacheMemoryRepository implements CacheRepositoryInterface {
-
     private cacheConfig: any;
     private cacheInstance: NodeCache;
 
@@ -64,7 +63,7 @@ export default class CacheMemoryRepository implements CacheRepositoryInterface {
     /**
      * Put multiple key-value pairs into cache for certain time
      */
-    public async putMany(data: { key: string, value: any }[], ttlInSeconds?: number): Promise<void> {
+    public async putMany(data: { key: string; value: any }[], ttlInSeconds?: number): Promise<void> {
         throw new CacheException(`Not implemented in cache memory repository`);
     }
 
@@ -96,7 +95,7 @@ export default class CacheMemoryRepository implements CacheRepositoryInterface {
         }
 
         // Otherwise we need to filter keys
-        const filteredKeys = allKeys.filter(key => regex.test(key));
+        const filteredKeys = allKeys.filter((key) => regex.test(key));
 
         // Return
         return filteredKeys;
@@ -126,7 +125,7 @@ export default class CacheMemoryRepository implements CacheRepositoryInterface {
     /**
      * Get all cache keys with timestamps
      */
-    public async getAllCacheKeysWithTimestamps(): Promise<{ key: string, expiresAtTimestamp: number }[]> {
+    public async getAllCacheKeysWithTimestamps(): Promise<{ key: string; expiresAtTimestamp: number }[]> {
         throw new CacheException(`Not applicable for memory cache`);
     }
 }

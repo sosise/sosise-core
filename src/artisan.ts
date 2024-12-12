@@ -1,27 +1,26 @@
-import colors from "colors";
-import { Command, option, version } from "commander";
-import figlet from "figlet";
-import fs from "fs";
-import path from "path";
-import prompts from "prompts";
-import MakeCommand from "./Artisan/Make/Command";
-import Config from "./Artisan/Make/Config";
-import Controller from "./Artisan/Make/Controller";
-import Enum from "./Artisan/Make/Enum";
-import Exception from "./Artisan/Make/Exception";
-import Middleware from "./Artisan/Make/Middleware";
-import Migration from "./Artisan/Make/Migration";
-import QueueWorker from "./Artisan/Make/QueueWorker";
-import Repository from "./Artisan/Make/Repository";
-import MakeSeed from "./Artisan/Make/Seed";
-import Service from "./Artisan/Make/Service";
-import Test from "./Artisan/Make/Test";
-import Type from "./Artisan/Make/Type";
-import Unifier from "./Artisan/Make/Unifier";
-import Migrate from "./Artisan/Migrate/Migrate";
-import QueueHandler from "./Artisan/Queue/QueueHandler";
-import Seed from "./Artisan/Seed/Seed";
-import CommandRegistration from "./Command/CommandRegistration";
+import colors from 'colors';
+import { Command } from 'commander';
+import fs from 'fs';
+import path from 'path';
+import prompts from 'prompts';
+import MakeCommand from './Artisan/Make/Command';
+import Config from './Artisan/Make/Config';
+import Controller from './Artisan/Make/Controller';
+import Enum from './Artisan/Make/Enum';
+import Exception from './Artisan/Make/Exception';
+import Middleware from './Artisan/Make/Middleware';
+import Migration from './Artisan/Make/Migration';
+import QueueWorker from './Artisan/Make/QueueWorker';
+import Repository from './Artisan/Make/Repository';
+import MakeSeed from './Artisan/Make/Seed';
+import Service from './Artisan/Make/Service';
+import Test from './Artisan/Make/Test';
+import Type from './Artisan/Make/Type';
+import Unifier from './Artisan/Make/Unifier';
+import Migrate from './Artisan/Migrate/Migrate';
+import QueueHandler from './Artisan/Queue/QueueHandler';
+import Seed from './Artisan/Seed/Seed';
+import CommandRegistration from './Command/CommandRegistration';
 
 export default class Artisan {
     /**
@@ -34,8 +33,13 @@ export default class Artisan {
 
             // Get version of the sosise-core
             const packageJsonFileContent = fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8');
-            const artisanString = fs.readFileSync(__dirname + '/Artisan/FileTemplates/ArtisanAscii.txt', 'utf-8').magenta;
-            const versionString = colors.dim(`                sosise-core: ${JSON.parse(packageJsonFileContent).version}`);
+            const artisanString = fs.readFileSync(
+                __dirname + '/Artisan/FileTemplates/ArtisanAscii.txt',
+                'utf-8',
+            ).magenta;
+            const versionString = colors.dim(
+                `                sosise-core: ${JSON.parse(packageJsonFileContent).version}`,
+            );
             const documentationLink = colors.dim(`       https://sosise.github.io/sosise-docs/`);
 
             command
@@ -243,7 +247,11 @@ export default class Artisan {
                     try {
                         // Stop the command if env is NOT local and no force is used
                         if (process.env.APP_ENV !== 'local' && !cli.force) {
-                            console.log(colors.red(`Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`));
+                            console.log(
+                                colors.red(
+                                    `Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`,
+                                ),
+                            );
                             console.log(colors.dim(`See ./artisan migrate:rollback --help for more information`));
                             process.exit(0);
                         }
@@ -257,7 +265,7 @@ export default class Artisan {
                         const confirmed = await prompts({
                             type: 'confirm',
                             name: 'confirmed',
-                            message: 'Are you sure that you want to rollback following migrations?'
+                            message: 'Are you sure that you want to rollback following migrations?',
                         });
                         if (confirmed.confirmed) {
                             // Rollback migrations
@@ -284,7 +292,11 @@ export default class Artisan {
                     try {
                         // Stop the command if env is NOT local and no force is used
                         if (process.env.APP_ENV !== 'local' && !cli.force) {
-                            console.log(colors.red(`Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`));
+                            console.log(
+                                colors.red(
+                                    `Attention! You are in ${process.env.APP_ENV} environment, if you still want to run this command use -f or --force flag`,
+                                ),
+                            );
                             console.log(colors.dim(`See ./artisan migrate:fresh --help for more information`));
                             process.exit(0);
                         }
@@ -307,7 +319,11 @@ export default class Artisan {
             command
                 .command('seed')
                 .description(colors.dim('Run the database seeds'))
-                .option('-f, --force', 'Force seeding even if seeds are restricted to be run in a local environment', false)
+                .option(
+                    '-f, --force',
+                    'Force seeding even if seeds are restricted to be run in a local environment',
+                    false,
+                )
                 .action(async (cli) => {
                     try {
                         const instance = new Seed(cli);
@@ -425,8 +441,7 @@ export default class Artisan {
 
             // Parse cli arguments and execute actions
             command.parse(argv);
-        }
-        catch (error) {
+        } catch (error) {
             const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
             const exceptionHandler = new Handler();
             exceptionHandler.reportCommandException(error).then(() => {

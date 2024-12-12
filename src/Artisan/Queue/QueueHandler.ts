@@ -1,10 +1,9 @@
-import { QueueGetters } from "bullmq";
-import colors from "colors";
-import fs from "fs";
-import { inspect } from "util";
+import { QueueGetters } from 'bullmq';
+import colors from 'colors';
+import fs from 'fs';
+import { inspect } from 'util';
 
 export default class QueueHandler {
-
     protected workersPath = '/build/app/Console/QueueWorkers';
 
     /**
@@ -13,7 +12,11 @@ export default class QueueHandler {
     public async listen(queueName: string): Promise<void> {
         // Proceed only when migrations path exists
         if (!fs.existsSync(process.cwd() + this.workersPath)) {
-            console.log(colors.yellow(`Ups, you don't have any workers, you can create them with ./artisan make:queueworker MyWorker`));
+            console.log(
+                colors.yellow(
+                    `Ups, you don't have any workers, you can create them with ./artisan make:queueworker MyWorker`,
+                ),
+            );
             return;
         }
 
@@ -55,7 +58,11 @@ export default class QueueHandler {
         }
 
         // Log, if we've reached this line, means that no worker found for given queue name
-        console.log(colors.yellow(`Sorry there is no worker with specified queue name ${queueName}, take a look at src/app/Console/QueueWorkers`));
+        console.log(
+            colors.yellow(
+                `Sorry there is no worker with specified queue name ${queueName}, take a look at src/app/Console/QueueWorkers`,
+            ),
+        );
     }
 
     /**
@@ -66,7 +73,9 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, { connection: { host: queueConfig.redis.host, port: queueConfig.redis.port } });
+        const queueGetters = new QueueGetters(queueName, {
+            connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
+        });
 
         // Get all failed jobs
         const jobs = await queueGetters.getFailed(0, await queueGetters.getFailedCount());
@@ -90,7 +99,9 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, { connection: { host: queueConfig.redis.host, port: queueConfig.redis.port } });
+        const queueGetters = new QueueGetters(queueName, {
+            connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
+        });
 
         // Get all delayed jobs
         const jobs = await queueGetters.getDelayed(0, await queueGetters.getDelayedCount());
@@ -114,7 +125,9 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, { connection: { host: queueConfig.redis.host, port: queueConfig.redis.port } });
+        const queueGetters = new QueueGetters(queueName, {
+            connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
+        });
 
         // Get jobs
         const jobs = await queueGetters.getFailed(0, await queueGetters.getFailedCount());
@@ -138,7 +151,9 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, { connection: { host: queueConfig.redis.host, port: queueConfig.redis.port } });
+        const queueGetters = new QueueGetters(queueName, {
+            connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
+        });
 
         // Get jobs
         const jobs = await queueGetters.getFailed(0, await queueGetters.getFailedCount());
@@ -151,7 +166,7 @@ export default class QueueHandler {
             const jobPayload = inspect(job.data, {
                 depth: null,
                 maxArrayLength: null,
-                colors: false
+                colors: false,
             });
             console.log(colors.red(`Job id: ${jobId} payload: ${jobPayload}`));
         }
@@ -166,7 +181,9 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, { connection: { host: queueConfig.redis.host, port: queueConfig.redis.port } });
+        const queueGetters = new QueueGetters(queueName, {
+            connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
+        });
 
         // Get jobs
         const jobs = await queueGetters.getWaiting(0, await queueGetters.getWaitingCount());
@@ -179,7 +196,7 @@ export default class QueueHandler {
             const jobPayload = inspect(job.data, {
                 depth: null,
                 maxArrayLength: null,
-                colors: false
+                colors: false,
             });
             console.log(colors.yellow(`Job id: ${jobId} payload: ${jobPayload}`));
         }
@@ -194,7 +211,9 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, { connection: { host: queueConfig.redis.host, port: queueConfig.redis.port } });
+        const queueGetters = new QueueGetters(queueName, {
+            connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
+        });
 
         // Get jobs
         const jobs = await queueGetters.getDelayed(0, await queueGetters.getDelayedCount());
@@ -207,7 +226,7 @@ export default class QueueHandler {
             const jobPayload = inspect(job.data, {
                 depth: null,
                 maxArrayLength: null,
-                colors: false
+                colors: false,
             });
             console.log(colors.blue(`Job id: ${jobId} payload: ${jobPayload}`));
         }
@@ -222,7 +241,9 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, { connection: { host: queueConfig.redis.host, port: queueConfig.redis.port } });
+        const queueGetters = new QueueGetters(queueName, {
+            connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
+        });
 
         // Get jobs
         const jobs = await queueGetters.getCompleted(0, await queueGetters.getCompletedCount());
@@ -235,7 +256,7 @@ export default class QueueHandler {
             const jobPayload = inspect(job.data, {
                 depth: null,
                 maxArrayLength: null,
-                colors: false
+                colors: false,
             });
             console.log(colors.gray(`Job id: ${jobId} payload: ${jobPayload}`));
         }
@@ -250,7 +271,9 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, { connection: { host: queueConfig.redis.host, port: queueConfig.redis.port } });
+        const queueGetters = new QueueGetters(queueName, {
+            connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
+        });
 
         // Get jobs
         const jobs = await queueGetters.getActive(0, await queueGetters.getActiveCount());
@@ -263,7 +286,7 @@ export default class QueueHandler {
             const jobPayload = inspect(job.data, {
                 depth: null,
                 maxArrayLength: null,
-                colors: false
+                colors: false,
             });
             console.log(colors.green(`Job id: ${jobId} payload: ${jobPayload}`));
         }

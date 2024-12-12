@@ -1,9 +1,8 @@
-import fs from "fs";
-import CacheException from "../../Exceptions/Cache/CacheException";
-import CacheRepositoryInterface from "./CacheRepositoryInterface";
+import fs from 'fs';
+import CacheException from '../../Exceptions/Cache/CacheException';
+import CacheRepositoryInterface from './CacheRepositoryInterface';
 
 export default class CacheFileRepository implements CacheRepositoryInterface {
-
     private cacheConfig: any;
     private cacheFilePath: string;
 
@@ -100,7 +99,7 @@ export default class CacheFileRepository implements CacheRepositoryInterface {
         const cache = this.readCacheFileAndParse();
 
         // Get ttl
-        const ttl = (!ttlInSeconds ? this.cacheConfig.defaultTTLInSeconds : ttlInSeconds);
+        const ttl = !ttlInSeconds ? this.cacheConfig.defaultTTLInSeconds : ttlInSeconds;
 
         // Put data into cache
         cache[key] = {
@@ -115,7 +114,7 @@ export default class CacheFileRepository implements CacheRepositoryInterface {
     /**
      * Put multiple key-value pairs into cache for certain time
      */
-    public async putMany(data: { key: string, value: any }[], ttlInSeconds?: number): Promise<void> {
+    public async putMany(data: { key: string; value: any }[], ttlInSeconds?: number): Promise<void> {
         throw new CacheException(`Not implemented in cache file repository`);
     }
 
@@ -194,7 +193,7 @@ export default class CacheFileRepository implements CacheRepositoryInterface {
         }
 
         // Otherwise we need to filter keys
-        const filteredKeys = allKeys.filter(key => regex.test(key));
+        const filteredKeys = allKeys.filter((key) => regex.test(key));
 
         // Return
         return filteredKeys;
@@ -271,7 +270,7 @@ export default class CacheFileRepository implements CacheRepositoryInterface {
     /**
      * Get all cache keys with timestamps
      */
-    public async getAllCacheKeysWithTimestamps(): Promise<{ key: string, expiresAtTimestamp: number }[]> {
+    public async getAllCacheKeysWithTimestamps(): Promise<{ key: string; expiresAtTimestamp: number }[]> {
         // Check if cache file does not exists
         if (!this.checkIfCacheFileExists()) {
             // Create cache file
@@ -285,7 +284,7 @@ export default class CacheFileRepository implements CacheRepositoryInterface {
         const cache = this.readCacheFileAndParse();
 
         // Initialize result variable
-        const result: { key: string, expiresAtTimestamp: number }[] = [];
+        const result: { key: string; expiresAtTimestamp: number }[] = [];
 
         // Fill resulting variable with data
         for (const [k, v] of Object.entries(cache) as any) {

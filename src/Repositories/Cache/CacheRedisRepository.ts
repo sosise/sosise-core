@@ -1,10 +1,9 @@
-import { createClient, RedisClientType } from "redis";
-import CacheException from "../../Exceptions/Cache/CacheException";
-import RedisException from "../../Exceptions/Cache/RedisException";
-import CacheRepositoryInterface from "./CacheRepositoryInterface";
+import { createClient, RedisClientType } from 'redis';
+import CacheException from '../../Exceptions/Cache/CacheException';
+import RedisException from '../../Exceptions/Cache/RedisException';
+import CacheRepositoryInterface from './CacheRepositoryInterface';
 
 export default class CacheRedisRepository implements CacheRepositoryInterface {
-
     private cacheConfig: any;
     private cacheInstance: RedisClientType;
     private isClientClosed: boolean = false;
@@ -47,20 +46,20 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
         this.cacheInstance.on('error', (err) => {
             console.error(`Redis connection error: ${err}`);
 
-            if (err.message.includes("Socket closed unexpectedly")) {
-                console.warn("Redis socket closed unexpectedly. Attempting to reconnect...");
+            if (err.message.includes('Socket closed unexpectedly')) {
+                console.warn('Redis socket closed unexpectedly. Attempting to reconnect...');
                 this.reconnectRedisClient();
             }
         });
 
         this.cacheInstance.on('end', () => {
-            console.warn("Redis connection closed, attempting to reconnect...");
+            console.warn('Redis connection closed, attempting to reconnect...');
             this.connected = false;
             this.reconnectRedisClient();
         });
 
         this.cacheInstance.on('connect', () => {
-            console.log("Redis client connected.");
+            console.log('Redis client connected.');
             this.connected = true;
             this.reconnecting = false; // Reset reconnecting flag on successful connection
         });
@@ -71,8 +70,8 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
      */
     private async waitForConnection() {
         while (!this.connected) {
-            console.log("Waiting for Redis connection...");
-            await new Promise(resolve => setTimeout(resolve, 100)); // Check connection status every 100 ms
+            console.log('Waiting for Redis connection...');
+            await new Promise((resolve) => setTimeout(resolve, 100)); // Check connection status every 100 ms
         }
     }
 
@@ -84,7 +83,7 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
             await this.cacheInstance.connect();
             this.isClientClosed = false;
             this.connected = true;
-            console.log("Connected to Redis successfully.");
+            console.log('Connected to Redis successfully.');
         } catch (err) {
             console.error(`Failed to connect to Redis: ${err}`);
             this.connected = false;
@@ -101,12 +100,12 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
         this.connected = false;
 
         if (this.isClientClosed) {
-            console.warn("Reinitializing Redis client...");
+            console.warn('Reinitializing Redis client...');
             this.initializeRedisClient();
         }
 
         try {
-            console.log("Attempting to reconnect to Redis...");
+            console.log('Attempting to reconnect to Redis...');
             await this.connectToRedis();
         } catch (err) {
             console.error(`Error during Redis client reinitialization: ${err}`);
@@ -141,7 +140,7 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
         const values = await this.cacheInstance.mGet(keys);
 
         // Map Redis values: parse JSON if value exists, replace null with undefined for missing keys
-        return values.map(value => value === null ? undefined : JSON.parse(value));
+        return values.map((value) => (value === null ? undefined : JSON.parse(value)));
     }
 
     /**
@@ -175,7 +174,7 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
     /**
      * Put multiple key-value pairs into cache for certain time
      */
-    public async putMany(data: { key: string, value: any }[], ttlInSeconds?: number): Promise<void> {
+    public async putMany(data: { key: string; value: any }[], ttlInSeconds?: number): Promise<void> {
         // Wait for redis connection
         await this.waitForConnection();
 
@@ -230,7 +229,7 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
         }
 
         // Filter keys based on the provided regex
-        const filteredKeys = allKeys.filter(key => regex.test(key));
+        const filteredKeys = allKeys.filter((key) => regex.test(key));
 
         return filteredKeys;
     }
@@ -270,7 +269,7 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
     /**
      * Get all cache keys with timestamps
      */
-    public async getAllCacheKeysWithTimestamps(): Promise<{ key: string, expiresAtTimestamp: number }[]> {
+    public async getAllCacheKeysWithTimestamps(): Promise<{ key: string; expiresAtTimestamp: number }[]> {
         throw new CacheException(`Not applicable for redis cache`);
     }
 }

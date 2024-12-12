@@ -1,4 +1,4 @@
-import Base from "./Base";
+import Base from './Base';
 
 export default class QueueWorker extends Base {
     protected templatePath = __dirname + '/../FileTemplates/QueueWorkerTemplate.txt';

@@ -1,13 +1,12 @@
-import Nodemailer from "nodemailer";
-import Mail from "nodemailer/lib/mailer";
-import FakeMailSendingException from "../Exceptions/Mailer/FakeMailSendingException";
-import MailSendingException from "../Exceptions/Mailer/MailSendingException";
-import TestAccountCreationException from "../Exceptions/Mailer/TestAccountCreationException";
-import IOC from "../ServiceProviders/IOC";
-import LoggerService from "../Services/Logger/LoggerService";
+import Nodemailer from 'nodemailer';
+import Mail from 'nodemailer/lib/mailer';
+import FakeMailSendingException from '../Exceptions/Mailer/FakeMailSendingException';
+import MailSendingException from '../Exceptions/Mailer/MailSendingException';
+import TestAccountCreationException from '../Exceptions/Mailer/TestAccountCreationException';
+import IOC from '../ServiceProviders/IOC';
+import LoggerService from '../Services/Logger/LoggerService';
 
 export default class Mailer {
-
     private static instance: Mailer;
     private client: Nodemailer.Transporter;
     private dryrun: boolean = false;
@@ -45,8 +44,8 @@ export default class Mailer {
                     secure: testAccount.smtp.secure,
                     auth: {
                         user: testAccount.user,
-                        pass: testAccount.pass
-                    }
+                        pass: testAccount.pass,
+                    },
                 });
             } catch (error) {
                 throw new TestAccountCreationException(`Test SMTP account creation failed, ${error.message}`);
@@ -78,8 +77,12 @@ export default class Mailer {
                 const sendMailResponse = await Mailer.instance.client.sendMail(mailOptions);
 
                 // Logger
-                Mailer.instance.loggerService.info('Fake email was sent successfully', { messageId: sendMailResponse.messageId });
-                Mailer.instance.loggerService.info(`Fake email link generated, ${Nodemailer.getTestMessageUrl(sendMailResponse)}`);
+                Mailer.instance.loggerService.info('Fake email was sent successfully', {
+                    messageId: sendMailResponse.messageId,
+                });
+                Mailer.instance.loggerService.info(
+                    `Fake email link generated, ${Nodemailer.getTestMessageUrl(sendMailResponse)}`,
+                );
 
                 return sendMailResponse;
             } catch (error) {

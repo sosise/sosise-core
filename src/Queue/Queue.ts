@@ -1,8 +1,7 @@
-import { Job, JobsOptions, Queue as BullQueue } from "bullmq";
+import { Job, JobsOptions, Queue as BullQueue } from 'bullmq';
 
 export default class Queue {
-
-    private static instances: { queueName: string, instance: Queue }[] = [];
+    private static instances: { queueName: string; instance: Queue }[] = [];
     private queueClient: BullQueue;
 
     /**
@@ -16,8 +15,8 @@ export default class Queue {
         this.queueClient = new BullQueue(queueName, {
             connection: {
                 host: queueConfig.redis.host,
-                port: queueConfig.redis.port
-            }
+                port: queueConfig.redis.port,
+            },
         });
     }
 
