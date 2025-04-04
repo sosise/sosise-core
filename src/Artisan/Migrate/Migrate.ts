@@ -117,9 +117,7 @@ export default class Migrate {
         const lastBatchNumber = lodash.max(lodash.map(migrationRows, 'batch'));
 
         // Now filter only the migrations we want to rollback according to the batch number
-        const migrationNamesToRollback = lodash
-            .map(lodash.filter(migrationRows, { batch: lastBatchNumber }), 'migration')
-            .reverse();
+        const migrationNamesToRollback = lodash.map(lodash.filter(migrationRows, { batch: lastBatchNumber }), 'migration').reverse();
 
         // Iterate through all migrations we want to rollback
         for (const migrationName of migrationNamesToRollback) {
@@ -131,9 +129,7 @@ export default class Migrate {
 
             // If migration exists in database but does not exists on filesystem
             if (!fs.existsSync(migrationFilePath)) {
-                throw new MigrationDoesNotExistsOnFilesystemException(
-                    `Migration ${migrationFilePath} does not exists on filesystem`,
-                );
+                throw new MigrationDoesNotExistsOnFilesystemException(`Migration ${migrationFilePath} does not exists on filesystem`);
             }
 
             // Import migration file
@@ -164,9 +160,7 @@ export default class Migrate {
         const lastBatchNumber = lodash.max(lodash.map(migrationRows, 'batch'));
 
         // Now filter only the migrations we want to rollback according to the batch number
-        const migrationNamesToRollback = lodash
-            .map(lodash.filter(migrationRows, { batch: lastBatchNumber }), 'migration')
-            .reverse();
+        const migrationNamesToRollback = lodash.map(lodash.filter(migrationRows, { batch: lastBatchNumber }), 'migration').reverse();
 
         // Log
         console.log(colors.dim(`Following migrations would be rolled back:`));
@@ -238,19 +232,14 @@ export default class Migrate {
                 const result = await this.dbConnection.raw(query, []);
 
                 // Get table names from result
-                const tableNames = result
-                    .map((row: any) => row.table_name)
-                    .filter((tableName: string) => tableName !== 'sqlite_sequence');
+                const tableNames = result.map((row: any) => row.table_name).filter((tableName: string) => tableName !== 'sqlite_sequence');
 
                 // Return table names array
                 return tableNames;
             }
             case 'Client_CockroachDB': {
                 // Fetch all table names from the current database
-                const rows = await this.dbConnection
-                    .select('table_name')
-                    .from('information_schema.tables')
-                    .where('table_schema', 'public');
+                const rows = await this.dbConnection.select('table_name').from('information_schema.tables').where('table_schema', 'public');
 
                 // Map the result to extract table names
                 const tableNames = rows.map((row: any) => row.table_name);

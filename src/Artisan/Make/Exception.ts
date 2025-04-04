@@ -52,11 +52,7 @@ export default class Exception extends Base {
                 // Parse the code
                 const codeInExceptionFile = exceptionFileContent.match(/code = ([0-9]{1,});/);
 
-                if (
-                    codeInExceptionFile &&
-                    codeInExceptionFile[1] &&
-                    biggestExceptionCode < Number(codeInExceptionFile[1])
-                ) {
+                if (codeInExceptionFile && codeInExceptionFile[1] && biggestExceptionCode < Number(codeInExceptionFile[1])) {
                     biggestExceptionCode = Number(codeInExceptionFile[1]);
                 }
             }
@@ -64,19 +60,13 @@ export default class Exception extends Base {
             // If we could't determine biggest exception code just use the default
             if (biggestExceptionCode === 0) {
                 // Replace in template content the code
-                templateFileContent = templateFileContent.replace(
-                    new RegExp('%code%', 'g'),
-                    this.defaultExceptionCode.toString(),
-                );
+                templateFileContent = templateFileContent.replace(new RegExp('%code%', 'g'), this.defaultExceptionCode.toString());
             } else {
                 // Increment biggest exception code
                 biggestExceptionCode++;
 
                 // Replace in template content the code
-                templateFileContent = templateFileContent.replace(
-                    new RegExp('%code%', 'g'),
-                    biggestExceptionCode.toString(),
-                );
+                templateFileContent = templateFileContent.replace(new RegExp('%code%', 'g'), biggestExceptionCode.toString());
             }
 
             // Write new file

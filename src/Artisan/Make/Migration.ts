@@ -33,10 +33,7 @@ export default class Migration {
                 `${process.cwd()}/${this.createPath}/${dayjs().format('YYYY_MM_DD_HHmmss')}_${this.name}.ts`,
                 templateFileContent,
             );
-            console.log(
-                colors.green('Created Migration:'),
-                `${this.createPath}/${dayjs().format('YYYY_MM_DD_HHmmss')}_${this.name}.ts`,
-            );
+            console.log(colors.green('Created Migration:'), `${this.createPath}/${dayjs().format('YYYY_MM_DD_HHmmss')}_${this.name}.ts`);
         } catch (error) {
             throw new MakeException(error.message);
         }
@@ -59,10 +56,7 @@ export default class Migration {
                 `${process.cwd()}/${this.createPath}/${dayjs().format('YYYY_MM_DD_HHmmss')}_${this.name}.ts`,
                 templateFileContent,
             );
-            console.log(
-                colors.green('Created Migration:'),
-                `${this.createPath}/${dayjs().format('YYYY_MM_DD_HHmmss')}_${this.name}.ts`,
-            );
+            console.log(colors.green('Created Migration:'), `${this.createPath}/${dayjs().format('YYYY_MM_DD_HHmmss')}_${this.name}.ts`);
         } catch (error) {
             throw new MakeException(error.message);
         }

@@ -13,10 +13,7 @@ export default class Config extends Base {
     public createFile(): void {
         try {
             let templateFileContent = fs.readFileSync(this.templatePath, 'utf8');
-            templateFileContent = templateFileContent.replace(
-                new RegExp('%name%', 'g'),
-                this.name.toLocaleLowerCase() + 'Config',
-            );
+            templateFileContent = templateFileContent.replace(new RegExp('%name%', 'g'), this.name.toLocaleLowerCase() + 'Config');
             const pathOfNewFile = `${process.cwd()}/${this.createPath}/${this.name}.ts`;
             this.throwExceptionIfFileAlreadyExists(pathOfNewFile);
             fs.writeFileSync(pathOfNewFile, templateFileContent);

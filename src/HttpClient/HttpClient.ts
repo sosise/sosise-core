@@ -54,11 +54,7 @@ export default class HttpClient {
         let httpsAgent = new https.Agent(httpsAgentConfig);
 
         // In case https proxy is being used
-        if (
-            axiosConfig.proxy &&
-            axiosConfig.proxy.protocol &&
-            axiosConfig.proxy.protocol.toLocaleLowerCase() === 'https'
-        ) {
+        if (axiosConfig.proxy && axiosConfig.proxy.protocol && axiosConfig.proxy.protocol.toLocaleLowerCase() === 'https') {
             // Prepare https proxy agent config
             const httpsProxyAgentConfig: any = {
                 host: axiosConfig.proxy.host,
@@ -144,10 +140,7 @@ export default class HttpClient {
     /**
      * Make request with retry
      */
-    public async requestWithRetry(
-        config: HttpClientRequestConfig,
-        retryConfig: HttpClientRetryConfig,
-    ): Promise<AxiosResponse> {
+    public async requestWithRetry(config: HttpClientRequestConfig, retryConfig: HttpClientRetryConfig): Promise<AxiosResponse> {
         // Prepare cancel token for emergency timeout
         const source = axios.CancelToken.source();
         const timeout = setTimeout(
@@ -202,8 +195,7 @@ export default class HttpClient {
             // Add method and url to error message, for better readability
             if (error.message[0] !== '[') {
                 error.message =
-                    `[${config.method?.toUpperCase()}] ${this.config?.baseURL ?? ''}${config.url!.split('?')[0]} ` +
-                    error.message;
+                    `[${config.method?.toUpperCase()}] ${this.config?.baseURL ?? ''}${config.url!.split('?')[0]} ` + error.message;
             }
 
             // Log

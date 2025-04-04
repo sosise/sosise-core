@@ -33,13 +33,8 @@ export default class Artisan {
 
             // Get version of the sosise-core
             const packageJsonFileContent = fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8');
-            const artisanString = fs.readFileSync(
-                __dirname + '/Artisan/FileTemplates/ArtisanAscii.txt',
-                'utf-8',
-            ).magenta;
-            const versionString = colors.dim(
-                `                sosise-core: ${JSON.parse(packageJsonFileContent).version}`,
-            );
+            const artisanString = fs.readFileSync(__dirname + '/Artisan/FileTemplates/ArtisanAscii.txt', 'utf-8').magenta;
+            const versionString = colors.dim(`                sosise-core: ${JSON.parse(packageJsonFileContent).version}`);
             const documentationLink = colors.dim(`       https://sosise.github.io/sosise-docs/`);
 
             command
@@ -319,11 +314,7 @@ export default class Artisan {
             command
                 .command('seed')
                 .description(colors.dim('Run the database seeds'))
-                .option(
-                    '-f, --force',
-                    'Force seeding even if seeds are restricted to be run in a local environment',
-                    false,
-                )
+                .option('-f, --force', 'Force seeding even if seeds are restricted to be run in a local environment', false)
                 .action(async (cli) => {
                     try {
                         const instance = new Seed(cli);

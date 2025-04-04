@@ -63,10 +63,7 @@ export default class Repository {
         try {
             let templateFileContent = fs.readFileSync(this.repositoryInterfaceTemplatePath, 'utf8');
             const interfaceName = this.name + 'Interface';
-            templateFileContent = templateFileContent.replace(
-                '%name%',
-                interfaceName.charAt(0).toUpperCase() + interfaceName.slice(1),
-            );
+            templateFileContent = templateFileContent.replace('%name%', interfaceName.charAt(0).toUpperCase() + interfaceName.slice(1));
             const pathOfNewFile = `${process.cwd()}/${this.createPath}/${interfaceName}.ts`;
             this.throwExceptionIfFileAlreadyExists(pathOfNewFile);
             fs.writeFileSync(pathOfNewFile, templateFileContent);

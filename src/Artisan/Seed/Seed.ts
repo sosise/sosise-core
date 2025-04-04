@@ -61,9 +61,7 @@ export default class Seed {
             // Do not run seed if environment is not local and seed is restricted to be run only in local environment
             if (process.env.APP_ENV !== 'local' && instance.onlyInLocalEnvironment && !this.cli.force) {
                 console.log(
-                    colors.yellow(
-                        `Skipping seed ${seedName}, it is restricted to a local environment only. Please use -f to force`,
-                    ),
+                    colors.yellow(`Skipping seed ${seedName}, it is restricted to a local environment only. Please use -f to force`),
                 );
                 continue;
             }

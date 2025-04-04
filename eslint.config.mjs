@@ -22,6 +22,7 @@ export default [
             "@typescript-eslint/no-require-imports": "off",
             "@typescript-eslint/ban-ts-comment": "off",
             "no-case-declarations": "off",
+            "no-prototype-builtins": "off",
         }
     },
     {

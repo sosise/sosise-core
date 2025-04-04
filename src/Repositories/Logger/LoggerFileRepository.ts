@@ -20,10 +20,7 @@ export default class LoggerFileRepository implements LoggerStorageRepositoryInte
      * Log info message
      */
     public debug(message: string, params: any, channel: string | undefined): void {
-        fs.appendFileSync(
-            this.getLogFilePath(channel),
-            this.makePrettyStringNoColor('debug', message, params) + os.EOL,
-        );
+        fs.appendFileSync(this.getLogFilePath(channel), this.makePrettyStringNoColor('debug', message, params) + os.EOL);
     }
 
     /**
@@ -37,30 +34,21 @@ export default class LoggerFileRepository implements LoggerStorageRepositoryInte
      * Log warning message
      */
     public warning(message: string, params: any, channel: string | undefined): void {
-        fs.appendFileSync(
-            this.getLogFilePath(channel),
-            this.makePrettyStringNoColor('warning', message, params) + os.EOL,
-        );
+        fs.appendFileSync(this.getLogFilePath(channel), this.makePrettyStringNoColor('warning', message, params) + os.EOL);
     }
 
     /**
      * Log error message
      */
     public error(message: string, params: any, channel: string | undefined): void {
-        fs.appendFileSync(
-            this.getLogFilePath(channel),
-            this.makePrettyStringNoColor('error', message, params) + os.EOL,
-        );
+        fs.appendFileSync(this.getLogFilePath(channel), this.makePrettyStringNoColor('error', message, params) + os.EOL);
     }
 
     /**
      * Log critical message
      */
     public critical(message: string, params: any, channel: string | undefined): void {
-        fs.appendFileSync(
-            this.getLogFilePath(channel),
-            this.makePrettyStringNoColor('critical', message, params) + os.EOL,
-        );
+        fs.appendFileSync(this.getLogFilePath(channel), this.makePrettyStringNoColor('critical', message, params) + os.EOL);
     }
 
     /**
@@ -122,8 +110,7 @@ export default class LoggerFileRepository implements LoggerStorageRepositoryInte
         })();
 
         // Prepare params string
-        const paramsString =
-            params !== null ? inspect(params, { depth: null, maxArrayLength: null, colors: false }) : '';
+        const paramsString = params !== null ? inspect(params, { depth: null, maxArrayLength: null, colors: false }) : '';
 
         // Prepare a string
         const outputString: string = `${dayjs().format('YYYY-MM-DD HH:mm:ss')} ${levelString} ${message} ${paramsString}`;

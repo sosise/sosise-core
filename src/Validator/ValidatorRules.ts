@@ -85,12 +85,34 @@ export default class ValidatorRules {
     }
 
     /**
-     * Checks if the parameter value is of type number.
+     * Checks if the parameter value is of type string or null
+     */
+    public shouldBeStringOrNull(customErrorMessage?: string): this {
+        const value = this.validator.value[this.paramName];
+        if (value !== undefined && value !== null && typeof value !== 'string') {
+            this.setError(`The ${this.paramName} field must be a string or null.`, customErrorMessage);
+        }
+        return this;
+    }
+
+    /**
+     * Checks if the parameter value is of type number
      */
     public shouldBeNumber(customErrorMessage?: string): this {
         const value = this.validator.value[this.paramName];
         if (value !== undefined && typeof value !== 'number') {
             this.setError(`The ${this.paramName} field must be a number.`, customErrorMessage);
+        }
+        return this;
+    }
+
+    /**
+     * Checks if the parameter value is of type number or null
+     */
+    public shouldBeNumberOrNull(customErrorMessage?: string): this {
+        const value = this.validator.value[this.paramName];
+        if (value !== undefined && value !== null && typeof value !== 'number') {
+            this.setError(`The ${this.paramName} field must be a number or null.`, customErrorMessage);
         }
         return this;
     }
@@ -102,6 +124,17 @@ export default class ValidatorRules {
         const value = this.validator.value[this.paramName];
         if (value !== undefined && typeof value !== 'boolean') {
             this.setError(`The ${this.paramName} field must be a boolean.`, customErrorMessage);
+        }
+        return this;
+    }
+
+    /**
+     * Checks if the parameter value is of type boolean or null
+     */
+    public shouldBeBooleanOrNull(customErrorMessage?: string): this {
+        const value = this.validator.value[this.paramName];
+        if (value !== undefined && value !== null && typeof value !== 'boolean') {
+            this.setError(`The ${this.paramName} field must be a boolean or null.`, customErrorMessage);
         }
         return this;
     }
@@ -208,15 +241,25 @@ export default class ValidatorRules {
     }
 
     /**
+     * Validates a value to ensure it is a valid email address or null.
+     * Uses a regular expression to check the format of the value.
+     */
+    public emailOrNull(customErrorMessage?: string): this {
+        const value = this.validator.value[this.paramName];
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (typeof value === 'string' && value !== null && !regex.test(value)) {
+            this.setError(`The ${this.paramName} field must be a valid email address or null.`, customErrorMessage);
+        }
+        return this;
+    }
+
+    /**
      * Validates that the value is within a predefined list of values.
      */
     public inList(values: any[], customErrorMessage?: string): this {
         const value = this.validator.value[this.paramName];
         if (value !== undefined && !values.includes(value)) {
-            this.setError(
-                `The ${this.paramName} field must be one of the following values: ${values.join(', ')}.`,
-                customErrorMessage,
-            );
+            this.setError(`The ${this.paramName} field must be one of the following values: ${values.join(', ')}.`, customErrorMessage);
         }
         return this;
     }
@@ -227,10 +270,7 @@ export default class ValidatorRules {
     public regex(pattern: RegExp, customErrorMessage?: string): this {
         const value = this.validator.value[this.paramName];
         if (value !== undefined && typeof value === 'string' && !pattern.test(value)) {
-            this.setError(
-                `The ${this.paramName} field fails to match the required pattern: "${pattern}".`,
-                customErrorMessage,
-            );
+            this.setError(`The ${this.paramName} field fails to match the required pattern: "${pattern}".`, customErrorMessage);
         }
         return this;
     }
@@ -243,10 +283,7 @@ export default class ValidatorRules {
         const otherValue = this.validator.value[otherParamName];
         if (currentValue !== undefined || otherValue !== undefined) {
             if (currentValue === otherValue) {
-                this.setError(
-                    `The ${this.paramName} field must be different from the ${otherParamName} field.`,
-                    customErrorMessage,
-                );
+                this.setError(`The ${this.paramName} field must be different from the ${otherParamName} field.`, customErrorMessage);
             }
         }
         return this;
@@ -261,10 +298,7 @@ export default class ValidatorRules {
         if (value !== undefined) {
             const enumValues = Object.values(enumObject);
             if (!enumValues.includes(value)) {
-                this.setError(
-                    `The ${this.paramName} field must be one of the enum values: ${enumValues.join(', ')}.`,
-                    customErrorMessage,
-                );
+                this.setError(`The ${this.paramName} field must be one of the enum values: ${enumValues.join(', ')}.`, customErrorMessage);
             }
         }
         return this;

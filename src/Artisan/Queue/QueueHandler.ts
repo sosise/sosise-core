@@ -12,11 +12,7 @@ export default class QueueHandler {
     public async listen(queueName: string): Promise<void> {
         // Proceed only when migrations path exists
         if (!fs.existsSync(process.cwd() + this.workersPath)) {
-            console.log(
-                colors.yellow(
-                    `Ups, you don't have any workers, you can create them with ./artisan make:queueworker MyWorker`,
-                ),
-            );
+            console.log(colors.yellow(`Ups, you don't have any workers, you can create them with ./artisan make:queueworker MyWorker`));
             return;
         }
 
@@ -59,9 +55,7 @@ export default class QueueHandler {
 
         // Log, if we've reached this line, means that no worker found for given queue name
         console.log(
-            colors.yellow(
-                `Sorry there is no worker with specified queue name ${queueName}, take a look at src/app/Console/QueueWorkers`,
-            ),
+            colors.yellow(`Sorry there is no worker with specified queue name ${queueName}, take a look at src/app/Console/QueueWorkers`),
         );
     }
 

@@ -137,12 +137,7 @@ export default class CommandRegistration {
                                     // If pid file contains signature what we are executing right now
                                     if (fileObject.signature === commandClassInstance.signature) {
                                         // Check if process exists by pid and signature
-                                        if (
-                                            await this.checkIfProcessExistsByPidAndCmd(
-                                                fileObject.pid,
-                                                commandClassInstance.signature,
-                                            )
-                                        ) {
+                                        if (await this.checkIfProcessExistsByPidAndCmd(fileObject.pid, commandClassInstance.signature)) {
                                             // Yep the process is really ours, we should wait
                                             console.log(
                                                 colors.yellow(

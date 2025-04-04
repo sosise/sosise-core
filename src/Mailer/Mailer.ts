@@ -80,9 +80,7 @@ export default class Mailer {
                 Mailer.instance.loggerService.info('Fake email was sent successfully', {
                     messageId: sendMailResponse.messageId,
                 });
-                Mailer.instance.loggerService.info(
-                    `Fake email link generated, ${Nodemailer.getTestMessageUrl(sendMailResponse)}`,
-                );
+                Mailer.instance.loggerService.info(`Fake email link generated, ${Nodemailer.getTestMessageUrl(sendMailResponse)}`);
 
                 return sendMailResponse;
             } catch (error) {

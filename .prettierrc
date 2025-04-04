@@ -1,8 +1,9 @@
 {
-    "printWidth": 120,
+    "printWidth": 140,
+    "proseWrap": "preserve",
     "useTabs": false,
     "tabWidth": 4,
-    "endOfLine": "lf",
+    "endOfLine": "auto",
     "semi": true,
     "singleQuote": true,
     "bracketSpacing": true,
