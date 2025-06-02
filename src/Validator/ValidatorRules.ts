@@ -305,6 +305,24 @@ export default class ValidatorRules {
     }
 
     /**
+     * Validates that the value is one of the enum's values or null.
+     * Useful for ensuring a value matches one of the predefined options in an enumeration.
+     */
+    public enumOrNull(enumObject: object, customErrorMessage?: string): this {
+        const value = this.validator.value[this.paramName];
+        if (value !== undefined && value !== null) {
+            const enumValues = Object.values(enumObject);
+            if (!enumValues.includes(value)) {
+                this.setError(
+                    `The ${this.paramName} field must be one of the enum values: ${enumValues.join(', ')} or null.`,
+                    customErrorMessage,
+                );
+            }
+        }
+        return this;
+    }
+
+    /**
      * Allows for custom validation logic defined by the user.
      * The custom function provided should return true if the value passes the validation,
      * and false otherwise. An optional custom error message can be provided.
