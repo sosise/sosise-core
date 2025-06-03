@@ -1,6 +1,6 @@
 {
   "name": "sosise-core",
-  "version": "0.11.10",
+  "version": "1.0.0",
   "description": "Sosise is a web application boilerplate/framework with an expressive, elegant syntax. A Sosise provides a structure and starting point for creating your application, allowing you to focus on creating something amazing while we sweat the details.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -42,6 +42,7 @@
     "faker": "^5.4.0",
     "figlet": "^1.5.0",
     "https-proxy-agent": "^7.0.1",
+    "ip-range-check": "^0.2.0",
     "knex": "^3.1.0",
     "lodash": "^4.17.20",
     "memorystore": "^1.6.4",
@@ -49,6 +50,7 @@
     "mysql": "^2.18.1",
     "node-cache": "^5.1.2",
     "nodemailer": "^6.6.3",
+    "path-to-regexp": "^8.2.0",
     "pg": "^8.12.0",
     "prompts": "^2.4.1",
     "redis": "^4.7.0",

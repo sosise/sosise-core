@@ -108,13 +108,26 @@ export default class Server {
         // app.use(Sentry.Handlers.tracingHandler());
 
         // Dynamic middlewares registration
-        const middlewares = require(process.cwd() + '/build/app/Http/Middlewares/Kernel').middlewares;
-        for (const middleware of middlewares) {
-            const middlewarePath = process.cwd() + '/build/app/Http/Middlewares/' + middleware + '.js';
-            // At this step use require, instead of import, because it's synchronous
-            const middlewareClass = require(middlewarePath);
-            const middlewareInstance = new middlewareClass.default();
-            app.use(middlewareInstance.handle);
+        const registeredMiddlewares = require(process.cwd() + '/build/app/Http/Middlewares/Kernel').middlewares;
+        const middlewareSearchPaths = [
+            process.cwd() + '/build/app/Http/Middlewares/',
+            process.cwd() + '/node_modules/sosise-core/build/Middlewares/',
+        ];
+
+        // Register each middleware from Kernel configuration
+        for (const middlewareName of registeredMiddlewares) {
+            // Check each potential location where middleware might be stored
+            for (const middlewareDirectory of middlewareSearchPaths) {
+                const middlewareFilePath = middlewareDirectory + middlewareName + '.js';
+
+                // Register middleware if file exists at current path
+                if (fs.existsSync(middlewareFilePath)) {
+                    const MiddlewareModule = require(middlewareFilePath);
+                    const middlewareHandler = new MiddlewareModule.default();
+                    app.use(middlewareHandler.handle.bind(middlewareHandler));
+                    break; // Stop searching other paths once found
+                }
+            }
         }
 
         // Setting up routes
