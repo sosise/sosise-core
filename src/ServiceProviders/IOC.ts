@@ -1,5 +1,6 @@
 import IOCMakeException from '../Exceptions/IOC/IOCMakeException';
 import CacheService from '../Services/Cache/CacheService';
+import EventBusService from '../Services/EventBus/EventBusService';
 import LoggerService from '../Services/Logger/LoggerService';
 
 export default class IOC {
@@ -23,6 +24,9 @@ export default class IOC {
             },
             CacheService: () => {
                 return new CacheService();
+            },
+            EventBusService: () => {
+                return new EventBusService();
             },
         },
 

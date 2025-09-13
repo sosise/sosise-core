@@ -2,6 +2,9 @@ import { createClient, RedisClientType } from 'redis';
 import CacheException from '../../Exceptions/Cache/CacheException';
 import RedisException from '../../Exceptions/Cache/RedisException';
 import CacheRepositoryInterface from './CacheRepositoryInterface';
+import Helper from '../../Helper/Helper';
+import IOC from '../../ServiceProviders/IOC';
+import LoggerService from '../../Services/Logger/LoggerService';
 
 export default class CacheRedisRepository implements CacheRepositoryInterface {
     private cacheConfig: any;
@@ -9,12 +12,14 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
     private isClientClosed: boolean = false;
     private connected: boolean = false;
     private reconnecting: boolean = false; // New flag to prevent multiple reconnects
+    private logger: LoggerService;
 
     /**
      * Constructor
      */
     constructor(cacheConfig: any) {
         this.cacheConfig = cacheConfig;
+        this.logger = IOC.makeSingleton(LoggerService) as LoggerService;
         this.initializeRedisClient();
 
         // Attempt initial connection
@@ -29,7 +34,7 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
             url: `redis://${this.cacheConfig.driverConfiguration.redis.host}:${this.cacheConfig.driverConfiguration.redis.port}`,
             socket: {
                 reconnectStrategy: (retries) => {
-                    console.warn(`Reconnecting to Redis, attempt #${retries}`);
+                    this.logger.debug(`Reconnecting to Redis, attempt #${retries}`, null, 'cache');
                     return Math.min(retries * 100, 3000); // exponential backoff up to 3 seconds
                 },
                 connectTimeout: 10000, // Set connection timeout to 10 seconds
@@ -44,22 +49,22 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
      */
     private setupEventListeners() {
         this.cacheInstance.on('error', (err) => {
-            console.error(`Redis connection error: ${err}`);
+            this.logger.debug(`Connection error: ${err}`, null, 'cache');
 
             if (err.message.includes('Socket closed unexpectedly')) {
-                console.warn('Redis socket closed unexpectedly. Attempting to reconnect...');
+                this.logger.debug('Socket closed unexpectedly. Attempting to reconnect...', null, 'cache');
                 this.reconnectRedisClient();
             }
         });
 
         this.cacheInstance.on('end', () => {
-            console.warn('Redis connection closed, attempting to reconnect...');
+            this.logger.debug('Connection closed, attempting to reconnect...', null, 'cache');
             this.connected = false;
             this.reconnectRedisClient();
         });
 
         this.cacheInstance.on('connect', () => {
-            console.log('Redis client connected.');
+            this.logger.debug('Redis client connected', null, 'cache');
             this.connected = true;
             this.reconnecting = false; // Reset reconnecting flag on successful connection
         });
@@ -70,8 +75,11 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
      */
     private async waitForConnection() {
         while (!this.connected) {
-            console.log('Waiting for Redis connection...');
-            await new Promise((resolve) => setTimeout(resolve, 100)); // Check connection status every 100 ms
+            // Log
+            this.logger.debug('Waiting for Redis connection...', null, 'cache');
+
+            // Check connection status every 100 ms
+            await Helper.sleep(100);
         }
     }
 
@@ -83,9 +91,9 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
             await this.cacheInstance.connect();
             this.isClientClosed = false;
             this.connected = true;
-            console.log('Connected to Redis successfully.');
+            this.logger.debug('Connected to Redis successfully', null, 'cache');
         } catch (err) {
-            console.error(`Failed to connect to Redis: ${err}`);
+            this.logger.debug(`Failed to connect to Redis: ${err}`, null, 'cache');
             this.connected = false;
             throw new RedisException(`Redis connection error! Error: ${err}`);
         }
@@ -95,20 +103,21 @@ export default class CacheRedisRepository implements CacheRepositoryInterface {
      * Reconnect Redis client by reinitializing the client instance
      */
     private async reconnectRedisClient() {
-        if (this.reconnecting || this.connected) return; // Prevent multiple reconnect attempts if already reconnecting or connected
+        // Prevent multiple reconnect attempts if already reconnecting or connected
+        if (this.reconnecting || this.connected) return;
         this.reconnecting = true;
         this.connected = false;
 
         if (this.isClientClosed) {
-            console.warn('Reinitializing Redis client...');
+            this.logger.debug('Reinitializing Redis client...', null, 'cache');
             this.initializeRedisClient();
         }
 
         try {
-            console.log('Attempting to reconnect to Redis...');
+            this.logger.debug('Attempting to reconnect to Redis...', null, 'cache');
             await this.connectToRedis();
         } catch (err) {
-            console.error(`Error during Redis client reinitialization: ${err}`);
+            this.logger.debug(`Error during Redis client reinitialization: ${err}`, null, 'cache');
         } finally {
             this.reconnecting = false; // Ensure flag resets after attempt
         }

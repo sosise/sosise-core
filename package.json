@@ -1,6 +1,6 @@
 {
   "name": "sosise-core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Sosise is a web application boilerplate/framework with an expressive, elegant syntax. A Sosise provides a structure and starting point for creating your application, allowing you to focus on creating something amazing while we sweat the details.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
