@@ -1,0 +1,11 @@
+{
+  "watch": ["src/**/*"],
+  "ignore": [
+    "build/**/*",
+    "node_modules/**/*",
+    "docs/**/*",
+    "*.log"
+  ],
+  "ext": "ts,js,json",
+  "exec": "npm run build"
+}
