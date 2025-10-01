@@ -1,6 +1,6 @@
 {
   "name": "sosise-core",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Sosise is a web application boilerplate/framework with an expressive, elegant syntax. A Sosise provides a structure and starting point for creating your application, allowing you to focus on creating something amazing while we sweat the details.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -18,10 +18,12 @@
     "url": "https://github.com/sosise/sosise-core"
   },
   "scripts": {
-    "build": "rm -rf build ; tsc ; cp -R src/Artisan/FileTemplates build/Artisan/FileTemplates",
-    "watch": "nodemon",
     "dev": "nodemon",
-    "pub": "npm version patch --no-git-tag-version && npm run build && npm publish",
+    "watch": "nodemon",
+    "build": "npm run clean:build ; tsc ; npm run copy-file-templates",
+    "clean:build": "rm -rf build",
+    "copy-file-templates": "cp -R src/Artisan/FileTemplates build/Artisan/FileTemplates",
+    "publish": "npm run build && npm publish",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
