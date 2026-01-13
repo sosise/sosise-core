@@ -1,0 +1,22 @@
+/**
+ * Completion Models Enum
+ * Available LLM models for chat completions
+ */
+enum CompletionModelsEnum {
+    // OpenAI
+    GPT_4O = 'gpt-4o',
+    GPT_4O_MINI = 'gpt-4o-mini',
+    GPT_4_1 = 'gpt-4.1',
+    GPT_4_1_MINI = 'gpt-4.1-mini',
+    GPT_4_1_NANO = 'gpt-4.1-nano',
+    O3 = 'o3',
+    O4_MINI = 'o4-mini',
+
+    // Groq
+    LLAMA_3_3_70B = 'llama-3.3-70b-versatile',
+    LLAMA_3_1_8B = 'llama-3.1-8b-instant',
+    GPT_OSS_120B = 'openai/gpt-oss-120b',
+    GPT_OSS_20B = 'openai/gpt-oss-20b',
+}
+
+export default CompletionModelsEnum;

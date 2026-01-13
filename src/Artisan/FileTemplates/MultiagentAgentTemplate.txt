@@ -1,0 +1,45 @@
+import AbstractBaseAgent from 'sosise-core/build/Services/AgentGraph/AbstractBaseAgent';
+import { AgentContextType, AgentResponseType } from 'sosise-core/build/Types/AgentGraph/AgentGraphTypes';
+import AgentMessageTypeEnum from 'sosise-core/build/Enums/AgentGraph/AgentMessageTypeEnum';
+
+/**
+ * %name% - Agent for the multi-agent system
+ * Handles specific task and returns result to the next agent
+ */
+export default class %name% extends AbstractBaseAgent {
+    /**
+     * Unique identifier for routing
+     */
+    public readonly id: string = '%agentId%';
+
+    /**
+     * Human-readable name for logs
+     */
+    public readonly name: string = '%agentName%';
+
+    /**
+     * Process incoming message and return response
+     * @param context - Agent context with message, history, and memory
+     * @returns Promise resolving to agent response
+     */
+    public async process(context: AgentContextType): Promise<AgentResponseType> {
+        // Get prompt template
+        const prompt = this.promptRepository.getPrompt('%promptFile%');
+
+        // Build the full prompt with context
+        const fullPrompt = prompt.replace('%message%', context.message.content);
+
+        // Request LLM completion
+        const llmResponse = await this.llm.openai.getCompletion([{ role: 'user', content: fullPrompt }], 'gpt-4o-mini', 0.7);
+
+        // Parse LLM response
+        const result = llmResponse.responseText;
+
+        // Return response
+        return {
+            content: result,
+            type: AgentMessageTypeEnum.RESULT,
+            next: '%nextAgent%',
+        };
+    }
+}

@@ -1,0 +1,12 @@
+/**
+ * Prompt Repository Interface
+ * Defines contract for prompt storage and retrieval
+ */
+export default interface PromptRepositoryInterface {
+    /**
+     * Get prompt by filename
+     * @param promptFilename - Name of the prompt file
+     * @returns Prompt content
+     */
+    getPrompt(promptFilename: string): string;
+}

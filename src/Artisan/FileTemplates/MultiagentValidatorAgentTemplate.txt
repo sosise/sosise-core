@@ -1,0 +1,82 @@
+import AbstractBaseAgent from 'sosise-core/build/Services/AgentGraph/AbstractBaseAgent';
+import { AgentContextType, AgentResponseType } from 'sosise-core/build/Types/AgentGraph/AgentGraphTypes';
+import AgentMessageTypeEnum from 'sosise-core/build/Enums/AgentGraph/AgentMessageTypeEnum';
+import CompletionModelsEnum from '../../../Enums/LLM/CompletionModelsEnum';
+
+/**
+ * ValidatorAgent - Validates worker output against requirements
+ * Uses context.currentAgentIterations to track validation attempts
+ * After MAX_ITERATIONS returns error instead of feedback
+ */
+export default class ValidatorAgent extends AbstractBaseAgent {
+    /**
+     * Unique identifier for routing
+     */
+    public readonly id: string = 'validator-agent';
+
+    /**
+     * Human-readable name for logs
+     */
+    public readonly name: string = 'Validator Agent';
+
+    /**
+     * Maximum validation iterations before failing
+     */
+    private readonly MAX_ITERATIONS: number = 3;
+
+    /**
+     * Validate worker output and decide next step
+     */
+    public async process(context: AgentContextType): Promise<AgentResponseType> {
+        // Check iteration limit FIRST
+        if (context.currentAgentIterations >= this.MAX_ITERATIONS) {
+            return {
+                content: {
+                    error: 'Maximum validation iterations exceeded',
+                    lastAttempt: context.message.content,
+                    iterations: context.currentAgentIterations,
+                },
+                type: AgentMessageTypeEnum.RESULT,
+                next: 'END',
+            };
+        }
+
+        // Get agent prompt for validation
+        const agentPrompt = this.promptRepository.getPrompt(context.message.metadata.promptFile);
+
+        // Get our prompt
+        const prompt = this.promptRepository.getPrompt('validator-agent.txt');
+
+        // Build validation prompt
+        const fullPrompt = prompt
+            .replace('%original_task%', context.initialMessage)
+            .replace('%agent_prompt%', agentPrompt)
+            .replace('%agent_result%', context.message.content);
+
+        // Request LLM completion for validation
+        const llmResponse = await this.llm.groq.getCompletion(
+            [{ role: 'user', content: fullPrompt }],
+            CompletionModelsEnum.GPT_OSS_120B,
+            0,
+        );
+
+        // Parse validation result
+        const validationResult = JSON.parse(llmResponse.responseText);
+
+        // Approved - end successfully
+        if (validationResult.approved) {
+            return {
+                content: JSON.parse(context.message.content),
+                type: AgentMessageTypeEnum.RESULT,
+                next: 'END',
+            };
+        }
+
+        // Not approved - send feedback to the agent who sent the message
+        return {
+            content: validationResult.feedback,
+            type: AgentMessageTypeEnum.FEEDBACK,
+            next: context.message.from.id,
+        };
+    }
+}

@@ -1,0 +1,29 @@
+# Task
+Validate if the agent's output matches the original task and agent's instructions.
+
+# Original Task
+<original_task>
+%original_task%
+</original_task>
+
+# Agent Prompt (Instructions the agent followed)
+<agent_prompt>
+%agent_prompt%
+</agent_prompt>
+
+# Agent Result
+<agent_result>
+%agent_result%
+</agent_result>
+
+# Validation Rules
+1. Check that output matches the expected format from agent prompt
+2. Verify data is correctly extracted from original task
+3. Check format correctness
+
+# Response Format
+Return ONLY valid JSON without any backticks
+{
+  "approved": true or false,
+  "feedback": "What needs to be fixed (only if not approved)"
+}

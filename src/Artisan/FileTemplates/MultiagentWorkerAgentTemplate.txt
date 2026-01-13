@@ -1,0 +1,45 @@
+import AbstractBaseAgent from 'sosise-core/build/Services/AgentGraph/AbstractBaseAgent';
+import { AgentContextType, AgentResponseType } from 'sosise-core/build/Types/AgentGraph/AgentGraphTypes';
+import AgentMessageTypeEnum from 'sosise-core/build/Enums/AgentGraph/AgentMessageTypeEnum';
+import CompletionModelsEnum from '../../../Enums/LLM/CompletionModelsEnum';
+
+/**
+ * WorkerAgent - Extracts structured data from text
+ * Parses input and returns JSON with name, email, phone
+ */
+export default class WorkerAgent extends AbstractBaseAgent {
+    /**
+     * Unique identifier for routing
+     */
+    public readonly id: string = 'worker-agent';
+
+    /**
+     * Human-readable name for logs
+     */
+    public readonly name: string = 'Worker Agent';
+
+    /**
+     * Process incoming message and extract contact data
+     */
+    public async process(context: AgentContextType): Promise<AgentResponseType> {
+        // Get our prompt
+        const prompt = this.promptRepository.getPrompt('worker-agent.txt');
+
+        // Build prompt with message and optional feedback
+        const isFeedback = context.message.type === AgentMessageTypeEnum.FEEDBACK;
+        const fullPrompt = prompt
+            .replace('%message%', context.initialMessage)
+            .replace('%feedback%', isFeedback ? context.message.content : 'None');
+
+        // Request LLM completion
+        const llmResponse = await this.llm.groq.getCompletion([{ role: 'user', content: fullPrompt }], CompletionModelsEnum.GPT_OSS_20B, 0);
+
+        // Return
+        return {
+            content: llmResponse.responseText,
+            type: AgentMessageTypeEnum.RESULT,
+            next: 'validator-agent',
+            metadata: { promptFile: 'worker-agent.txt' },
+        };
+    }
+}

@@ -1,0 +1,30 @@
+import fs from 'node:fs';
+import Helper from 'sosise-core/build/Helper/Helper';
+import PromptRepositoryInterface from './PromptRepositoryInterface';
+
+/**
+ * Prompt Repository
+ * Handles reading prompt templates from storage/ma/prompts directory
+ */
+export default class PromptRepository implements PromptRepositoryInterface {
+    /**
+     * Get prompt by filename
+     * @param promptFilename - Name of the prompt file
+     * @returns Prompt content
+     */
+    public getPrompt(promptFilename: string): string {
+        // Assemble prompt path
+        const path = `${Helper.storagePath()}ma/prompts/${promptFilename}`;
+
+        // In case prompt does not exists
+        if (!fs.existsSync(path)) {
+            throw new Error(`Prompt at path ${path} does not exists`);
+        }
+
+        // Read the prompt
+        const fileBody = fs.readFileSync(path, 'utf-8');
+
+        // Return
+        return fileBody;
+    }
+}

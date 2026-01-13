@@ -1,0 +1,8 @@
+export default interface CompletionResponseType {
+    responseText: string;
+    usedTokens: {
+        input: number;
+        cachedInput: number;
+        output: number;
+    };
+}

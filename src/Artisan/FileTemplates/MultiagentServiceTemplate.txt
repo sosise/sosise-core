@@ -1,0 +1,68 @@
+import AgentGraphService from 'sosise-core/build/Services/AgentGraph/AgentGraphService';
+import FileStorageService from 'sosise-core/build/Services/AgentGraph/Memory/FileStorageService';
+import { GraphResultType, GraphStorageInterface } from 'sosise-core/build/Types/AgentGraph/AgentGraphTypes';
+import LLMRepositoryInterface from '../../Repositories/LLM/LLMRepositoryInterface';
+import PromptRepository from '../../Repositories/Prompt/PromptRepository';
+import OpenAICompletionRepository from '../../Repositories/LLM/OpenAICompletionRepository';
+import GroqCompletionRepository from '../../Repositories/LLM/GroqCompletionRepository';
+import WorkerAgent from './Agents/WorkerAgent';
+import ValidatorAgent from './Agents/ValidatorAgent';
+
+/**
+ * Main service for managing the multi-agent graph
+ * Factory for creating and running agent workflows
+ */
+export default class %name% {
+    private static readonly STORAGE_PATH = 'storage/ma';
+    private graph: AgentGraphService;
+    private memory: GraphStorageInterface;
+
+    /**
+     * Constructor
+     */
+    constructor() {
+        // Instantiate dependencies
+        this.memory = new FileStorageService(%name%.STORAGE_PATH);
+        const promptRepository = new PromptRepository();
+
+        // Create LLM providers object
+        const llmProviders: Record<string, LLMRepositoryInterface> = {
+            openai: new OpenAICompletionRepository(),
+            groq: new GroqCompletionRepository(),
+        };
+
+        // Create agents
+        const workerAgent = new WorkerAgent(llmProviders, promptRepository);
+        const validatorAgent = new ValidatorAgent(llmProviders, promptRepository);
+
+        // Create the agent graph
+        // Flow: WorkerAgent -> ValidatorAgent -> [FEEDBACK -> WorkerAgent] or [END]
+        this.graph = new AgentGraphService({
+            agents: [workerAgent, validatorAgent],
+            start: workerAgent,
+            memory: this.memory,
+        });
+    }
+
+    /**
+     * Run the multi-agent system
+     * @param initialMessage - Initial input message
+     * @param threadId - Optional thread ID for resuming
+     * @returns Promise resolving to graph result
+     */
+    public async run(initialMessage: string, threadId?: string): Promise<GraphResultType> {
+        // Get or generate threadId
+        const id = threadId ?? this.generateThreadId();
+
+        // Run the multiagent system
+        return this.graph.run(initialMessage, { threadId: id });
+    }
+
+    /**
+     * Generate a unique thread ID
+     * @returns Generated thread ID
+     */
+    private generateThreadId(): string {
+        return `thread-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    }
+}

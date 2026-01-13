@@ -1,0 +1,4 @@
+export default interface ChatMessageType {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+}

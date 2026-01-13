@@ -1,0 +1,17 @@
+import ChatMessageType from '../../Types/LLM/ChatMessageType';
+import CompletionResponseType from '../../Types/LLM/CompletionResponseType';
+
+/**
+ * LLM Repository Interface
+ * Defines contract for LLM completion providers
+ */
+export default interface LLMRepositoryInterface {
+    /**
+     * Get completion from LLM
+     * @param messages - Array of chat messages
+     * @param model - Model name to use
+     * @param temperature - Optional temperature parameter
+     * @returns Promise resolving to the completion response
+     */
+    getCompletion(messages: ChatMessageType[], model: string, temperature?: number): Promise<CompletionResponseType>;
+}

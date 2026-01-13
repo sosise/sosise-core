@@ -1,0 +1,70 @@
+import HttpClient from 'sosise-core/build/HttpClient/HttpClient';
+import HttpClientRetryConfig from 'sosise-core/build/Types/HttpClientRetryConfig';
+import ChatMessageType from '../../Types/LLM/ChatMessageType';
+import CompletionResponseType from '../../Types/LLM/CompletionResponseType';
+import LLMRepositoryInterface from './LLMRepositoryInterface';
+
+/**
+ * OpenAI Completion Repository
+ * Handles communication with OpenAI API for chat completions
+ */
+export default class OpenAICompletionRepository implements LLMRepositoryInterface {
+    private static readonly BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com';
+    private static readonly API_KEY = process.env.OPENAI_API_KEY || '';
+    private httpClient: HttpClient;
+    private retryConfig: HttpClientRetryConfig = {
+        requestMaxRetries: 3,
+        requestRetryInterval: 2000,
+        requestRetryStrategy: 'linear',
+        requestDoNotRetryForHttpCodes: [400, 401, 403],
+    };
+
+    /**
+     * Constructor
+     */
+    constructor() {
+        // Instantiate http client
+        this.httpClient = new HttpClient({
+            baseURL: OpenAICompletionRepository.BASE_URL,
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${OpenAICompletionRepository.API_KEY}`,
+            },
+            timeout: 600000,
+        });
+    }
+
+    /**
+     * Get completion from OpenAI
+     * @param messages - Array of chat messages
+     * @param model - Model name to use
+     * @param temperature - Optional temperature parameter
+     * @returns Promise resolving to the completion response
+     */
+    public async getCompletion(messages: ChatMessageType[], model: string, temperature?: number): Promise<CompletionResponseType> {
+        // Prepare data
+        const data: any = {
+            model,
+            messages,
+        };
+
+        // Set temperature if provided
+        if (temperature !== undefined) {
+            data.temperature = temperature;
+        }
+
+        // Make request with retry
+        const response = await this.httpClient.requestWithRetry({ url: '/v1/chat/completions', method: 'POST', data }, this.retryConfig);
+
+        // Return structured response
+        return {
+            responseText: response.data.choices[0].message.content,
+            usedTokens: {
+                input: response.data.usage.prompt_tokens - (response.data.usage.prompt_tokens_details?.cached_tokens ?? 0),
+                cachedInput: response.data.usage.prompt_tokens_details?.cached_tokens ?? 0,
+                output: response.data.usage.completion_tokens,
+            },
+        };
+    }
+}

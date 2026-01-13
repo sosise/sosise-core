@@ -1,0 +1,42 @@
+import commander from 'commander';
+import BaseCommand, { OptionType } from 'sosise-core/build/Command/BaseCommand';
+import %serviceName% from '../../Services/MA/%serviceName%';
+
+/**
+ * Command to run the multi-agent system
+ */
+export default class MACommand extends BaseCommand {
+    /**
+     * Command name
+     */
+    protected signature: string = 'ma:run';
+
+    /**
+     * Command description
+     */
+    protected description: string = 'Run the multi-agent system with a given input';
+
+    /**
+     * When the command is executed, prevent it from double execution
+     */
+    protected singleExecution: boolean = true;
+
+    /**
+     * Command options
+     */
+    protected options: OptionType[] = [];
+
+    /**
+     * Execute the console command
+     */
+    public async handle(cli: commander.Command): Promise<void> {
+        // Instantiate the multiagent service
+        const multiagentService = new %serviceName%();
+
+        // Run the system
+        const result = await multiagentService.run("Hello this is Igor from Atyrau, +77017777777, if you have any questions write me on my email igor@gmail.com");
+
+        // Output result
+        console.log('Result:', JSON.stringify(result, null, 2));
+    }
+}

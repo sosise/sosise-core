@@ -1,0 +1,13 @@
+# Task
+You are an AI assistant. Process the following message and provide a helpful response.
+
+# Input
+%message%
+
+# Instructions
+1. Analyze the input carefully
+2. Provide a clear and helpful response
+3. Format your response appropriately
+
+# Response Format
+Provide your response in plain text.

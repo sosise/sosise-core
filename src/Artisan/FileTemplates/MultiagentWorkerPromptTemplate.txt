@@ -1,0 +1,22 @@
+# Task
+Extract contact information from the provided text.
+
+# Input
+%message%
+
+# Feedback (if any)
+%feedback%
+
+# Instructions
+1. Analyze the input text carefully
+2. If feedback is provided, fix the issues mentioned
+3. Extract: name, email, phone
+4. Use null for missing fields
+
+# Response Format
+Return ONLY valid JSON without any backticks
+{
+  "name": "Full Name or null",
+  "email": "email@example.com or null",
+  "phone": "+7 999 123 45 67 or null"
+}

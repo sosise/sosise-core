@@ -17,6 +17,8 @@ import Service from './Artisan/Make/Service';
 import Test from './Artisan/Make/Test';
 import Type from './Artisan/Make/Type';
 import Unifier from './Artisan/Make/Unifier';
+import MultiagentInit from './Artisan/Make/MultiagentInit';
+import MultiagentCreate from './Artisan/Make/MultiagentCreate';
 import Migrate from './Artisan/Migrate/Migrate';
 import QueueHandler from './Artisan/Queue/QueueHandler';
 import Seed from './Artisan/Seed/Seed';
@@ -212,7 +214,27 @@ export default class Artisan {
                     instance.createFile();
                 });
 
-            // Make commands
+            // Multiagent commands
+            command.command('');
+            command.command(colors.green('Multiagent'));
+
+            command
+                .command('ma:init [name]')
+                .description(colors.dim('Initialize multi-agent system with all necessary files'))
+                .action((name) => {
+                    const instance = new MultiagentInit(name || 'MultiagentService');
+                    instance.createFiles();
+                });
+
+            command
+                .command('ma:create <name>')
+                .description(colors.dim('Create a new agent for the multi-agent system'))
+                .action((name) => {
+                    const instance = new MultiagentCreate(name);
+                    instance.createFile();
+                });
+
+            // Migrate commands
             command.command('');
             command.command(colors.green('Migrate'));
 
