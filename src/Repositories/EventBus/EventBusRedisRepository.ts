@@ -559,12 +559,12 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
         const keys: string[] = [];
 
         // Use SCAN to find matching keys (safe for large datasets)
-        let cursor = 0;
+        let cursor = '0';
         do {
             const result = await this.publishClient.scan(cursor, { MATCH: durablePattern, COUNT: 100 });
             cursor = result.cursor;
             keys.push(...result.keys);
-        } while (cursor !== 0);
+        } while (cursor !== '0');
 
         return keys;
     }
@@ -649,13 +649,13 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
      */
     private async findPositionKeys(): Promise<string[]> {
         const keys: string[] = [];
-        let cursor = 0;
+        let cursor = '0';
 
         do {
             const result = await this.publishClient.scan(cursor, { MATCH: `position:durable:*:${this.serviceName}`, COUNT: 100 });
             cursor = result.cursor;
             keys.push(...result.keys);
-        } while (cursor !== 0);
+        } while (cursor !== '0');
 
         return keys;
     }

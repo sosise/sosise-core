@@ -1,4 +1,4 @@
-import { Worker, QueueScheduler, Job } from 'bullmq';
+import { Worker, Job } from 'bullmq';
 import queueConfig from '../../../config/queue';
 import Handler from '../../Exceptions/Handler';
 
@@ -31,9 +31,6 @@ export default class %name% {
      * Listen to the queue (please do not delete this method)
      */
     private async listen(): Promise<void> {
-        // Instantiate queue scheduler
-        const scheduler = new QueueScheduler(this.queueName, { connection: this.redisConnection });
-
         // Instantiate worker
         const myWorker = new Worker(this.queueName, async (job) => this.handle(job), { connection: this.redisConnection });
 

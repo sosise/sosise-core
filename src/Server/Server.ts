@@ -1,15 +1,13 @@
-import BodyParser from 'body-parser';
 import colors from 'colors';
 import Compression from 'compression';
-import SessionRedisStore from 'connect-redis';
+import { RedisStore } from 'connect-redis';
 import Express from 'express';
 import { NextFunction, Request, Response } from 'express';
 import ExpressSession from 'express-session';
 import fs from 'fs';
 import SessionMemoryStore from 'memorystore';
-import Redis from 'redis';
+import { createClient } from 'redis';
 import SessionFileStore from 'session-file-store';
-import * as Sentry from '@sentry/node';
 import SessionInitializationException from '../Exceptions/Session/SessionInitializationException';
 import ServerInformation from './ServerInformation';
 
@@ -55,10 +53,18 @@ export default class Server {
                         break;
 
                     case 'redis':
-                        const RedisStore = SessionRedisStore(ExpressSession);
+                        // Create Redis client for session store
+                        const redisSessionConfig = sessionConfig.drivers[sessionConfig.driver];
+                        const redisClient = createClient({
+                            url: `redis://${redisSessionConfig.host}:${redisSessionConfig.port}`,
+                        });
+                        await redisClient.connect();
+
+                        // Initialize Redis session store
                         sessionConfig.store = new RedisStore({
-                            client: Redis.createClient(),
-                            ...sessionConfig.drivers[sessionConfig.driver],
+                            client: redisClient,
+                            prefix: redisSessionConfig.prefix,
+                            ttl: redisSessionConfig.ttl,
                         });
                         break;
 
@@ -71,10 +77,6 @@ export default class Server {
             }
         }
 
-        // Initialize sentry
-        const sentryConfig = require(process.cwd() + '/build/config/sentry').default;
-        Sentry.init(sentryConfig);
-
         // Setting up POST params parser
         app.use(Express.json());
         app.use(
@@ -86,26 +88,11 @@ export default class Server {
         // Setting up multipart/form-data
 
         app.use(
-            BodyParser.raw({
+            Express.raw({
                 limit: '150mb',
                 // type: '*/*'
             }),
         );
-
-        // app.use(ExpressFormData.parse({
-        //     uploadDir: os.tmpdir(),
-        //     autoClean: true
-        // }));
-        // app.use(ExpressFormData.format());
-        // app.use(ExpressFormData.stream());
-        // app.use(ExpressFormData.union());
-
-        // RequestHandler creates a separate execution context using domains, so that every
-        // transaction/span/breadcrumb is attached to its own Hub instance
-        // app.use(Sentry.Handlers.requestHandler());
-
-        // TracingHandler creates a trace for every incoming request
-        // app.use(Sentry.Handlers.tracingHandler());
 
         // Dynamic middlewares registration
         const registeredMiddlewares = require(process.cwd() + '/build/app/Http/Middlewares/Kernel').middlewares;
@@ -133,28 +120,6 @@ export default class Server {
         // Setting up routes
         const apiRoutes = require(process.cwd() + '/build/routes/api').default;
         app.use('/', apiRoutes);
-
-        // The error handler must be before any other error middleware and after all controllers
-        app.use(
-            Sentry.Handlers.errorHandler({
-                shouldHandleError(error) {
-                    // Send exception to sentry when property sendToSentry exists and is true
-                    // @ts-ignore
-                    if (error.sendToSentry !== undefined && error.sendToSentry === true) {
-                        return true;
-                    }
-
-                    // Do not send exception to sentry when property sendToSentry exists and is false
-                    // @ts-ignore
-                    if (error.sendToSentry !== undefined && error.sendToSentry === false) {
-                        return false;
-                    }
-
-                    // When property was not found in the exception, send to sentry by default
-                    return true;
-                },
-            }),
-        );
 
         // Exception handler
         const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;

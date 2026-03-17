@@ -1,5 +1,4 @@
-import commander from 'commander';
-import BaseCommand, { OptionType } from 'sosise-core/build/Command/BaseCommand';
+import BaseCommand, { OptionType, Command } from 'sosise-core/build/Command/BaseCommand';
 
 export default class %name% extends BaseCommand {
     /**
@@ -31,12 +30,15 @@ export default class %name% extends BaseCommand {
     /**
      * Execute the console command
      */
-    public async handle(cli: commander.Command): Promise<void> {
+    public async handle(cli: Command): Promise<void> {
+        // Access options via cli.opts()
+        const options = cli.opts();
+
         // Check if the debug option is provided
-        if (cli.debug) {
+        if (options.debug) {
             console.log('Debug option provided');
         }
 
-        console.log('Example export since ' + cli.since);
+        console.log('Example export since ' + options.since);
     }
 }

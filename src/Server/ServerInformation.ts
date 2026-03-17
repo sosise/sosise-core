@@ -41,6 +41,13 @@ export default class ServerInformation {
 
             switch (connectionConfig.client) {
                 case 'mysql':
+                case 'mysql2':
+                    console.log(colors.white(`  Host\t\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.host}`));
+                    console.log(colors.white(`  Port\t\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.port}`));
+                    console.log(colors.white(`  Database\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.database}`));
+                    break;
+                case 'pg':
+                case 'cockroachdb':
                     console.log(colors.white(`  Host\t\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.host}`));
                     console.log(colors.white(`  Port\t\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.port}`));
                     console.log(colors.white(`  Database\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.database}`));
@@ -49,9 +56,6 @@ export default class ServerInformation {
                     console.log(colors.white(`  Host\t\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.server}`));
                     console.log(colors.white(`  Port\t\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.port}`));
                     console.log(colors.white(`  Database\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.database}`));
-                    break;
-                case 'sqlite3':
-                    console.log(colors.white(`  Database File\t\t\t\t\t`) + colors.gray(`${connectionConfig.connection.filename}`));
                     break;
             }
 

@@ -224,15 +224,12 @@ export default class Migrate {
                 // Return table names array
                 return tableNames;
             }
-            case 'Client_SQLite3': {
-                // Prepare query and bindings
-                const query = "SELECT name AS table_name FROM sqlite_master WHERE type='table'";
+            case 'Client_PG': {
+                // Fetch all table names from the current database
+                const rows = await this.dbConnection.select('table_name').from('information_schema.tables').where('table_schema', 'public');
 
-                // Send request to database
-                const result = await this.dbConnection.raw(query, []);
-
-                // Get table names from result
-                const tableNames = result.map((row: any) => row.table_name).filter((tableName: string) => tableName !== 'sqlite_sequence');
+                // Map the result to extract table names
+                const tableNames = rows.map((row: any) => row.table_name);
 
                 // Return table names array
                 return tableNames;

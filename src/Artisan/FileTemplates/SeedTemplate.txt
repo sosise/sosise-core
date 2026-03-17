@@ -1,8 +1,8 @@
 import BaseSchema from 'sosise-core/build/Database/BaseSchema';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 
 /**
- * For additional information, refer to: http://knexjs.org/#Schema ; https://www.npmjs.com/package/faker
+ * For additional information, refer to: http://knexjs.org/#Schema ; https://fakerjs.dev/
  */
 export default class %name% extends BaseSchema {
     /**
@@ -25,8 +25,8 @@ export default class %name% extends BaseSchema {
         // Generate 100 rows
         for (let row = 0; row < 100; row++) {
             data.push({
-                example_field_1: faker.name.firstName(),
-                example_field_2: faker.date.between('2020-01-01', '2021-12-31')
+                example_field_1: faker.person.firstName(),
+                example_field_2: faker.date.between({ from: '2020-01-01', to: '2024-12-31' })
             });
         }
 

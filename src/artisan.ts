@@ -45,13 +45,14 @@ export default class Artisan {
                 .usage(colors.green('[command] [options]'))
                 .addHelpCommand('help [command]', colors.dim('Display help for command'));
 
+            // Configure grouped help output
+            this.configureGroupedHelp(command);
+
             // Register available commands
             const commandRegistration = new CommandRegistration(command);
             commandRegistration.registerApplicationCommands();
 
             // Make commands
-            command.command('');
-            command.command(colors.green('Make'));
 
             command
                 .command('make:controller <name>')
@@ -215,9 +216,6 @@ export default class Artisan {
                 });
 
             // Multiagent commands
-            command.command('');
-            command.command(colors.green('Multiagent'));
-
             command
                 .command('ma:init [name]')
                 .description(colors.dim('Initialize multi-agent system with all necessary files'))
@@ -235,9 +233,6 @@ export default class Artisan {
                 });
 
             // Migrate commands
-            command.command('');
-            command.command(colors.green('Migrate'));
-
             command
                 .command('migrate')
                 .description(colors.dim('Run the database migrations'))
@@ -329,10 +324,7 @@ export default class Artisan {
                     }
                 });
 
-            // Make commands
-            command.command('');
-            command.command(colors.green('Seed'));
-
+            // Seed commands
             command
                 .command('seed')
                 .description(colors.dim('Run the database seeds'))
@@ -351,10 +343,7 @@ export default class Artisan {
                     }
                 });
 
-            // Make commands
-            command.command('');
-            command.command(colors.green('Queue'));
-
+            // Queue commands
             command
                 .command('queue:listen <queueName>')
                 .description(colors.dim('Listen to a given queue'))
@@ -448,10 +437,6 @@ export default class Artisan {
                     }
                 });
 
-            // Make commands
-            command.command('');
-            command.command(colors.green('Help'));
-
             // Parse cli arguments and execute actions
             command.parse(argv);
         } catch (error) {
@@ -461,5 +446,100 @@ export default class Artisan {
                 process.exit(1);
             });
         }
+    }
+
+    /**
+     * Configure grouped help output for beautiful command listing
+     */
+    private configureGroupedHelp(command: Command): void {
+        // Group order and labels
+        const groupOrder = ['_user', 'make', 'ma', 'migrate', 'seed', 'queue', '_other'];
+        const groupLabels: { [key: string]: string } = {
+            '_user': 'User-defined',
+            'make': 'Make',
+            'ma': 'Multiagent',
+            'migrate': 'Migrate',
+            'seed': 'Seed',
+            'queue': 'Queue',
+            '_other': 'Other',
+        };
+
+        // Standalone commands that belong to specific groups
+        const standaloneGroups: { [key: string]: string } = { 'migrate': 'migrate', 'seed': 'seed' };
+
+        // Known core command prefixes
+        const coreGroups = new Set(['make', 'ma', 'migrate', 'seed', 'queue', 'help']);
+
+        command.configureHelp({
+            formatHelp: (cmd: Command, helper: any): string => {
+                const termWidth = helper.padWidth(cmd, helper);
+                let output = '';
+
+                // Description (ASCII art banner)
+                const desc = helper.commandDescription(cmd);
+                if (desc) {
+                    output += desc + '\n\n';
+                }
+
+                // Usage
+                output += 'Usage: ' + helper.commandUsage(cmd) + '\n\n';
+
+                // Options
+                const optionList = helper.visibleOptions(cmd);
+                if (optionList.length) {
+                    output += 'Options:\n';
+                    for (const opt of optionList) {
+                        output += '  ' + helper.optionTerm(opt).padEnd(termWidth + 2) + helper.optionDescription(opt) + '\n';
+                    }
+                    output += '\n';
+                }
+
+                // Commands - grouped by prefix
+                const cmds = helper.visibleCommands(cmd);
+                if (cmds.length) {
+                    output += 'Commands:\n';
+
+                    // Group commands by prefix
+                    const groups: { [key: string]: any[] } = {};
+                    for (const sub of cmds) {
+                        const name = sub.name();
+                        let group: string;
+
+                        if (name === 'help') {
+                            group = '_other';
+                        } else if (standaloneGroups[name]) {
+                            group = standaloneGroups[name];
+                        } else if (name.includes(':')) {
+                            const prefix = name.split(':')[0];
+                            group = coreGroups.has(prefix) ? prefix : '_user';
+                        } else {
+                            group = '_user';
+                        }
+
+                        if (!groups[group]) {
+                            groups[group] = [];
+                        }
+                        groups[group].push(sub);
+                    }
+
+                    // Output groups in defined order
+                    for (const groupKey of groupOrder) {
+                        const subs = groups[groupKey];
+                        if (!subs || subs.length === 0) {
+                            continue;
+                        }
+
+                        const label = groupLabels[groupKey] || groupKey;
+                        output += '\n  ' + colors.green(label) + '\n';
+
+                        for (const sub of subs) {
+                            output += '  ' + helper.subcommandTerm(sub).padEnd(termWidth + 2) + helper.subcommandDescription(sub) + '\n';
+                        }
+                    }
+                }
+
+                return output;
+            },
+        });
     }
 }

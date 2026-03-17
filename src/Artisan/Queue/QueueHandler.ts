@@ -1,4 +1,4 @@
-import { QueueGetters } from 'bullmq';
+import { Queue } from 'bullmq';
 import colors from 'colors';
 import fs from 'fs';
 import { inspect } from 'util';
@@ -67,7 +67,7 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, {
+        const queueGetters = new Queue(queueName, {
             connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
         });
 
@@ -93,7 +93,7 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, {
+        const queueGetters = new Queue(queueName, {
             connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
         });
 
@@ -119,7 +119,7 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, {
+        const queueGetters = new Queue(queueName, {
             connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
         });
 
@@ -145,7 +145,7 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, {
+        const queueGetters = new Queue(queueName, {
             connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
         });
 
@@ -175,7 +175,7 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, {
+        const queueGetters = new Queue(queueName, {
             connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
         });
 
@@ -205,7 +205,7 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, {
+        const queueGetters = new Queue(queueName, {
             connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
         });
 
@@ -235,7 +235,7 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, {
+        const queueGetters = new Queue(queueName, {
             connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
         });
 
@@ -265,7 +265,7 @@ export default class QueueHandler {
         const queueConfig = require(process.cwd() + '/build/config/queue').default;
 
         // Instantiate queue getter
-        const queueGetters = new QueueGetters(queueName, {
+        const queueGetters = new Queue(queueName, {
             connection: { host: queueConfig.redis.host, port: queueConfig.redis.port },
         });
 

@@ -12,9 +12,6 @@ export default class %name% extends Exception {
     // Error code which is rendered in the response
     protected code = %code%;
 
-    // If set to false, no exception will be sent to Sentry
-    protected sendToSentry = true;
-
     // In which logging channel should this exception be logged; see src/config/logging.ts
     protected loggingChannel = 'default';
 

@@ -11,9 +11,6 @@ export default class LoggingChannelDoesNotExistsException extends Exception {
     // Error code which is rendered in the response
     protected code = 2006;
 
-    // If set to false no exception will be sent to sentry
-    protected sendToSentry = true;
-
     // In which logging channel should this exception be logged, see src/config/logging.ts
     protected loggingChannel = 'default';
 

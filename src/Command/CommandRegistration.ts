@@ -1,17 +1,17 @@
 import { exec } from 'child_process';
 import colors from 'colors';
-import commander from 'commander';
+import { Command } from 'commander';
 import fs from 'fs';
 import util from 'util';
 import Helper from '../Helper/Helper';
 
 export default class CommandRegistration {
-    private command: commander.Command;
+    private command: Command;
 
     /**
      * Constructor
      */
-    constructor(command: commander.Command) {
+    constructor(command: Command) {
         this.command = command;
     }
 
@@ -93,11 +93,7 @@ export default class CommandRegistration {
             // Get all available commands
             const listOfCommandFiles = this.getListOfCommandFiles();
 
-            // Show user commands if they exist
-            if (listOfCommandFiles.length > 0) {
-                this.command.command('');
-                this.command.command(colors.green('User-defined'));
-            }
+            // User-defined commands are registered below
 
             // Iterate through files
             for (const commandFile of this.getListOfCommandFiles()) {
@@ -111,10 +107,9 @@ export default class CommandRegistration {
                 const commandClassInstance = new commandClassImport.default();
 
                 // Register command and specify what to do when command is executed
-                const newCommand = commander
-                    .command(commandClassInstance.signature)
+                const newCommand = new Command(commandClassInstance.signature)
                     .description(colors.dim(`${commandClassInstance.description}`))
-                    .action(async (cli) => {
+                    .action(async (options, cli) => {
                         // Perform double execution prevention only if singleExecution param is set to true in current command
                         if (commandClassInstance.singleExecution) {
                             // Specify tmp directory

@@ -1,4 +1,7 @@
-import commander from 'commander';
+import { Command } from 'commander';
+
+// Re-export Command so user commands don't need to depend on commander directly
+export { Command };
 
 export interface OptionType {
     flag: string;
@@ -31,5 +34,5 @@ export default abstract class BaseCommand {
     /**
      * Execute the console command
      */
-    public abstract handle(cli: commander.Command): void;
+    public abstract handle(cli: Command): void;
 }
