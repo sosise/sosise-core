@@ -6,9 +6,11 @@ import { NextFunction, Request, Response } from 'express';
 import ExpressSession from 'express-session';
 import fs from 'fs';
 import SessionMemoryStore from 'memorystore';
+import { createServer } from 'node:http';
 import { createClient } from 'redis';
 import SessionFileStore from 'session-file-store';
 import SessionInitializationException from '../Exceptions/Session/SessionInitializationException';
+import applyHttpServerTimeouts from './HttpServerTimeouts';
 import ServerInformation from './ServerInformation';
 
 export default class Server {
@@ -78,10 +80,15 @@ export default class Server {
         }
 
         // Setting up POST params parser
-        app.use(Express.json());
+        app.use(
+            Express.json({
+                limit: process.env.HTTP_JSON_BODY_LIMIT || '10mb',
+            }),
+        );
         app.use(
             Express.urlencoded({
                 extended: true,
+                limit: process.env.HTTP_JSON_BODY_LIMIT || '10mb',
             }),
         );
 
@@ -127,8 +134,11 @@ export default class Server {
             new Handler().reportHttpException(request, response, error);
         });
 
+        // Create and configure the HTTP server before accepting connections
+        const httpServer = createServer(app);
+        applyHttpServerTimeouts(httpServer);
+
         // Start the server
-        // app.listen(port, () => console.log(`Listening at http://localhost:${port}`));
-        app.listen(port, () => console.log(colors.white('Listening at ') + colors.blue(`http://0.0.0.0:${port}`)));
+        httpServer.listen(Number(port), () => console.log(colors.white('Listening at ') + colors.blue(`http://0.0.0.0:${port}`)));
     }
 }
