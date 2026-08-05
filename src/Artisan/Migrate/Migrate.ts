@@ -182,11 +182,10 @@ export default class Migrate {
         // Log
         console.log(colors.dim('Drop all tables'));
 
-        // Iterate through all tables and drop them
-        for (const tableName of allTables) {
-            // Drop table
-            await this.dbConnection.schema.dropTableIfExists(tableName);
+        // Drop the whole schema at once, dropping table by table fails as soon as a foreign key points at it
+        await this.dropAllTables(allTables);
 
+        for (const tableName of allTables) {
             // Log
             console.log(colors.green(`Table ${tableName} dropped`));
         }
@@ -200,6 +199,50 @@ export default class Migrate {
 
         // Now run migrate
         await this.run();
+    }
+
+    /**
+     * Drop every given table regardless of the foreign keys between them
+     *
+     * Dropping table by table only works for a schema without relations, because a parent table
+     * cannot be dropped while a child still references it and the drop order is not known here.
+     */
+    private async dropAllTables(tableNames: string[]): Promise<void> {
+        // Nothing to drop in an empty schema
+        if (tableNames.length === 0) {
+            return;
+        }
+
+        switch (this.dbConnection.client.constructor.name) {
+            case 'Client_MySQL':
+            case 'Client_MySQL2': {
+                // Foreign key checks are a session setting, so every statement must run on one pinned connection
+                await this.dbConnection.transaction(async (transaction) => {
+                    await transaction.raw('SET FOREIGN_KEY_CHECKS = 0');
+
+                    try {
+                        for (const tableName of tableNames) {
+                            await transaction.schema.dropTableIfExists(tableName);
+                        }
+                    } finally {
+                        // Never hand a connection back to the pool with the checks still disabled
+                        await transaction.raw('SET FOREIGN_KEY_CHECKS = 1');
+                    }
+                });
+
+                return;
+            }
+            case 'Client_PG':
+            case 'Client_CockroachDB': {
+                // A single cascading drop removes the dependent constraints along with the tables
+                const placeholders = tableNames.map(() => '??').join(', ');
+                await this.dbConnection.raw(`DROP TABLE IF EXISTS ${placeholders} CASCADE`, tableNames);
+
+                return;
+            }
+        }
+
+        throw new DatabaseMigrationsNotSupported('Selected default database is not supported for migrations.');
     }
 
     /**
