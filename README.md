@@ -35,6 +35,8 @@ server.run();
 Applications that need exact request or response stream handling can disable those global middlewares and register them on individual routes instead:
 
 ```ts
+import Server from 'sosise-core/build/Server/Server';
+
 const server = new Server({
     globalBodyParsers: false,
     compression: false,
