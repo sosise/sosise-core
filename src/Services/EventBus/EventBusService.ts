@@ -59,6 +59,18 @@ export default class EventBusService {
      * Subscribe to an event with durable delivery (guaranteed delivery)
      * Supported in Redis driver
      */
+    public async subscribeDurable(eventPattern: string, handler: EventHandler): Promise<void> {
+        if (!this.eventBusRepository.subscribeDurable) {
+            throw new EventBusException('Awaitable durable subscriptions are not supported by this repository', this.eventBusConfig.driver);
+        }
+
+        return this.eventBusRepository.subscribeDurable(eventPattern, handler);
+    }
+
+    /**
+     * Subscribe to an event with durable delivery without waiting for readiness
+     * Supported in Redis driver
+     */
     public onDurable(eventPattern: string, handler: EventHandler): void {
         return this.eventBusRepository.onDurable(eventPattern, handler);
     }

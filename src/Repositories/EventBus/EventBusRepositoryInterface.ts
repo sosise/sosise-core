@@ -24,6 +24,12 @@ export default interface EventBusRepositoryInterface {
      * Subscribe to an event with durable delivery (guaranteed delivery)
      * Supported in Redis driver
      */
+    subscribeDurable?(eventPattern: string, handler: EventHandler): Promise<void>;
+
+    /**
+     * Subscribe to an event with durable delivery without waiting for readiness
+     * Supported in Redis driver
+     */
     onDurable(eventPattern: string, handler: EventHandler): void;
 
     /**

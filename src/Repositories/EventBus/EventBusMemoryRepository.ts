@@ -61,6 +61,16 @@ export default class EventBusMemoryRepository implements EventBusRepositoryInter
      * Subscribe to an event with durable delivery (guaranteed delivery)
      * Not supported in Memory driver - use RabbitMQ for guaranteed delivery
      */
+    public async subscribeDurable(_eventPattern: string, _handler: EventHandler): Promise<void> {
+        throw new EventBusException(
+            'Durable subscriptions are not supported in Memory driver. Use RabbitMQ driver for guaranteed delivery.',
+            'memory',
+        );
+    }
+
+    /**
+     * Subscribe to an event with durable delivery without waiting for readiness
+     */
     public onDurable(_eventPattern: string, _handler: EventHandler): void {
         throw new EventBusException(
             'Durable subscriptions are not supported in Memory driver. Use RabbitMQ driver for guaranteed delivery.',
