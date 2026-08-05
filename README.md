@@ -21,5 +21,29 @@ Use `new` to generate your project.
 sosise new <name>
 ```
 
+## HTTP Server
+
+Existing applications keep the default global body parsers and response compression:
+
+```ts
+import Server from 'sosise-core/build/Server/Server';
+
+const server = new Server();
+server.run();
+```
+
+Applications that need exact request or response stream handling can disable those global middlewares and register them on individual routes instead:
+
+```ts
+const server = new Server({
+    globalBodyParsers: false,
+    compression: false,
+});
+
+server.run();
+```
+
+For application-owned lifecycle integration, `start()` resolves after the server begins listening and returns its Node.js HTTP server. `stop()` stops accepting new connections, waits for active connections to close and releases built-in session-store resources owned by the server.
+
 ## License
 [MIT](LICENSE.md)
