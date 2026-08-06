@@ -140,6 +140,9 @@ class FakeRedisClient extends EventEmitter {
         this.server = server;
         this.isOpen = false;
         this.isReady = false;
+
+        // Subscriptions belong to the connection, closing it drops them on the server
+        this.subscriptions = [];
     }
 
     async connect() {
@@ -150,12 +153,22 @@ class FakeRedisClient extends EventEmitter {
     }
 
     async quit() {
-        this.isOpen = false;
-        this.isReady = false;
-        this.emit('end');
+        this.close();
     }
 
     destroy() {
+        this.close();
+    }
+
+    /**
+     * Close the connection, dropping every subscription it held
+     */
+    close() {
+        for (const { registry, key, listener } of this.subscriptions) {
+            this.server.unsubscribe(registry, key, listener);
+        }
+
+        this.subscriptions = [];
         this.isOpen = false;
         this.isReady = false;
         this.emit('end');
@@ -180,18 +193,29 @@ class FakeRedisClient extends EventEmitter {
 
     async subscribe(channel, listener) {
         this.server.subscribe(this.server.channelListeners, channel, listener);
+        this.subscriptions.push({ registry: this.server.channelListeners, key: channel, listener });
     }
 
     async pSubscribe(pattern, listener) {
         this.server.subscribe(this.server.patternListeners, pattern, listener);
+        this.subscriptions.push({ registry: this.server.patternListeners, key: pattern, listener });
     }
 
     async unsubscribe(channel, listener) {
         this.server.unsubscribe(this.server.channelListeners, channel, listener);
+        this.forgetSubscription(channel, listener);
     }
 
     async pUnsubscribe(pattern, listener) {
         this.server.unsubscribe(this.server.patternListeners, pattern, listener);
+        this.forgetSubscription(pattern, listener);
+    }
+
+    /**
+     * Drop one subscription from the bookkeeping used when the connection closes
+     */
+    forgetSubscription(key, listener) {
+        this.subscriptions = this.subscriptions.filter((subscription) => subscription.key !== key || subscription.listener !== listener);
     }
 
     async scan(cursor, options) {
@@ -200,6 +224,10 @@ class FakeRedisClient extends EventEmitter {
 
     async lRange(key, start, stop) {
         return this.server.lRange(key, start, stop);
+    }
+
+    async lLen(key) {
+        return (this.server.lists.get(key) ?? []).length;
     }
 
     async get(key) {
@@ -513,6 +541,198 @@ test('a reconnect does not attach a second listener to the same channel', async 
     await flush();
 
     assert.equal(server.listenerCountForChannel('live:order.created'), listenersBefore);
+});
+
+test('a durable list shorter than the cursor is replayed instead of skipped', async () => {
+    const server = new FakeRedisServer();
+    const repository = createRepository(server);
+    const received = [];
+
+    await repository.emit('order.created', { id: 1 });
+    await repository.emit('order.created', { id: 2 });
+    await repository.emit('order.created', { id: 3 });
+    await repository.onDurable('order.created', (payload) => {
+        received.push(payload.data.id);
+    });
+
+    assert.deepEqual(received, [1, 2, 3]);
+    assert.equal(server.strings.get(positionKey('order.created')), '2');
+
+    // Redis restarted without persistence, both the list and the stored cursor are gone
+    server.lists.delete('durable:order.created');
+    server.strings.delete(positionKey('order.created'));
+
+    await repository.emit('order.created', { id: 4 });
+    await flush();
+
+    // Without the length check the in-memory cursor would skip the next three events
+    assert.deepEqual(received, [1, 2, 3, 4]);
+    assert.equal(server.strings.get(positionKey('order.created')), '0');
+});
+
+test('a durable list that only grew is not replayed', async () => {
+    const server = new FakeRedisServer();
+    const repository = createRepository(server);
+    const received = [];
+
+    await repository.emit('order.created', { id: 1 });
+    await repository.onDurable('order.created', (payload) => {
+        received.push(payload.data.id);
+    });
+    await repository.emit('order.created', { id: 2 });
+    await flush();
+
+    // The list is longer than the cursor, which is the normal case and must not reset it
+    assert.deepEqual(received, [1, 2]);
+    assert.equal(server.strings.get(positionKey('order.created')), '1');
+});
+
+test('an explicit disconnect and connect restores a live subscription', async () => {
+    const server = new FakeRedisServer();
+    const repository = createRepository(server);
+    const received = [];
+
+    repository.on('order.created', (payload) => {
+        received.push(payload.data.id);
+    });
+    await flush();
+
+    // Closing the connection replaces both clients, and a fresh client holds no subscription
+    await repository.disconnect();
+    await repository.connect();
+
+    await repository.emit('order.created', { id: 1 });
+    await flush();
+
+    assert.deepEqual(received, [1]);
+});
+
+test('an explicit disconnect and connect restores a wildcard subscription', async () => {
+    const server = new FakeRedisServer();
+    const repository = createRepository(server);
+    const received = [];
+
+    repository.on('order.*', (payload) => {
+        received.push(payload.data.id);
+    });
+    await flush();
+
+    await repository.disconnect();
+    await repository.connect();
+
+    await repository.emit('order.created', { id: 1 });
+    await flush();
+
+    assert.deepEqual(received, [1]);
+});
+
+test('an explicit reconnect replays the backlog and keeps delivering new events', async () => {
+    const server = new FakeRedisServer();
+    const repository = createRepository(server);
+    const received = [];
+
+    await repository.onDurable('order.created', (payload) => {
+        received.push(payload.data.id);
+    });
+
+    await repository.disconnect();
+
+    // Emitted by another service while this one was down
+    server.lPush('durable:order.created', JSON.stringify({ event: 'order.created', data: { id: 1 }, timestamp: 1 }));
+
+    await repository.connect();
+    await flush();
+
+    assert.deepEqual(received, [1]);
+
+    // The live wake-up has to reach the drain again, otherwise the event sits in the list
+    await repository.emit('order.created', { id: 2 });
+    await flush();
+
+    assert.deepEqual(received, [1, 2]);
+});
+
+test('an explicit reconnect does not attach a second listener to the same channel', async () => {
+    const server = new FakeRedisServer();
+    const repository = createRepository(server);
+
+    repository.on('order.created', () => undefined);
+    await flush();
+
+    await repository.disconnect();
+    await repository.connect();
+    await flush();
+
+    assert.equal(server.listenerCountForChannel('live:order.created'), 1);
+});
+
+test('concurrent connect callers subscribe a pattern only once', async () => {
+    const server = new FakeRedisServer();
+    const repository = createRepository(server);
+
+    repository.on('order.created', () => undefined);
+    await flush();
+
+    await repository.disconnect();
+    await Promise.all([repository.connect(), repository.connect(), repository.connect()]);
+    await flush();
+
+    assert.equal(server.listenerCountForChannel('live:order.created'), 1);
+});
+
+test('a subscription registered while reconnecting is not subscribed twice', async () => {
+    const server = new FakeRedisServer();
+    const repository = createRepository(server);
+
+    await repository.disconnect();
+
+    // Registering during the reconnect makes the restore and the registration race
+    repository.on('order.created', () => undefined);
+    await repository.connect();
+    await flush();
+
+    assert.equal(server.listenerCountForChannel('live:order.created'), 1);
+});
+
+test('a failed restore is reported and retried by the next connect', async () => {
+    const server = new FakeRedisServer();
+    const repository = createRepository(server);
+
+    repository.on('order.created', () => undefined);
+    await flush();
+
+    await repository.disconnect();
+
+    // Make the first resubscribe attempt of the fresh client fail
+    const originalCreateClient = redis.createClient;
+    redis.createClient = () => {
+        const client = new FakeRedisClient(server);
+        let failed = false;
+
+        const subscribe = client.subscribe.bind(client);
+        client.subscribe = async (channel, listener) => {
+            if (!failed) {
+                failed = true;
+                throw new Error('subscribe refused');
+            }
+
+            return subscribe(channel, listener);
+        };
+
+        return client;
+    };
+
+    try {
+        await assert.rejects(() => repository.connect(), /subscribe refused/);
+    } finally {
+        redis.createClient = originalCreateClient;
+    }
+
+    // The pattern stayed unsubscribed, so the next connect must try it again
+    await repository.connect();
+    await flush();
+
+    assert.equal(server.listenerCountForChannel('live:order.created'), 1);
 });
 
 test('a single segment wildcard does not match a deeper durable key', async () => {

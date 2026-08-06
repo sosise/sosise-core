@@ -45,10 +45,6 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
     private subscriptionListeners: Map<string, SubscriptionListener> = new Map();
     private pendingSubscriptions: Map<string, Promise<void>> = new Map();
     private drainQueues: Map<string, DrainQueue> = new Map();
-    private processedPositions: Map<string, number> = new Map();
-    private invalidPositions: Map<string, string> = new Map();
-    private positionsLoaded: boolean = false;
-    private positionsLoadingPromise: Promise<void> | null = null;
     private serviceName: string;
     private loggerService: LoggerService;
 
@@ -104,6 +100,10 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
 
         // Create subscribe client (separate connection for subscriptions)
         this.subscribeClient = createClient(connectionOptions);
+
+        // A subscription belongs to the connection that made it, a fresh pair holds none
+        this.subscribedPatterns.clear();
+        this.subscriptionListeners.clear();
 
         // Setup event listeners
         this.setupEventListeners(this.publishClient, this.subscribeClient);
@@ -176,9 +176,10 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
     /**
      * Mark the connection as usable once both clients are ready
      *
-     * Node-redis restores its own subscriptions after a reconnect, so the repository
-     * must not subscribe again. Only the durable cursors need to catch up on whatever
-     * was emitted while the connection was down.
+     * Node-redis restores the subscriptions of a client that reconnected on its own, so the
+     * repository must not subscribe again here. Only the durable cursors need to catch up on
+     * whatever was emitted while the connection was down. Clients replaced by an explicit
+     * disconnect carry no subscription at all, which connect() reconciles separately.
      */
     private handleClientsReady(publishClient: RedisClientType, subscribeClient: RedisClientType): void {
         // Ignore clients that were replaced by a later disconnect
@@ -200,11 +201,16 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
 
     /**
      * Connect to Redis
+     *
+     * Resolves only once both clients are usable and every registered pattern is subscribed
+     * again. Connecting is therefore also the point where the subscriptions of the transport
+     * are reconciled with the handlers the application registered.
      */
     public async connect(): Promise<void> {
         // Both clients are already usable
         if (this.publishClient.isReady && this.subscribeClient.isReady) {
             this.connected = true;
+            await this.restoreSubscriptions();
             return;
         }
 
@@ -239,6 +245,43 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
             this.connected = true;
         } catch (error) {
             throw new EventBusException(`Failed to connect to Redis: ${error.message}`, 'redis');
+        }
+
+        // The clients may have just been created, subscriptions do not survive a replacement
+        await this.restoreSubscriptions();
+    }
+
+    /**
+     * Subscribe every registered pattern the current subscribe client does not hold yet
+     *
+     * This is a no-op for a client that reconnected on its own, because node-redis restores
+     * its subscriptions and the bookkeeping still lists them. After an explicit disconnect
+     * the clients are replaced and nothing is subscribed, so without this the live channel
+     * stops reaching handlers and durable drains stop being woken up.
+     *
+     * Every pattern is attempted even when one of them fails, and a failed pattern simply
+     * stays unsubscribed, which makes the next connect or reconnect try it again.
+     */
+    private async restoreSubscriptions(): Promise<void> {
+        const failedPatterns: string[] = [];
+        let firstErrorMessage = '';
+
+        for (const pattern of Array.from(this.handlers.keys())) {
+            if (this.subscribedPatterns.has(pattern)) {
+                continue;
+            }
+
+            try {
+                await this.ensureSubscribed(pattern);
+            } catch (error) {
+                failedPatterns.push(pattern);
+                firstErrorMessage = firstErrorMessage || error.message;
+                this.logError(`Failed to restore subscription for pattern "${pattern}": ${error.message}`, { error });
+            }
+        }
+
+        if (failedPatterns.length > 0) {
+            throw new EventBusException(`Failed to restore subscriptions for ${failedPatterns.join(', ')}: ${firstErrorMessage}`, 'redis');
         }
     }
 
@@ -421,9 +464,28 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
     }
 
     /**
-     * Subscribe to a pattern in Redis, joining an attempt that is already running
+     * Subscribe to a pattern once Redis is usable
      */
-    private subscribeToPattern(pattern: string): Promise<void> {
+    private async subscribeToPattern(pattern: string): Promise<void> {
+        // Wait for Redis connection
+        await this.waitForConnection();
+
+        await this.ensureSubscribed(pattern);
+    }
+
+    /**
+     * Subscribe to a pattern in Redis, joining an attempt that is already running
+     *
+     * Deliberately does not wait for the connection: connecting restores subscriptions
+     * itself, and a subscription waiting for the connect while the connect waits for that
+     * very subscription would deadlock.
+     */
+    private ensureSubscribed(pattern: string): Promise<void> {
+        // Check if already subscribed to this pattern
+        if (this.subscribedPatterns.has(pattern)) {
+            return Promise.resolve();
+        }
+
         const pendingSubscription = this.pendingSubscriptions.get(pattern);
 
         if (pendingSubscription) {
@@ -446,18 +508,17 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
      * Perform the Redis subscription
      */
     private async subscribeToPatternNow(pattern: string): Promise<void> {
-        // Wait for Redis connection
-        await this.waitForConnection();
-
-        // Check if already subscribed to this pattern
-        if (this.subscribedPatterns.has(pattern)) {
-            return;
-        }
-
+        const client = this.subscribeClient;
         const listener = this.getSubscriptionListener(pattern);
         const subscribeMethod = this.hasSegmentWildcard(pattern) ? 'pSubscribe' : 'subscribe';
 
-        await this.subscribeClient[subscribeMethod](this.toLiveChannelPattern(pattern), listener);
+        await client[subscribeMethod](this.toLiveChannelPattern(pattern), listener);
+
+        // The connection was replaced while subscribing, so the subscription went with it and
+        // must not be recorded, otherwise the reconciliation would consider it restored
+        if (this.subscribeClient !== client) {
+            throw new EventBusException(`Connection was replaced while subscribing to pattern "${pattern}"`, 'redis');
+        }
 
         // Mark pattern as subscribed
         this.subscribedPatterns.add(pattern);
@@ -580,98 +641,7 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
      */
     private async drainPattern(pattern: string): Promise<void> {
         await this.waitForConnection();
-        await this.ensurePositionsLoaded();
         await this.readPastEvents(pattern);
-    }
-
-    /**
-     * Ensure positions are loaded (load only once)
-     */
-    private async ensurePositionsLoaded(): Promise<void> {
-        if (this.positionsLoaded) {
-            return;
-        }
-
-        // If already loading, wait for the existing promise
-        if (this.positionsLoadingPromise) {
-            await this.positionsLoadingPromise;
-            return;
-        }
-
-        // Start loading and save the promise to prevent race conditions
-        const loadingPromise = this.loadPersistedPositions();
-        this.positionsLoadingPromise = loadingPromise;
-
-        try {
-            await loadingPromise;
-            this.positionsLoaded = true;
-        } finally {
-            // Release the promise even on failure, otherwise every later call awaits a rejection
-            if (this.positionsLoadingPromise === loadingPromise) {
-                this.positionsLoadingPromise = null;
-            }
-        }
-    }
-
-    /**
-     * Load persisted positions from Redis
-     */
-    private async loadPersistedPositions(): Promise<void> {
-        await this.waitForConnection();
-
-        // Find all position keys
-        const positionKeys = await this.findPositionKeys();
-
-        // Load each position
-        const suffix = `:${this.serviceName}`;
-        for (const positionKey of positionKeys) {
-            const position = await this.publishClient.get(positionKey);
-
-            if (position === null) {
-                continue;
-            }
-
-            // Extract durable key from position key (remove 'position:' prefix and ':{serviceName}' suffix)
-            const durableKey = positionKey.substring(POSITION_KEY_PREFIX.length, positionKey.length - suffix.length);
-            const positionValue = Number(position);
-
-            // A corrupt cursor must fail loudly, silently falling back would replay everything.
-            // Remember it instead of throwing here: this scan covers every durable key of the
-            // service, and one damaged cursor must not take unrelated subscriptions down with it
-            if (!/^-?\d+$/.test(position) || !Number.isSafeInteger(positionValue) || positionValue < -1) {
-                this.invalidPositions.set(durableKey, position);
-                this.logError(`Invalid persisted position "${position}" for durable key "${durableKey}"`);
-                continue;
-            }
-
-            this.invalidPositions.delete(durableKey);
-            this.processedPositions.set(durableKey, positionValue);
-
-            // Log
-            this.logDebug(`Service "${this.serviceName}" loaded position for "${durableKey}": ${positionValue}`);
-        }
-
-        // Log
-        this.logDebug(`Service "${this.serviceName}" loaded ${this.processedPositions.size} persisted positions`);
-    }
-
-    /**
-     * Find all position keys in Redis
-     */
-    private async findPositionKeys(): Promise<string[]> {
-        const keys: string[] = [];
-        let cursor = '0';
-
-        do {
-            const result = await this.publishClient.scan(cursor, {
-                MATCH: `${POSITION_KEY_PREFIX}${DURABLE_KEY_PREFIX}*:${this.serviceName}`,
-                COUNT: 100,
-            });
-            cursor = result.cursor;
-            keys.push(...result.keys);
-        } while (cursor !== '0');
-
-        return keys;
     }
 
     /**
@@ -686,13 +656,17 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
         const durableKeys = await this.findDurableKeys(pattern);
 
         for (const key of durableKeys) {
-            // Refuse to guess where to resume, but only for the keys this pattern actually reads
-            const invalidPosition = this.invalidPositions.get(key);
-            if (invalidPosition !== undefined) {
-                throw new EventBusException(`Invalid persisted position "${invalidPosition}" for durable key "${key}"`, 'redis');
-            }
+            let lastProcessedIndex = await this.readProcessedPosition(key);
 
-            let lastProcessedIndex = this.processedPositions.get(key) ?? -1;
+            // The durable list only ever grows, so a list shorter than the cursor claims can
+            // only mean Redis lost data. Trusting the cursor then would silently skip events
+            const listLength = await this.publishClient.lLen(key);
+            if (listLength <= lastProcessedIndex) {
+                this.logWarning(
+                    `Durable key "${key}" holds ${listLength} events but the cursor is at ${lastProcessedIndex}, replaying what is left`,
+                );
+                lastProcessedIndex = -1;
+            }
 
             // Read the unprocessed head of the list
             const messages = await this.publishClient.lRange(key, 0, -(lastProcessedIndex + 2));
@@ -721,9 +695,36 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
                 // Advance the cursor only after the event was fully handled
                 lastProcessedIndex++;
                 await this.saveProcessedPosition(key, lastProcessedIndex);
-                this.processedPositions.set(key, lastProcessedIndex);
             }
         }
+    }
+
+    /**
+     * Read where this service left off in one durable key
+     *
+     * Deliberately read from Redis on every drain instead of caching it in the process. A
+     * cached cursor outlives the data it points at: when Redis is restarted without
+     * persistence, flushed, or fails over to an empty replica, the key disappears while the
+     * process keeps counting, and every event until the list grew back would be skipped.
+     */
+    private async readProcessedPosition(durableKey: string): Promise<number> {
+        const positionKey = `${POSITION_KEY_PREFIX}${durableKey}:${this.serviceName}`;
+        const position = await this.publishClient.get(positionKey);
+
+        // Nothing processed yet, or the cursor is gone together with the data it described
+        if (position === null) {
+            return -1;
+        }
+
+        const positionValue = Number(position);
+
+        // A corrupt cursor must fail loudly, silently falling back would replay everything.
+        // Only this key is affected, subscriptions to other keys keep working
+        if (!/^-?\d+$/.test(position) || !Number.isSafeInteger(positionValue) || positionValue < -1) {
+            throw new EventBusException(`Invalid persisted position "${position}" for durable key "${durableKey}"`, 'redis');
+        }
+
+        return positionValue;
     }
 
     /**
@@ -942,6 +943,10 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
             this.connected = false;
             this.subscribedPatterns.clear();
             this.subscriptionListeners.clear();
+
+            // A subscription still in flight belongs to the connection being closed, joining it
+            // would make the reconciliation of the next connect fail for nothing
+            this.pendingSubscriptions.clear();
 
             // Node-redis cannot reopen a client that was quit, the next connect builds new ones
             this.clientsNeedInitialization = true;
