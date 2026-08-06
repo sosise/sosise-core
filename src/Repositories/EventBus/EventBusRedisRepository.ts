@@ -6,20 +6,47 @@ import LoggerService from '../../Services/Logger/LoggerService';
 import Helper from '../../Helper/Helper';
 import EventPatternMatcher from '../../Helper/EventPatternMatcher';
 
+/**
+ * Redis key layout
+ * - durable:{event}                        list of every emitted event, newest first (LPUSH)
+ * - live:{event}                           pub/sub channel used as a wake-up signal
+ * - position:durable:{event}:{serviceName} how many events this service already processed
+ */
+const LIVE_CHANNEL_PREFIX = 'live:';
+const DURABLE_KEY_PREFIX = 'durable:';
+const POSITION_KEY_PREFIX = 'position:';
+
+/**
+ * How long a client may take to become ready before a caller gives up
+ */
+const CLIENT_READY_TIMEOUT_MS = 10000;
+
+type SubscriptionListener = (message: string, channel: string) => void;
+
 interface HandlerInfo {
     handler: EventHandler;
-    pattern: string;
+    durable: boolean;
+}
+
+interface DrainQueue {
+    promise: Promise<void>;
+    rerunRequested: boolean;
 }
 
 export default class EventBusRedisRepository implements EventBusRepositoryInterface {
     private eventBusConfig: any;
     private publishClient: RedisClientType;
     private subscribeClient: RedisClientType;
-    private handlers: Map<string, Set<HandlerInfo>>;
+    private handlers: Map<string, Set<HandlerInfo>> = new Map();
     private connected: boolean = false;
-    private reconnecting: boolean = false;
+    private clientsNeedInitialization: boolean = false;
+    private connectPromise: Promise<void> | null = null;
     private subscribedPatterns: Set<string> = new Set();
+    private subscriptionListeners: Map<string, SubscriptionListener> = new Map();
+    private pendingSubscriptions: Map<string, Promise<void>> = new Map();
+    private drainQueues: Map<string, DrainQueue> = new Map();
     private processedPositions: Map<string, number> = new Map();
+    private invalidPositions: Map<string, string> = new Map();
     private positionsLoaded: boolean = false;
     private positionsLoadingPromise: Promise<void> | null = null;
     private serviceName: string;
@@ -30,7 +57,6 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
      */
     constructor(eventBusConfig: any) {
         this.eventBusConfig = eventBusConfig;
-        this.handlers = new Map();
         this.serviceName = eventBusConfig.driverConfiguration.redis.serviceName || 'default-service';
         this.loggerService = IOC.makeSingleton(LoggerService) as LoggerService;
 
@@ -40,8 +66,10 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
         // Initialize Redis clients
         this.initializeRedisClients();
 
-        // Connect to Redis
-        this.connect();
+        // Connect to Redis without blocking construction
+        this.connect().catch((error) => {
+            this.logError(`Failed to connect to Redis: ${error.message}`, { error });
+        });
     }
 
     /**
@@ -63,7 +91,7 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
                     this.logWarning(`Reconnecting, attempt #${retries}`);
                     return Math.min(retries * 100, 3000);
                 },
-                connectTimeout: 10000,
+                connectTimeout: CLIENT_READY_TIMEOUT_MS,
             },
         };
 
@@ -78,79 +106,95 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
         this.subscribeClient = createClient(connectionOptions);
 
         // Setup event listeners
-        this.setupEventListeners();
+        this.setupEventListeners(this.publishClient, this.subscribeClient);
     }
 
     /**
-     * Setup event listeners for Redis clients
+     * Setup event listeners for a pair of Redis clients
+     *
+     * The clients are passed explicitly because disconnect() replaces them, and the
+     * listeners of a replaced client must no longer touch the repository state.
      */
-    private setupEventListeners(): void {
+    private setupEventListeners(publishClient: RedisClientType, subscribeClient: RedisClientType): void {
         // Publish client events
-        this.publishClient.on('error', (err) => {
-            this.logError(`Publish client connection error: ${err}`);
+        publishClient.on('error', (error) => {
+            if (this.publishClient !== publishClient) {
+                return;
+            }
+            this.logError(`Publish client connection error: ${error}`);
             this.connected = false;
         });
 
-        this.publishClient.on('end', () => {
+        publishClient.on('end', () => {
+            if (this.publishClient !== publishClient) {
+                return;
+            }
             this.logError('Publish client connection closed');
             this.connected = false;
-            this.subscribedPatterns.clear();
         });
 
-        this.publishClient.on('connect', () => {
-            this.logError('Publish client connected');
-        });
-
-        this.publishClient.on('ready', () => {
-            this.logInfo('Publish client ready');
-
-            // Only set connected if both clients are ready
-            if (this.publishClient.isReady && this.subscribeClient.isReady) {
-                this.connected = true;
-                this.reconnecting = false;
+        publishClient.on('connect', () => {
+            if (this.publishClient === publishClient) {
+                this.logInfo('Publish client connected');
             }
+        });
+
+        publishClient.on('ready', () => {
+            this.logInfo('Publish client ready');
+            this.handleClientsReady(publishClient, subscribeClient);
         });
 
         // Subscribe client events
-        this.subscribeClient.on('error', (err) => {
-            this.logError(`Subscribe client connection error: ${err}`);
+        subscribeClient.on('error', (error) => {
+            if (this.subscribeClient !== subscribeClient) {
+                return;
+            }
+            this.logError(`Subscribe client connection error: ${error}`);
             this.connected = false;
         });
 
-        this.subscribeClient.on('end', () => {
+        subscribeClient.on('end', () => {
+            if (this.subscribeClient !== subscribeClient) {
+                return;
+            }
             this.logInfo('Subscribe client connection closed');
             this.connected = false;
-            this.subscribedPatterns.clear();
         });
 
-        this.subscribeClient.on('connect', () => {
-            this.logInfo('Subscribe client connected');
-        });
-
-        this.subscribeClient.on('ready', () => {
-            this.logInfo('Subscribe client ready');
-
-            // Only set connected if both clients are ready
-            if (this.publishClient.isReady && this.subscribeClient.isReady) {
-                this.connected = true;
-                this.reconnecting = false;
-
-                // Re-subscribe to all patterns after reconnection
-                this.resubscribeToPatterns();
+        subscribeClient.on('connect', () => {
+            if (this.subscribeClient === subscribeClient) {
+                this.logInfo('Subscribe client connected');
             }
+        });
+
+        subscribeClient.on('ready', () => {
+            this.logInfo('Subscribe client ready');
+            this.handleClientsReady(publishClient, subscribeClient);
         });
     }
 
     /**
-     * Wait until Redis is connected
+     * Mark the connection as usable once both clients are ready
+     *
+     * Node-redis restores its own subscriptions after a reconnect, so the repository
+     * must not subscribe again. Only the durable cursors need to catch up on whatever
+     * was emitted while the connection was down.
      */
-    private async waitForConnection(): Promise<void> {
-        while (!this.connected) {
-            // Log
-            this.logWarning('Waiting for connection...');
+    private handleClientsReady(publishClient: RedisClientType, subscribeClient: RedisClientType): void {
+        // Ignore clients that were replaced by a later disconnect
+        if (this.publishClient !== publishClient || this.subscribeClient !== subscribeClient) {
+            return;
+        }
 
-            // Check connection status every 1000 ms
-            await Helper.sleep(1000);
+        if (!publishClient.isReady || !subscribeClient.isReady) {
+            return;
+        }
+
+        const wasDisconnected = !this.connected;
+        this.connected = true;
+
+        if (wasDisconnected) {
+            this.scheduleDurableCatchUp();
         }
     }
 
@@ -158,8 +202,40 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
      * Connect to Redis
      */
     public async connect(): Promise<void> {
+        // Both clients are already usable
+        if (this.publishClient.isReady && this.subscribeClient.isReady) {
+            this.connected = true;
+            return;
+        }
+
+        // Serialize concurrent callers onto a single attempt
+        if (!this.connectPromise) {
+            const operation = this.connectClients();
+            const clearOperation = () => {
+                if (this.connectPromise === operation) {
+                    this.connectPromise = null;
+                }
+            };
+
+            this.connectPromise = operation;
+            operation.then(clearOperation, clearOperation);
+        }
+
+        await this.connectPromise;
+    }
+
+    /**
+     * Bring both clients up
+     */
+    private async connectClients(): Promise<void> {
         try {
-            await Promise.all([this.publishClient.connect(), this.subscribeClient.connect()]);
+            // A client that was quit cannot be reopened, start from fresh ones
+            if (this.clientsNeedInitialization) {
+                this.initializeRedisClients();
+                this.clientsNeedInitialization = false;
+            }
+
+            await Promise.all([this.connectClient(this.publishClient), this.connectClient(this.subscribeClient)]);
             this.connected = true;
         } catch (error) {
             throw new EventBusException(`Failed to connect to Redis: ${error.message}`, 'redis');
@@ -167,42 +243,63 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
     }
 
     /**
-     * Disconnect from Redis
+     * Open a single client, or wait for the one that is already opening
      */
-    public async disconnect(): Promise<void> {
-        try {
-            await Promise.all([this.publishClient.quit(), this.subscribeClient.quit()]);
-            this.connected = false;
-        } catch (error) {
-            throw new EventBusException(`Failed to disconnect from Redis: ${error.message}`, 'redis');
+    private async connectClient(client: RedisClientType): Promise<void> {
+        if (client.isReady) {
+            return;
         }
+
+        // Never opened, or closed and reopenable
+        if (!client.isOpen) {
+            await client.connect();
+            return;
+        }
+
+        // Opened but still handshaking or reconnecting on its own
+        await this.waitForClientReady(client);
     }
 
     /**
-     * Reconnect Redis clients
+     * Wait until a client reports readiness, giving up instead of hanging forever
      */
-    private async reconnectRedisClients(): Promise<void> {
-        // Prevent multiple reconnect attempts if already reconnecting or connected
-        if (this.reconnecting || this.connected) return;
-        this.reconnecting = true;
-        this.connected = false;
+    private waitForClientReady(client: RedisClientType): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const cleanup = () => {
+                clearTimeout(readyTimeout);
+                client.off('ready', onReady);
+                client.off('end', onEnd);
+            };
+            const onReady = () => {
+                cleanup();
+                resolve();
+            };
+            const onEnd = () => {
+                cleanup();
+                reject(new Error('Redis connection closed before becoming ready'));
+            };
+            const readyTimeout = setTimeout(() => {
+                cleanup();
+                reject(new Error(`Redis client did not become ready within ${CLIENT_READY_TIMEOUT_MS} ms`));
+            }, CLIENT_READY_TIMEOUT_MS);
 
-        try {
-            this.logWarning('Attempting to reconnect...');
+            client.on('ready', onReady);
+            client.on('end', onEnd);
+        });
+    }
 
-            // Wait before reconnecting to avoid rapid reconnection attempts
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            // Attempt to reconnect existing clients
-            await this.connect();
-        } catch (err) {
-            this.logError(`Error during reconnection: ${err}`);
-            // Retry reconnection
-            setTimeout(() => {
-                this.reconnecting = false;
-                this.reconnectRedisClients();
-            }, 5000);
+    /**
+     * Wait until Redis is usable
+     */
+    private async waitForConnection(): Promise<void> {
+        if (this.connected && this.publishClient.isReady && this.subscribeClient.isReady) {
+            return;
         }
+
+        // Log
+        this.logWarning('Waiting for connection...');
+
+        await this.connect();
     }
 
     /**
@@ -221,27 +318,24 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
         const maxRetries = 3;
         const retryDelay = 1000;
 
+        const eventData = {
+            event,
+            data,
+            timestamp: Date.now(),
+            expiresAt: ttlMinutes ? Date.now() + ttlMinutes * 60 * 1000 : null,
+        };
+        const message = JSON.stringify(eventData);
+        const durableKey = `${DURABLE_KEY_PREFIX}${event}`;
+        const liveChannel = `${LIVE_CHANNEL_PREFIX}${event}`;
+
         while (retries <= maxRetries) {
             try {
                 // Wait for Redis connection
                 await this.waitForConnection();
 
-                const eventData = {
-                    event,
-                    data,
-                    timestamp: Date.now(),
-                    expiresAt: ttlMinutes ? Date.now() + ttlMinutes * 60 * 1000 : null,
-                };
-
-                const message = JSON.stringify(eventData);
-
-                // 1. Save to durable list for guaranteed delivery
-                const durableKey = `durable:${event}`;
-                await this.publishClient.lPush(durableKey, message);
-
-                // 2. Publish to live channel for real-time subscribers
-                const liveKey = `live:${event}`;
-                await this.publishClient.publish(liveKey, message);
+                // Store the event and publish its wake-up in one transaction, so a subscriber
+                // is never woken up for an event that is not in the durable list yet
+                await this.publishClient.multi().lPush(durableKey, message).publish(liveChannel, message).exec();
 
                 const ttlInfo = ttlMinutes ? ` (TTL: ${ttlMinutes} min)` : '';
                 this.logInfo(`Event "${event}" saved to durable list and published live${ttlInfo}`);
@@ -264,116 +358,471 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
      * Subscribe to an event (real-time only)
      */
     public on(eventPattern: string, handler: EventHandler): void {
-        this.addLiveHandler(eventPattern, handler);
-    }
+        this.addHandler(eventPattern, { handler, durable: false });
 
-    /**
-     * Subscribe to an event with durable delivery (guaranteed delivery)
-     * Reads all past events from Redis Lists + subscribes to new events
-     */
-    public onDurable(eventPattern: string, handler: EventHandler): void {
-        // Start async operations but return immediately
-        this.setupDurableSubscription(eventPattern, handler).catch((error) => {
-            this.logError(`Failed to setup durable subscription for "${eventPattern}": ${error.message}`);
+        this.subscribeToPattern(eventPattern).catch((error) => {
+            this.logError(`Failed to subscribe to pattern "${eventPattern}": ${error.message}`, { error });
         });
     }
 
     /**
-     * Setup durable subscription asynchronously
+     * Subscribe to an event with durable delivery (guaranteed delivery)
+     *
+     * Awaiting the returned promise tells the caller that past events were replayed and the
+     * subscription is live, which is what an application wants during startup. Ignoring it
+     * keeps the historical fire and forget behaviour.
      */
-    private async setupDurableSubscription(eventPattern: string, handler: EventHandler): Promise<void> {
+    public onDurable(eventPattern: string, handler: EventHandler): Promise<void> {
+        const subscription = this.subscribeDurably(eventPattern, handler);
+
+        // Report the failure on behalf of callers that do not await. Attaching the handler
+        // also marks the rejection as handled, so an ignored promise cannot crash the
+        // process, while a caller that does await still receives the error.
+        subscription.catch((error) => {
+            this.logError(`Failed to setup durable subscription for "${eventPattern}": ${error.message}`);
+        });
+
+        return subscription;
+    }
+
+    /**
+     * Register the durable subscription and replay what the cursor has not seen
+     *
+     * Durable handlers are fed exclusively by the persisted cursor, never directly by
+     * the live channel, so an event is only ever marked as processed after the handler
+     * actually returned. Delivery is at-least-once and handlers must be idempotent.
+     */
+    private async subscribeDurably(eventPattern: string, handler: EventHandler): Promise<void> {
+        const handlerInfo: HandlerInfo = { handler, durable: true };
+        this.addHandler(eventPattern, handlerInfo);
+
         try {
-            // Wait for Redis connection
-            await this.waitForConnection();
-
-            // Load persisted positions before reading past events
-            await this.ensurePositionsLoaded();
-
-            // 1. Read all past events from durable lists
-            await this.readPastEvents(eventPattern, handler);
-
-            // 2. Subscribe to future live events
-            this.addLiveHandler(eventPattern, handler);
-
-            // Log
-            this.logInfo(`Durable subscription created for pattern "${eventPattern}"`);
+            // Subscribe before draining, so events emitted during the drain still wake it up
+            await this.subscribeToPattern(eventPattern);
+            await this.scheduleDrain(eventPattern);
         } catch (error) {
+            this.removeHandler(eventPattern, handlerInfo);
             throw new EventBusException(`Failed to create durable subscription for "${eventPattern}": ${error.message}`, 'redis');
         }
+
+        // Log
+        this.logInfo(`Durable subscription created for pattern "${eventPattern}"`);
     }
 
     /**
      * Add a handler for an event pattern
      */
-    private addHandler(pattern: string, handler: EventHandler): void {
+    private addHandler(pattern: string, handlerInfo: HandlerInfo): void {
         if (!this.handlers.has(pattern)) {
             this.handlers.set(pattern, new Set());
-
-            // Subscribe to the pattern in Redis
-            this.subscribeToPattern(pattern);
         }
 
-        this.handlers.get(pattern)!.add({ handler, pattern });
+        this.handlers.get(pattern)!.add(handlerInfo);
     }
 
     /**
-     * Subscribe to a pattern in Redis
+     * Subscribe to a pattern in Redis, joining an attempt that is already running
      */
-    private async subscribeToPattern(pattern: string): Promise<void> {
+    private subscribeToPattern(pattern: string): Promise<void> {
+        const pendingSubscription = this.pendingSubscriptions.get(pattern);
+
+        if (pendingSubscription) {
+            return pendingSubscription;
+        }
+
+        const operation = this.subscribeToPatternNow(pattern);
+        const clearOperation = () => {
+            if (this.pendingSubscriptions.get(pattern) === operation) {
+                this.pendingSubscriptions.delete(pattern);
+            }
+        };
+
+        this.pendingSubscriptions.set(pattern, operation);
+        operation.then(clearOperation, clearOperation);
+        return operation;
+    }
+
+    /**
+     * Perform the Redis subscription
+     */
+    private async subscribeToPatternNow(pattern: string): Promise<void> {
         // Wait for Redis connection
         await this.waitForConnection();
 
         // Check if already subscribed to this pattern
         if (this.subscribedPatterns.has(pattern)) {
-            this.logWarning(`Already subscribed to pattern "${pattern}", skipping...`);
+            return;
+        }
+
+        const listener = this.getSubscriptionListener(pattern);
+        const subscribeMethod = this.hasSegmentWildcard(pattern) ? 'pSubscribe' : 'subscribe';
+
+        await this.subscribeClient[subscribeMethod](this.toLiveChannelPattern(pattern), listener);
+
+        // Mark pattern as subscribed
+        this.subscribedPatterns.add(pattern);
+        this.logInfo(`Successfully subscribed to pattern "${pattern}"`);
+    }
+
+    /**
+     * Get the listener of a pattern, creating it on first use
+     *
+     * The very same function object has to be handed to unsubscribe later, otherwise
+     * node-redis keeps the old listener attached to the channel.
+     */
+    private getSubscriptionListener(pattern: string): SubscriptionListener {
+        let listener = this.subscriptionListeners.get(pattern);
+
+        if (!listener) {
+            listener = (message: string, channel: string) => this.handlePatternMessage(pattern, channel, message);
+            this.subscriptionListeners.set(pattern, listener);
+        }
+
+        return listener;
+    }
+
+    /**
+     * Handle an incoming message of one subscription
+     *
+     * Only the handlers of the pattern whose subscription fired are dispatched. Scanning
+     * every registered pattern here would deliver a message twice whenever two overlapping
+     * patterns are subscribed.
+     */
+    private handlePatternMessage(pattern: string, channel: string, message: string): void {
+        if (!channel.startsWith(LIVE_CHANNEL_PREFIX)) {
+            return;
+        }
+
+        // The Redis glob is broader than the framework matcher, drop what does not really match
+        const event = channel.substring(LIVE_CHANNEL_PREFIX.length);
+        if (!this.matchesPattern(event, pattern)) {
+            return;
+        }
+
+        const handlerSet = this.handlers.get(pattern);
+        if (!handlerSet) {
+            return;
+        }
+
+        // Durable handlers are fed by the cursor, the live message is only a wake-up
+        if (this.getDurableHandlers(pattern).length > 0) {
+            this.scheduleDrain(pattern).catch((error) => {
+                // Leave the cursor where it is, a later wake-up or reconnect retries it
+                this.logError(`Failed to drain durable pattern "${pattern}": ${error.message}`, { error });
+            });
+        }
+
+        const liveHandlers = Array.from(handlerSet).filter((handlerInfo) => !handlerInfo.durable);
+        if (liveHandlers.length === 0) {
             return;
         }
 
         try {
-            const subscribeMethod = this.isWildcardPattern(pattern) ? 'pSubscribe' : 'subscribe';
+            const payload = this.createEventPayload(message);
 
-            await this.subscribeClient[subscribeMethod](pattern, (message: string, channel: string) => {
-                this.handleMessage(channel, message);
-            });
-
-            // Mark pattern as subscribed
-            this.subscribedPatterns.add(pattern);
-            this.logInfo(`Successfully subscribed to pattern "${pattern}"`);
+            for (const handlerInfo of liveHandlers) {
+                // Wrap the call so a rejected async handler is reported instead of going unhandled
+                Promise.resolve(handlerInfo.handler(payload)).catch((error) => {
+                    this.logError(`Error in handler for pattern "${pattern}": ${error.message}`, { error });
+                });
+            }
         } catch (error) {
-            this.logError(`Failed to subscribe to "${pattern}"`, { error });
+            this.logError(`Failed to handle message for pattern "${pattern}": ${error.message}`, { error });
         }
     }
 
     /**
-     * Handle incoming messages from Redis
+     * Get the durable handlers registered for a pattern
      */
-    private handleMessage(channel: string, message: string): void {
+    private getDurableHandlers(pattern: string): HandlerInfo[] {
+        return Array.from(this.handlers.get(pattern) ?? []).filter((handlerInfo) => handlerInfo.durable);
+    }
+
+    /**
+     * Request a drain of a durable pattern
+     *
+     * Wake-ups are coalesced: while a drain runs, further wake-ups only ask it to make one
+     * more pass, so an event emitted mid-drain is never missed and never starts a second
+     * concurrent drain of the same cursor.
+     */
+    private scheduleDrain(pattern: string): Promise<void> {
+        const runningQueue = this.drainQueues.get(pattern);
+
+        if (runningQueue) {
+            runningQueue.rerunRequested = true;
+            return runningQueue.promise;
+        }
+
+        const queue: DrainQueue = { promise: Promise.resolve(), rerunRequested: false };
+        this.drainQueues.set(pattern, queue);
+
+        queue.promise = this.runDrainPasses(pattern, queue).finally(() => {
+            if (this.drainQueues.get(pattern) === queue) {
+                this.drainQueues.delete(pattern);
+            }
+        });
+
+        return queue.promise;
+    }
+
+    /**
+     * Keep draining while new wake-ups arrive
+     */
+    private async runDrainPasses(pattern: string, queue: DrainQueue): Promise<void> {
+        do {
+            queue.rerunRequested = false;
+            await this.drainPattern(pattern);
+        } while (queue.rerunRequested);
+    }
+
+    /**
+     * Deliver everything the cursor has not seen yet
+     */
+    private async drainPattern(pattern: string): Promise<void> {
+        await this.waitForConnection();
+        await this.ensurePositionsLoaded();
+        await this.readPastEvents(pattern);
+    }
+
+    /**
+     * Ensure positions are loaded (load only once)
+     */
+    private async ensurePositionsLoaded(): Promise<void> {
+        if (this.positionsLoaded) {
+            return;
+        }
+
+        // If already loading, wait for the existing promise
+        if (this.positionsLoadingPromise) {
+            await this.positionsLoadingPromise;
+            return;
+        }
+
+        // Start loading and save the promise to prevent race conditions
+        const loadingPromise = this.loadPersistedPositions();
+        this.positionsLoadingPromise = loadingPromise;
+
         try {
-            const { event, data, timestamp } = JSON.parse(message);
+            await loadingPromise;
+            this.positionsLoaded = true;
+        } finally {
+            // Release the promise even on failure, otherwise every later call awaits a rejection
+            if (this.positionsLoadingPromise === loadingPromise) {
+                this.positionsLoadingPromise = null;
+            }
+        }
+    }
 
-            // Create event payload
-            const payload: EventPayload = {
-                event: {
-                    name: event,
-                    timestamp: timestamp || Date.now(),
-                },
-                data,
-            };
+    /**
+     * Load persisted positions from Redis
+     */
+    private async loadPersistedPositions(): Promise<void> {
+        await this.waitForConnection();
 
-            // Find matching handlers
-            for (const [pattern, handlerSet] of this.handlers) {
-                if (this.matchesPattern(channel, pattern)) {
-                    for (const handlerInfo of handlerSet) {
-                        try {
-                            handlerInfo.handler(payload);
-                        } catch (error) {
-                            this.logError(`Error in handler for pattern "${pattern}"`, { error });
-                        }
-                    }
+        // Find all position keys
+        const positionKeys = await this.findPositionKeys();
+
+        // Load each position
+        const suffix = `:${this.serviceName}`;
+        for (const positionKey of positionKeys) {
+            const position = await this.publishClient.get(positionKey);
+
+            if (position === null) {
+                continue;
+            }
+
+            // Extract durable key from position key (remove 'position:' prefix and ':{serviceName}' suffix)
+            const durableKey = positionKey.substring(POSITION_KEY_PREFIX.length, positionKey.length - suffix.length);
+            const positionValue = Number(position);
+
+            // A corrupt cursor must fail loudly, silently falling back would replay everything.
+            // Remember it instead of throwing here: this scan covers every durable key of the
+            // service, and one damaged cursor must not take unrelated subscriptions down with it
+            if (!/^-?\d+$/.test(position) || !Number.isSafeInteger(positionValue) || positionValue < -1) {
+                this.invalidPositions.set(durableKey, position);
+                this.logError(`Invalid persisted position "${position}" for durable key "${durableKey}"`);
+                continue;
+            }
+
+            this.invalidPositions.delete(durableKey);
+            this.processedPositions.set(durableKey, positionValue);
+
+            // Log
+            this.logDebug(`Service "${this.serviceName}" loaded position for "${durableKey}": ${positionValue}`);
+        }
+
+        // Log
+        this.logDebug(`Service "${this.serviceName}" loaded ${this.processedPositions.size} persisted positions`);
+    }
+
+    /**
+     * Find all position keys in Redis
+     */
+    private async findPositionKeys(): Promise<string[]> {
+        const keys: string[] = [];
+        let cursor = '0';
+
+        do {
+            const result = await this.publishClient.scan(cursor, {
+                MATCH: `${POSITION_KEY_PREFIX}${DURABLE_KEY_PREFIX}*:${this.serviceName}`,
+                COUNT: 100,
+            });
+            cursor = result.cursor;
+            keys.push(...result.keys);
+        } while (cursor !== '0');
+
+        return keys;
+    }
+
+    /**
+     * Read the events a durable pattern has not processed yet
+     *
+     * Events are prepended with LPUSH, so index 0 holds the newest one and the cursor counts
+     * how many entries at the tail were already processed. Counting from the tail keeps the
+     * cursor valid even when new events are pushed while this drain is running.
+     */
+    private async readPastEvents(pattern: string): Promise<void> {
+        // Find all durable keys matching the pattern
+        const durableKeys = await this.findDurableKeys(pattern);
+
+        for (const key of durableKeys) {
+            // Refuse to guess where to resume, but only for the keys this pattern actually reads
+            const invalidPosition = this.invalidPositions.get(key);
+            if (invalidPosition !== undefined) {
+                throw new EventBusException(`Invalid persisted position "${invalidPosition}" for durable key "${key}"`, 'redis');
+            }
+
+            let lastProcessedIndex = this.processedPositions.get(key) ?? -1;
+
+            // Read the unprocessed head of the list
+            const messages = await this.publishClient.lRange(key, 0, -(lastProcessedIndex + 2));
+
+            if (messages.length === 0) {
+                this.logDebug(`No new messages for key "${key}" (already processed up to ${lastProcessedIndex})`);
+                continue;
+            }
+
+            this.logDebug(`Reading ${messages.length} new messages for key "${key}", lastIndex=${lastProcessedIndex}`);
+
+            // Redis lists are LIFO, reverse to process in chronological order
+            for (const message of messages.reverse()) {
+                const durableHandlers = this.getDurableHandlers(pattern);
+
+                // The subscription was removed while draining
+                if (durableHandlers.length === 0) {
+                    return;
                 }
+
+                if (!(await this.deliverPastEvent(key, message, durableHandlers))) {
+                    // A handler failed, leave the cursor untouched so the event is redelivered
+                    return;
+                }
+
+                // Advance the cursor only after the event was fully handled
+                lastProcessedIndex++;
+                await this.saveProcessedPosition(key, lastProcessedIndex);
+                this.processedPositions.set(key, lastProcessedIndex);
+            }
+        }
+    }
+
+    /**
+     * Deliver one stored event to every durable handler of the pattern
+     *
+     * Returns false when the cursor must not advance. An unparseable entry can never be
+     * delivered, so it is reported and skipped instead of blocking the cursor forever.
+     */
+    private async deliverPastEvent(key: string, message: string, durableHandlers: HandlerInfo[]): Promise<boolean> {
+        let payload: EventPayload;
+        let expiresAt: number | null;
+
+        try {
+            payload = this.createEventPayload(message);
+            expiresAt = JSON.parse(message).expiresAt ?? null;
+        } catch (error) {
+            this.logError(`Skipping unreadable event in durable key "${key}": ${error.message}`, { error });
+            return true;
+        }
+
+        // Check TTL - skip expired events
+        if (expiresAt && Date.now() > expiresAt) {
+            this.logInfo(`Skipping expired event "${payload.event.name}" (expired at ${new Date(expiresAt).toISOString()})`);
+            return true;
+        }
+
+        try {
+            // Every durable handler of the pattern shares one cursor, so all of them must
+            // succeed before the event counts as processed
+            for (const handlerInfo of durableHandlers) {
+                await handlerInfo.handler(payload);
             }
         } catch (error) {
-            this.logError('Failed to handle message', { error });
+            this.logError(`Error processing past event from key "${key}": ${error.message}`, { error });
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Find Redis keys matching durable pattern
+     */
+    private async findDurableKeys(pattern: string): Promise<string[]> {
+        const keys: string[] = [];
+        let cursor = '0';
+
+        // Use SCAN to find matching keys (safe for large datasets)
+        do {
+            const result = await this.publishClient.scan(cursor, {
+                MATCH: `${DURABLE_KEY_PREFIX}${this.toRedisGlob(pattern)}`,
+                COUNT: 100,
+            });
+            cursor = result.cursor;
+
+            // The Redis glob spans dots, keep only what the framework matcher accepts too
+            keys.push(...result.keys.filter((key) => this.matchesPattern(key.substring(DURABLE_KEY_PREFIX.length), pattern)));
+        } while (cursor !== '0');
+
+        return keys;
+    }
+
+    /**
+     * Save processed position to Redis
+     */
+    private async saveProcessedPosition(durableKey: string, position: number): Promise<void> {
+        const positionKey = `${POSITION_KEY_PREFIX}${durableKey}:${this.serviceName}`;
+        await this.publishClient.set(positionKey, position.toString());
+        this.logDebug(`Service "${this.serviceName}" saved position for "${durableKey}": ${position} (key: "${positionKey}")`);
+    }
+
+    /**
+     * Create EventPayload from Redis message
+     */
+    private createEventPayload(message: string): EventPayload {
+        const { event, data, timestamp, expiresAt } = JSON.parse(message);
+        return {
+            event: {
+                name: event,
+                timestamp: timestamp || Date.now(),
+                expiresAt: expiresAt || undefined,
+            },
+            data,
+        };
+    }
+
+    /**
+     * Catch up every durable cursor after a reconnect
+     */
+    private scheduleDurableCatchUp(): void {
+        for (const pattern of this.handlers.keys()) {
+            if (this.getDurableHandlers(pattern).length === 0) {
+                continue;
+            }
+
+            this.scheduleDrain(pattern).catch((error) => {
+                // Leave the cursor where it is, a later wake-up retries it
+                this.logError(`Failed to drain durable pattern "${pattern}": ${error.message}`, { error });
+            });
         }
     }
 
@@ -389,9 +838,10 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
 
         if (handler) {
             // Remove specific handler
-            const toRemove = Array.from(handlerSet).filter((h) => h.handler === handler);
-            for (const handlerInfo of toRemove) {
-                handlerSet.delete(handlerInfo);
+            for (const handlerInfo of Array.from(handlerSet)) {
+                if (handlerInfo.handler === handler) {
+                    handlerSet.delete(handlerInfo);
+                }
             }
         } else {
             // Remove all handlers
@@ -401,7 +851,31 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
         // If no handlers left, unsubscribe from pattern
         if (handlerSet.size === 0) {
             this.handlers.delete(eventPattern);
-            this.unsubscribeFromPattern(eventPattern);
+
+            this.unsubscribeFromPattern(eventPattern).catch((error) => {
+                this.logError(`Failed to unsubscribe from pattern "${eventPattern}": ${error.message}`, { error });
+            });
+        }
+    }
+
+    /**
+     * Remove a single handler, dropping its subscription when it was the last one
+     */
+    private removeHandler(pattern: string, handlerInfo: HandlerInfo): void {
+        const handlerSet = this.handlers.get(pattern);
+
+        if (!handlerSet) {
+            return;
+        }
+
+        handlerSet.delete(handlerInfo);
+
+        if (handlerSet.size === 0) {
+            this.handlers.delete(pattern);
+
+            this.unsubscribeFromPattern(pattern).catch((error) => {
+                this.logError(`Failed to unsubscribe from pattern "${pattern}": ${error.message}`, { error });
+            });
         }
     }
 
@@ -409,19 +883,22 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
      * Unsubscribe from a pattern in Redis
      */
     private async unsubscribeFromPattern(pattern: string): Promise<void> {
-        if (!this.connected) {
+        const listener = this.subscriptionListeners.get(pattern);
+        this.subscriptionListeners.delete(pattern);
+
+        if (!this.subscribedPatterns.has(pattern)) {
             return;
         }
 
-        try {
-            const unsubscribeMethod = this.isWildcardPattern(pattern) ? 'pUnsubscribe' : 'unsubscribe';
-            await this.subscribeClient[unsubscribeMethod](pattern);
+        // Remove pattern from subscribed patterns
+        this.subscribedPatterns.delete(pattern);
 
-            // Remove pattern from subscribed patterns
-            this.subscribedPatterns.delete(pattern);
-        } catch (error) {
-            this.logError(`Failed to unsubscribe from pattern "${pattern}"`, { error });
+        if (!listener || !this.subscribeClient.isReady) {
+            return;
         }
+
+        const unsubscribeMethod = this.hasSegmentWildcard(pattern) ? 'pUnsubscribe' : 'unsubscribe';
+        await this.subscribeClient[unsubscribeMethod](this.toLiveChannelPattern(pattern), listener);
     }
 
     /**
@@ -430,13 +907,11 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
     public removeAllListeners(eventPattern?: string): void {
         if (eventPattern) {
             this.off(eventPattern);
-        } else {
-            // Unsubscribe from all patterns
-            for (const pattern of this.handlers.keys()) {
-                this.unsubscribeFromPattern(pattern);
-            }
-            this.handlers.clear();
-            this.subscribedPatterns.clear();
+            return;
+        }
+
+        for (const pattern of Array.from(this.handlers.keys())) {
+            this.off(pattern);
         }
     }
 
@@ -456,221 +931,83 @@ export default class EventBusRedisRepository implements EventBusRepositoryInterf
     }
 
     /**
-     * Re-subscribe to all patterns after reconnection
+     * Disconnect from Redis
      */
-    private async resubscribeToPatterns(): Promise<void> {
-        for (const pattern of this.handlers.keys()) {
-            await this.subscribeToPattern(pattern);
-        }
-    }
-
-    /**
-     * Check if a pattern contains wildcards
-     */
-    private isWildcardPattern(pattern: string): boolean {
-        return EventPatternMatcher.isWildcardPattern(pattern);
-    }
-
-    /**
-     * Check if a channel matches a pattern
-     */
-    private matchesPattern(channel: string, pattern: string): boolean {
-        return EventPatternMatcher.matchesPattern(channel, pattern);
-    }
-
-    /**
-     * Add handler for live events (pub/sub)
-     */
-    private addLiveHandler(pattern: string, handler: EventHandler): void {
-        const livePattern = `live:${pattern}`;
-        this.addHandler(livePattern, handler);
-    }
-
-    /**
-     * Read past events from Redis Lists based on pattern
-     */
-    private async readPastEvents(pattern: string, handler: EventHandler): Promise<void> {
+    public async disconnect(): Promise<void> {
         try {
-            // Find all durable keys matching the pattern
-            const durableKeys = await this.findDurableKeys(pattern);
-
-            // Read new messages from matching lists
-            for (const key of durableKeys) {
-                // Get last processed position for this key
-                const lastProcessedIndex = this.processedPositions.get(key) || -1;
-
-                this.logDebug(`Looking for position of key "${key}" in Map`);
-
-                // Get total list length
-                const listLength = await this.publishClient.lLen(key);
-
-                this.logDebug(`Processing key "${key}": lastIndex=${lastProcessedIndex}, listLength=${listLength}`);
-
-                if (listLength > lastProcessedIndex + 1) {
-                    // Read only new messages starting from lastProcessedIndex + 1
-                    const startIndex = lastProcessedIndex + 1;
-                    const messages = await this.publishClient.lRange(key, startIndex, -1);
-
-                    this.logDebug(`Reading ${messages.length} new messages from index ${startIndex} for key "${key}"`);
-
-                    // Process messages in chronological order (reverse since Redis lists are LIFO)
-                    for (let i = messages.length - 1; i >= 0; i--) {
-                        try {
-                            const parsed = JSON.parse(messages[i]);
-
-                            // Check TTL - skip expired events
-                            if (parsed.expiresAt && Date.now() > parsed.expiresAt) {
-                                this.logInfo(
-                                    `Skipping expired event "${parsed.event}" (expired at ${new Date(parsed.expiresAt).toISOString()})`,
-                                );
-                                continue;
-                            }
-
-                            const payload = this.createEventPayload(messages[i]);
-                            handler(payload);
-                        } catch (error) {
-                            this.logError(`Error processing past event from key "${key}"`, { error });
-                        }
-                    }
-
-                    // Update processed position after all messages are processed
-                    const newProcessedIndex = listLength - 1;
-                    this.processedPositions.set(key, newProcessedIndex);
-
-                    // Log
-                    this.logDebug(`Service "${this.serviceName}" updating position for key "${key}" to ${newProcessedIndex}`);
-
-                    // Persist position to Redis
-                    await this.saveProcessedPosition(key, newProcessedIndex);
-                } else {
-                    this.logDebug(`No new messages for key "${key}" (already processed up to ${lastProcessedIndex}`);
-                }
-            }
+            await Promise.all([this.closeClient(this.publishClient), this.closeClient(this.subscribeClient)]);
         } catch (error) {
-            this.logError(`Error reading past events for pattern "${pattern}"`, { error });
+            throw new EventBusException(`Failed to disconnect from Redis: ${error.message}`, 'redis');
+        } finally {
+            this.connected = false;
+            this.subscribedPatterns.clear();
+            this.subscriptionListeners.clear();
+
+            // Node-redis cannot reopen a client that was quit, the next connect builds new ones
+            this.clientsNeedInitialization = true;
         }
     }
 
     /**
-     * Find Redis keys matching durable pattern
+     * Close a single client
      */
-    private async findDurableKeys(pattern: string): Promise<string[]> {
-        const durablePattern = `durable:${pattern}`;
-        const keys: string[] = [];
-
-        // Use SCAN to find matching keys (safe for large datasets)
-        let cursor = '0';
-        do {
-            const result = await this.publishClient.scan(cursor, { MATCH: durablePattern, COUNT: 100 });
-            cursor = result.cursor;
-            keys.push(...result.keys);
-        } while (cursor !== '0');
-
-        return keys;
-    }
-
-    /**
-     * Create EventPayload from Redis message
-     */
-    private createEventPayload(message: string): EventPayload {
-        const { event, data, timestamp, expiresAt } = JSON.parse(message);
-        return {
-            event: {
-                name: event,
-                timestamp: timestamp || Date.now(),
-                expiresAt: expiresAt || undefined,
-            },
-            data,
-        };
-    }
-
-    /**
-     * Ensure positions are loaded (load only once)
-     */
-    private async ensurePositionsLoaded(): Promise<void> {
-        if (this.positionsLoaded) {
+    private async closeClient(client: RedisClientType): Promise<void> {
+        if (!client.isOpen) {
             return;
         }
 
-        // If already loading, wait for existing promise
-        if (this.positionsLoadingPromise) {
-            await this.positionsLoadingPromise;
+        // A client that never became ready cannot process QUIT
+        if (!client.isReady) {
+            client.destroy();
             return;
         }
 
-        // Start loading and save promise to prevent race conditions
-        this.positionsLoadingPromise = this.loadPersistedPositions();
-        await this.positionsLoadingPromise;
-        this.positionsLoaded = true;
-        this.positionsLoadingPromise = null;
+        await client.quit();
     }
 
     /**
-     * Load persisted positions from Redis
+     * Check whether a whole segment of the pattern is a wildcard
+     *
+     * EventPatternMatcher only treats a complete "*" or "**" segment as a wildcard, so the
+     * transport must use the same rule when choosing between subscribe and pSubscribe.
      */
-    private async loadPersistedPositions(): Promise<void> {
-        try {
-            await this.waitForConnection();
+    private hasSegmentWildcard(pattern: string): boolean {
+        return pattern.split('.').some((segment) => segment === '*' || segment === '**');
+    }
 
-            // Find all position keys
-            const positionKeys = await this.findPositionKeys();
-
-            // Load each position
-            for (const positionKey of positionKeys) {
-                const position = await this.publishClient.get(positionKey);
-                if (position !== null) {
-                    // Extract durable key from position key (remove 'position:' prefix and ':{serviceName}' suffix)
-                    const prefix = 'position:';
-                    const suffix = `:${this.serviceName}`;
-                    const durableKey = positionKey.substring(prefix.length, positionKey.length - suffix.length);
-                    const positionValue = parseInt(position);
-                    this.processedPositions.set(durableKey, positionValue);
-
-                    // Log
-                    this.logDebug(`Service "${this.serviceName}" loaded position for "${durableKey}": ${positionValue}`);
+    /**
+     * Translate a framework pattern into a Redis glob
+     *
+     * The glob is only a broad transport filter, it spans dots where the framework matcher
+     * does not. EventPatternMatcher stays authoritative for both callbacks and scanned keys.
+     */
+    private toRedisGlob(pattern: string): string {
+        return pattern
+            .split('.')
+            .map((segment) => {
+                if (segment === '*' || segment === '**') {
+                    return '*';
                 }
-            }
 
-            // Log
-            this.logDebug(`Service "${this.serviceName}" loaded ${this.processedPositions.size} persisted positions`);
-
-            // Debug: log all keys in processedPositions Map
-            for (const [mapKey, mapValue] of this.processedPositions) {
-                this.logDebug(`Service "${this.serviceName}" Map contains key "${mapKey}" with value ${mapValue}`);
-            }
-        } catch (error) {
-            // Log
-            this.logError(`Error loading persisted positions: ${error.message}`);
-        }
+                return Array.from(segment)
+                    .map((character) => (['*', '?', '[', ']', '\\'].includes(character) ? `\\${character}` : character))
+                    .join('');
+            })
+            .join('.');
     }
 
     /**
-     * Find all position keys in Redis
+     * Build the live channel or channel pattern of an event pattern
      */
-    private async findPositionKeys(): Promise<string[]> {
-        const keys: string[] = [];
-        let cursor = '0';
-
-        do {
-            const result = await this.publishClient.scan(cursor, { MATCH: `position:durable:*:${this.serviceName}`, COUNT: 100 });
-            cursor = result.cursor;
-            keys.push(...result.keys);
-        } while (cursor !== '0');
-
-        return keys;
+    private toLiveChannelPattern(pattern: string): string {
+        return `${LIVE_CHANNEL_PREFIX}${this.hasSegmentWildcard(pattern) ? this.toRedisGlob(pattern) : pattern}`;
     }
 
     /**
-     * Save processed position to Redis
+     * Check if an event matches a pattern
      */
-    private async saveProcessedPosition(durableKey: string, position: number): Promise<void> {
-        try {
-            const positionKey = `position:${durableKey}:${this.serviceName}`;
-            await this.publishClient.set(positionKey, position.toString());
-            this.logDebug(`Service "${this.serviceName}" saved position for "${durableKey}": ${position} (key: "${positionKey}")`);
-        } catch (error) {
-            this.logError(`Error saving position for key "${durableKey}": ${error.message}`);
-        }
+    private matchesPattern(event: string, pattern: string): boolean {
+        return EventPatternMatcher.matchesPattern(event, pattern);
     }
 
     /**

@@ -23,8 +23,11 @@ export default interface EventBusRepositoryInterface {
     /**
      * Subscribe to an event with durable delivery (guaranteed delivery)
      * Supported in Redis driver
+     *
+     * Await the returned promise to know that past events were replayed and the
+     * subscription is live, or ignore it to subscribe in fire and forget fashion
      */
-    onDurable(eventPattern: string, handler: EventHandler): void;
+    onDurable(eventPattern: string, handler: EventHandler): Promise<void>;
 
     /**
      * Unsubscribe from an event
