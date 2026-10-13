@@ -38,22 +38,36 @@ export default class CommandRegistration {
      * Get process by pid
      */
     private async checkIfProcessExistsByPidAndCmd(pid: number, cmd: string): Promise<boolean> {
+        // The pid file was left by an earlier process whose pid the OS has given to us
+        if (pid === process.pid) {
+            return false;
+        }
+
         // Promisify exec
         const promiseExec = util.promisify(exec);
 
-        // Execute ps
-        const result = await promiseExec('ps');
+        // Execute ps over every process with its full command line, plain ps on macOS and procps
+        // lists only processes attached to the current terminal
+        const result = await promiseExec('ps -A -o pid=,args=');
 
         // Logic
+        // Compare the whole PID column: matched anywhere in the line, a stale pid also matches
+        // the command's own arguments or a longer pid, and the command is never run again
         const psLines = result.stdout.split('\n');
         for (const line of psLines) {
-            if (line.match(new RegExp(pid.toString(), 'i'))) {
-                if (line.match(new RegExp(cmd, 'i'))) {
-                    return true;
-                }
+            const linePid = Number(line.trim().split(/\s+/)[0]);
+            if (linePid === pid && line.match(new RegExp(cmd, 'i'))) {
+                return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Remove the pid file of the current process
+     */
+    private removePidFile(): void {
+        fs.rmSync('/tmp/' + process.pid + '.pid', { force: true });
     }
 
     /**
@@ -176,12 +190,23 @@ export default class CommandRegistration {
                                 // This ensures that command has ended
                                 this.createOrUpdateCommandExecutionFile(`${commandFile}-end`);
 
+                                // A pid file left behind is checked by every next execution
+                                if (commandClassInstance.singleExecution) {
+                                    this.removePidFile();
+                                }
+
                                 process.exit(0);
                             })
                             .catch(async (error) => {
                                 const Handler = require(process.cwd() + '/build/app/Exceptions/Handler').default;
                                 const exceptionHandler = new Handler();
                                 await exceptionHandler.reportCommandException(error);
+
+                                // A pid file left behind is checked by every next execution
+                                if (commandClassInstance.singleExecution) {
+                                    this.removePidFile();
+                                }
+
                                 process.exit(1);
                             });
                     });
