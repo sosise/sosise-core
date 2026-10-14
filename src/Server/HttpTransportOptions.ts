@@ -8,6 +8,7 @@ export interface HttpTransportOptions {
     jsonBodyLimit: string;
     rawBodyLimit: string;
     shutdownTimeout: number;
+    trustProxy: boolean | number | string | undefined;
 }
 
 /**
@@ -25,6 +26,7 @@ export default function resolveHttpTransportOptions(environment: HttpTransportEn
         jsonBodyLimit: parseBodyLimit(environment.HTTP_JSON_BODY_LIMIT, '10mb', 'HTTP_JSON_BODY_LIMIT'),
         rawBodyLimit: parseBodyLimit(environment.HTTP_RAW_BODY_LIMIT, '150mb', 'HTTP_RAW_BODY_LIMIT'),
         shutdownTimeout: parseShutdownTimeout(environment.HTTP_SHUTDOWN_TIMEOUT_MS, 10000, 'HTTP_SHUTDOWN_TIMEOUT_MS'),
+        trustProxy: parseTrustProxy(environment.HTTP_TRUST_PROXY, 'HTTP_TRUST_PROXY'),
     };
 }
 
@@ -90,4 +92,42 @@ function parseShutdownTimeout(value: string | undefined, fallback: number, name:
     }
 
     return shutdownTimeout;
+}
+
+/**
+ * Read which proxies in front of the application Express may trust
+ *
+ * The value is what Express accepts for its "trust proxy" setting: "true" or "false", a number
+ * of hops, or a comma-separated list of addresses, subnets and presets such as "loopback".
+ * Express validates the list itself when the setting is applied, so a typo fails startup.
+ * Leaving the variable out keeps the historical behaviour: one trusted hop when sessions are on.
+ */
+function parseTrustProxy(value: string | undefined, name: string): boolean | number | string | undefined {
+    // Keep the historical behaviour when the variable is absent
+    if (value === undefined) {
+        return undefined;
+    }
+
+    const normalizedValue = value.trim();
+
+    // Booleans trust every proxy or none of them
+    if (normalizedValue === 'true') {
+        return true;
+    }
+
+    if (normalizedValue === 'false') {
+        return false;
+    }
+
+    // A plain number counts the hops between the application and the client
+    if (/^\d+$/.test(normalizedValue)) {
+        return Number(normalizedValue);
+    }
+
+    // Anything else is a list of trusted addresses, and an empty one is a mistake rather than a choice
+    if (!normalizedValue) {
+        throw new Error(`${name} must be "true", "false", a number of hops or a list of trusted addresses.`);
+    }
+
+    return normalizedValue;
 }

@@ -11,6 +11,7 @@ test('keeps every transport feature enabled when no variable is set', () => {
         jsonBodyLimit: '10mb',
         rawBodyLimit: '150mb',
         shutdownTimeout: 10000,
+        trustProxy: undefined,
     });
 });
 
@@ -24,6 +25,7 @@ test('applies explicit transport values', () => {
             HTTP_JSON_BODY_LIMIT: '25mb',
             HTTP_RAW_BODY_LIMIT: '1gb',
             HTTP_SHUTDOWN_TIMEOUT_MS: '0',
+            HTTP_TRUST_PROXY: '2',
         }),
         {
             compression: false,
@@ -33,6 +35,7 @@ test('applies explicit transport values', () => {
             jsonBodyLimit: '25mb',
             rawBodyLimit: '1gb',
             shutdownTimeout: 0,
+            trustProxy: 2,
         },
     );
 });
@@ -81,3 +84,15 @@ for (const [name, environment] of [
         assert.throws(() => resolveHttpTransportOptions(environment), /must be a non-negative integer/);
     });
 }
+
+test('reads which proxies to trust the way Express accepts them', () => {
+    // Booleans, a number of hops and a list of trusted addresses
+    assert.equal(resolveHttpTransportOptions({ HTTP_TRUST_PROXY: 'true' }).trustProxy, true);
+    assert.equal(resolveHttpTransportOptions({ HTTP_TRUST_PROXY: 'false' }).trustProxy, false);
+    assert.equal(resolveHttpTransportOptions({ HTTP_TRUST_PROXY: ' 2 ' }).trustProxy, 2);
+    assert.equal(resolveHttpTransportOptions({ HTTP_TRUST_PROXY: 'loopback, 10.0.0.0/24' }).trustProxy, 'loopback, 10.0.0.0/24');
+});
+
+test('rejects an empty list of trusted proxies', () => {
+    assert.throws(() => resolveHttpTransportOptions({ HTTP_TRUST_PROXY: ' ' }), /HTTP_TRUST_PROXY must be/);
+});

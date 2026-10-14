@@ -3,7 +3,7 @@ import { match } from 'path-to-regexp';
 import ipRangeCheck from 'ip-range-check';
 const config = require(process.cwd() + '/build/config/throttling').default;
 
-export default class DocumentationBasicAuthMiddleware {
+export default class ThrottlingMiddleware {
     private rateLimitMap: Map<string, { count: number; windowStartTs: number }> = new Map();
 
     /**
@@ -94,8 +94,18 @@ export default class DocumentationBasicAuthMiddleware {
 
     /**
      * Get client ip
+     *
+     * Without a header the key is the address Express resolved: it walks X-Forwarded-For from the
+     * right through exactly as many proxies as "trust proxy" allows, so a client cannot pick its
+     * own key. A header is only safe when a trusted proxy overwrites it, the leftmost entry of an
+     * appended X-Forwarded-For is whatever the client sent
      */
     private getClientIp(request: Request): string | undefined {
+        // Use the address resolved by Express when no header is configured
+        if (!config.clientIpHeader) {
+            return this.normalizeIp(request.ip);
+        }
+
         // Get string from header
         let clientIp: string | undefined = request.headers[config.clientIpHeader.toLowerCase()] as any;
 
@@ -111,5 +121,18 @@ export default class DocumentationBasicAuthMiddleware {
 
         // Otherwise just return
         return clientIp;
+    }
+
+    /**
+     * Normalize an IPv4 address that a dual-stack socket reports in its IPv6-mapped form
+     */
+    private normalizeIp(ip: string | undefined): string | undefined {
+        // An unknown address is not throttled, exactly like a missing header
+        if (!ip) {
+            return undefined;
+        }
+
+        // "::ffff:10.0.0.5" is "10.0.0.5", and skipSubnets are written in the IPv4 form
+        return ip.startsWith('::ffff:') && ip.includes('.') ? ip.slice('::ffff:'.length) : ip;
     }
 }

@@ -83,6 +83,11 @@ export default class Server {
         // Instantiate app
         const app = Express();
 
+        // Trust exactly the proxies the deployment declares, request.ip and throttling depend on it
+        if (transportOptions.trustProxy !== undefined) {
+            app.set('trust proxy', transportOptions.trustProxy);
+        }
+
         // Use gzip compression in responses
         if (transportOptions.compression) {
             app.use(Compression());
@@ -138,8 +143,10 @@ export default class Server {
             return;
         }
 
-        // Trust first proxy
-        app.set('trust proxy', 1);
+        // Trust the first proxy unless the deployment declared its proxies itself
+        if (this.transportOptions?.trustProxy === undefined) {
+            app.set('trust proxy', 1);
+        }
 
         // Initialize session store
         switch (sessionConfig.driver) {
